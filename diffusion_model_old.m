@@ -1,4 +1,4 @@
-function [tracer,obst] = diffusion_model(pvec,const,modelopt,filename)
+function [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename)
 % DIFFUSION_MODEL run model of tracers diffusing through obstacles 
 %   inputs are:
 %   pvec = parameter vector containing 

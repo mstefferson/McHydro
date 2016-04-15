@@ -16,13 +16,13 @@ slide_barr_height=0;    %barrier height to sliding, in kT
 bind_energy_vec = 0;
 %bind_energy_vec = [-20, -10, -5, -4, -3, -2, -1,-0.1, -0.01, -0.001, 0, 0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 20];
 %bind_energy_vec = logspace(-5,5,32);
-ffrac_obst=0;         %filling fraction of obstacles
+ffrac_obst=0.1;         %filling fraction of obstacles
 %ffvec=[0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9];
 % ffvec=[0 0.1 0.2];
 ffrac_tracer=0.1;       %filling fraction of tracers
 const.n_gridpoints=100;    %number of grid points, same in x and y
 % const.n_gridpoints=10;    %number of grid points, same in x and y
-const.ntimesteps=1e1;       %number of timesteps NOte 1e5 gives errors on my laptop. 
+const.ntimesteps=1e2;       %number of timesteps NOte 1e5 gives errors on my laptop. 
 % const.ntimesteps=1e2;       %number of timesteps
        
 %other constants and model options
@@ -43,7 +43,9 @@ modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slo
 modelopt.movie=0;           %1 to record movie
 
 nparams=length(bind_energy_vec);
+fprintf('Starting paramloop \n')
 parfor j=1:nparams
+    fprintf('param run %d\n', j);
     bind_energy = bind_energy_vec(j);
     pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
 
@@ -55,7 +57,9 @@ parfor j=1:nparams
     filename=['data_',filestring,'.mat'];
     
     %run the model!
-    [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
+    [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename);
     
 end
+
+fprintf('Completed run\n');
 %elapsed_time=toc;
