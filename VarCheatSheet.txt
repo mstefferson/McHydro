@@ -1,0 +1,47 @@
+
+%%%%%%%%%%%% vary_run_*.m %%%%%%%%%%%%%%%%%%%%%%%%%%
+  Description: Initializes parameters and runs main body of code, diffusion_model
+
+%key parameters and constants
+slide_barr_height=0;         %barrier height to sliding, in kT
+bind_energy=-20;             %binding energy of tracers to obstacles, in kT
+ffrac_obst=0.1;              %filling fraction of obstacles
+ffrac_tracer=0.1;            %filling fraction of tracers
+const.n_gridpoints=100;      %number of grid points, same in x and y
+const.ntimesteps=1e1;        %number of timesteps NOte 1e5 gives errors on my laptop. 
+       
+%other constants and model options
+const.size_obst=1;           %obstacle linear dimension, MUST BE odd integer
+const.size_tracer=1;         %tracer linear dimension, MUST BE odd integer
+const.nequil=0;              %number of timesteps for initial equilibration
+
+modelopt.obst_excl=1;        %1 if obstacles sterically exclude each other, 0 if not
+modelopt.tracer_excl=0;      %MUST BE 0 so tracers don't interact (ghosts)
+modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude
+modelopt.dimension=2;        %system dimension, currently must be 2
+modelopt.animate=0;          %1 to show animation, 0 for no animation
+modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
+modelopt.movie=0;            %1 to record movie
+pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
+
+%%%%%%%%%%%% diffusion_model_old %%%%%%%%%%%%%%%%%%%
+function [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename)
+  Description: Main body of the cody. Evolves particles in time
+
+obst_curv=0.2; %curvature for animations
+tracer_curv=1; %curvature for animations
+lattice.moves=[1 0; -1 0; 0 1; 0 -1]; %possible steps a particle can take
+tracer.pmove=exp(-slide_barr); %probability to move
+
+%%%%%%%%%%%%%%% place_objects %%%%%%%%%%%%%%%%
+function obj=place_objects(n_obj,len_obj,ngridpoints,modelopt, ...
+    exclude_flag,existing_fig,obj_color, obj_curv, placed_obj)
+  Description: Places the particles on the grid. Place the obstacles first then
+  then tracers.
+%center x,y positions of each object
+obj.center=[x' y']; 
+%list of lattice index positions for all points inside objects
+obj.allpts = zeros(1,len_obj^dim); 
+%counter for objects that have been placed
+obj_counter = n_obj+1;%+n.tracer
+
