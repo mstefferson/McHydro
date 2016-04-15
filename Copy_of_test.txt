@@ -1,1 +1,0 @@
-/Users/Loren/Google Drive/Diffusion with obstacles/obstacle tracer diffusion model/binding models/results/data_bar0_bind0_fo0.2_ft0.5_so1_st1_oe1_ng50_nt1000.mat

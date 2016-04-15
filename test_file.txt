@@ -1,1 +1,0 @@
-data_bar0_bind0.00041011_fo0.1_ft0.5_so1_st1_oe1_ng100_nt300000.mat
