@@ -31,7 +31,9 @@ function [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename)
 obst_curv=0.2; %curvature for animations
 tracer_curv=1; %curvature for animations
 lattice.moves=[1 0; -1 0; 0 1; 0 -1]; %possible steps a particle can take
-tracer.pmove=exp(-slide_barr); %probability to move
+tracer.pmove=exp(-slide_barr); %probability to move   
+tracer.cen_nomod   %center, no periodic wrapping
+tracer.center     %center with periodic wrapping
 
 %%%%%%%%%%%%%%% place_objects %%%%%%%%%%%%%%%%
 function obj=place_objects(n_obj,len_obj,ngridpoints,modelopt, ...

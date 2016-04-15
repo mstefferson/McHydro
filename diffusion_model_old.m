@@ -1,4 +1,4 @@
-function [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename)
+function [tracer,obst] = diffusion_model_old(paramvec,const,modelopt,filename)
 % DIFFUSION_MODEL run model of tracers diffusing through obstacles 
 %   inputs are:
 %   pvec = parameter vector containing 
@@ -16,14 +16,14 @@ function [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename)
 
 %% initialize
 %parameters from pvec
-if (length(pvec)<4)
+if (length(paramvec)<4)
     error('diffusion_model: parameter vector too short');
-elseif (length(pvec)==4)
-    ffrac_obst=pvec(1);
-    ffrac_tracer=pvec(2);
-    slide_barr=pvec(3) ;  
-    bind_energy=pvec(4);
-elseif (length(pvec)>4)
+elseif (length(paramvec)==4)
+    ffrac_obst=paramvec(1);
+    ffrac_tracer=paramvec(2);
+    slide_barr=paramvec(3) ;  
+    bind_energy=paramvec(4);
+elseif (length(paramvec)>4)
     error('diffusion_model: parameter vector too long');
 end
 
@@ -69,7 +69,7 @@ tracer.ffrac=ffrac_tracer;
 tracer.pmove=exp(-slide_barr);
 tracer.state=sum(ismember(tracer.allpts, obst.allpts),2);
 
-parsave(filename,pvec,tracer,obst,const,modelopt);
+parsave(filename,paramvec,tracer,obst,const,modelopt);
 
 %set up things for recording
 obst.cen_nomod=obst.center;
@@ -147,3 +147,7 @@ if modelopt.movie
     movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
         const,n,modelopt.movie_timestep,modelopt.movie_filename);
 end
+
+% Write filename to a file
+fid = fopen('filelist.txt','a+');
+fprintf(fid,'%s\n',filename);

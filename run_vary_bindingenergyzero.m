@@ -22,7 +22,7 @@ ffrac_obst=0.1;         %filling fraction of obstacles
 ffrac_tracer=0.1;       %filling fraction of tracers
 const.n_gridpoints=100;    %number of grid points, same in x and y
 % const.n_gridpoints=10;    %number of grid points, same in x and y
-const.ntimesteps=1e2;       %number of timesteps NOte 1e5 gives errors on my laptop. 
+const.ntimesteps=1e1;       %number of timesteps NOte 1e5 gives errors on my laptop. 
 % const.ntimesteps=1e2;       %number of timesteps
        
 %other constants and model options
@@ -35,17 +35,19 @@ modelopt.dimension=2; %system dimension, currently must be 2
 
 %%% END of section to copy to analyze script. %%%%%%%
 
-
 const.nequil=0;           %number of timesteps for initial equilibration
 
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie
 
+% Save filenames to a .txt I will probably work around this
+fileid = fopen('filelist.txt','a+');
 nparams=length(bind_energy_vec);
 fprintf('Starting paramloop \n')
+
 parfor j=1:nparams
-    fprintf('param run %d\n', j);
+    
     bind_energy = bind_energy_vec(j);
     pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
 
@@ -55,11 +57,13 @@ parfor j=1:nparams
     '_oe',num2str(modelopt.obst_excl),'_ng',...
     num2str(const.n_gridpoints),'_nt',num2str(const.ntimesteps)];
     filename=['data_',filestring,'.mat'];
+    %fprintf(fileid,'%s',filename);
     
     %run the model!
     [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename);
     
 end
 
+fclose(fileid);
 fprintf('Completed run\n');
 %elapsed_time=toc;
