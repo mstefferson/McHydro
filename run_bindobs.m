@@ -16,7 +16,7 @@ slide_barr_height=0;    %barrier height to sliding, in kT
 bind_energy_vec = 0;
 %bind_energy_vec = [-20, -10, -5, -4, -3, -2, -1,-0.1, -0.01, -0.001, 0, 0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 20];
 %bind_energy_vec = logspace(-5,5,32);
-ffrac_obst=0.1;         %filling fraction of obstacles
+ffrac_obst=0.2;         %filling fraction of obstacles
 %ffvec=[0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9];
 % ffvec=[0 0.1 0.2];
 ffrac_tracer=0.1;       %filling fraction of tracers
@@ -42,7 +42,6 @@ modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slo
 modelopt.movie=0;           %1 to record movie
 
 % Save filenames to a .txt I will probably work around this
-fileid = fopen('filelist.txt','a+');
 nparams=length(bind_energy_vec);
 fprintf('Starting paramloop \n')
 
@@ -60,10 +59,10 @@ parfor j=1:nparams
     %fprintf(fileid,'%s',filename);
     
     %run the model!
-    [tracer,obst] = diffusion_model_old(pvec,const,modelopt,filename);
+    [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
+    movefile(filename,'./runfiles');
     
 end
 
-fclose(fileid);
 fprintf('Completed run\n');
 %elapsed_time=toc;
