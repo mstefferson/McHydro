@@ -8,23 +8,19 @@
 % clear all;
 %close all;
 
-%%%%%%%% Beginning of section to copy to analyze script. 
+%%%%%%%% Beginning of section to copy to analyze script.
 
 %key parameters and constants
 slide_barr_height=0;    %barrier height to sliding, in kT
-%bind_energy=-20;         %binding energy of tracers to obstacles, in kT
-bind_energy_vec = 0;
-%bind_energy_vec = [-20, -10, -5, -4, -3, -2, -1,-0.1, -0.01, -0.001, 0, 0.001, 0.01, 0.1, 1, 2, 3, 4, 5, 10, 20];
-%bind_energy_vec = logspace(-5,5,32);
-ffrac_obst=0.2;         %filling fraction of obstacles
-%ffvec=[0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9];
-% ffvec=[0 0.1 0.2];
+bind_energy_vec = [1 6];
+ffrac_obst_vec= [ 0.1 0.2 0.3];         %filling fraction of obstacles
 ffrac_tracer=0.1;       %filling fraction of tracers
+
+%grid stuff
+const.n_trials    = 4;
 const.n_gridpoints=100;    %number of grid points, same in x and y
-% const.n_gridpoints=10;    %number of grid points, same in x and y
-const.ntimesteps=1e1;       %number of timesteps NOte 1e5 gives errors on my laptop. 
-% const.ntimesteps=1e2;       %number of timesteps
-       
+const.ntimesteps=1e1;       %number of timesteps NOte 1e5 gives errors on my laptop.
+
 %other constants and model options
 const.size_obst=1;      %obstacle linear dimension, MUST BE odd integer
 const.size_tracer=1;     %tracer linear dimension, MUST BE odd integer
@@ -33,28 +29,53 @@ modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
 modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude
 modelopt.dimension=2; %system dimension, currently must be 2
 
-%%% END of section to copy to analyze script. %%%%%%%
-
 const.nequil=0;           %number of timesteps for initial equilibration
 
+%model stuff
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie
 
-% Save filenames to a .txt I will probably work around this
-nparams=length(bind_energy_vec);
+%build a parameter matrix
+nbe      = length( bind_energy_vec );
+nffo     = length( ffrac_obst_vec );
+nt       = const.n_trials;
+nparams  = nbe * nffo * nt;
+%param matrix.  (:,1) = trial (:,2) = binding (:,3) = ffrc obs
+param_mat = zeros( nparams, 3 );
+for i = 1:nt
+    for j = 1:nbe
+        for k = 1:nffo
+            rowind = k + nffo * (j-1) + nffo * nbe * (i - 1);
+            param_mat( rowind, 1 ) = i;
+            param_mat( rowind, 2 ) = bind_energy_vec(j);
+            param_mat( rowind, 3 ) = ffrac_obst_vec(k);  
+        end
+    end
+end
+
+% For some reason, param_mat gets "sliced". Create vectors to get arround
+% this
+param_trial = param_mat(:,1);
+param_bind  = param_mat(:,2);
+param_ffo   = param_mat(:,3);
+
 fprintf('Starting paramloop \n')
 
 parfor j=1:nparams
     
-    bind_energy = bind_energy_vec(j);
+    trial = param_trial(j); 
+    bind_energy = param_bind(j); 
+    ffrac_obst = param_ffo(j);
+    
     pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
-
+    
     filestring=['bar',num2str(slide_barr_height),'_bind',num2str(bind_energy),...
-    '_fo',num2str(ffrac_obst),'_ft',num2str(ffrac_tracer),'_so',...
-    num2str(const.size_obst),'_st',num2str(const.size_tracer),...
-    '_oe',num2str(modelopt.obst_excl),'_ng',...
-    num2str(const.n_gridpoints),'_nt',num2str(const.ntimesteps)];
+        '_fo',num2str(ffrac_obst),'_ft',num2str(ffrac_tracer),'_so',...
+        num2str(const.size_obst),'_st',num2str(const.size_tracer),...
+        '_oe',num2str(modelopt.obst_excl),'_ng',...
+        num2str(const.n_gridpoints),'_nt',...
+        num2str(const.ntimesteps),'_t', num2str(trial)];
     filename=['data_',filestring,'.mat'];
     %fprintf(fileid,'%s',filename);
     
