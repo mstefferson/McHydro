@@ -5,7 +5,7 @@
 % Get all the files you want to analyze
 
 Files2Analyze = parserunfiles;
-NumFiles = size(FileCell,1);
+NumFiles = size(Files2Analyze,1);
 
 tic
 
@@ -13,7 +13,7 @@ fprintf('Starting analysis\n');
 for j=1:NumFiles  
    
      % Grab a file
-     filename = FileCell{j};
+     filename = Files2Analyze{j};
 
      % Put all variables in a struct
      S = load( ['./runfiles/' filename] );
