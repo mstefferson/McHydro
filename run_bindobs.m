@@ -8,8 +8,6 @@
 % clear all;
 %close all;
 
-%%%%%%%% Beginning of section to copy to analyze script.
-
 %key parameters and constants
 slide_barr_height=0;    %barrier height to sliding, in kT
 bind_energy_vec = [1 6];
