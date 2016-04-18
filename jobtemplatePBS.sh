@@ -36,12 +36,12 @@
 ###
 ### To send email when the job is completed:
 #PBS -m ae
-#PBS -M hough@colorado.edu
+#PBS -M mist7261@colorado.edu
 
 ### Optionally set the destination for your program's output
 ### Specify localhost and an NFS filesystem to prevent file copy errors.
-#PBS -e /Users/hough/eo/
-#PBS -o /Users/hough/eo/
+#PBS -e /Users/mist7261/eo/
+#PBS -o /Users/mist7261/eo/
 
 ### Specify the number of cpus for your job.  This example will allocate 4 cores
 ### using 2 processors on each of 2 nodes.
@@ -79,7 +79,7 @@ echo Using ${NPROCS} processors across ${NNODES} nodes
 ## $HOME/my-program
 module load matlab_R2015b
 cd /Users/hough/binding_models
-matlab -nodesktop -r "run_vary_bindingenergyzero”
+matlab -nodesktop -r "run_bindobs”
 
 # PBS environment variables available in every batch job:
 #
