@@ -14,6 +14,12 @@ bind_energy_vec = [1 6];
 ffrac_obst_vec= [ 0.1 0.2 0.3];         %filling fraction of obstacles
 ffrac_tracer=0.1;       %filling fraction of tracers
 
+%declare a params struct for organization as well
+params.slide_barr_height = slide_barr_height;
+params.bind_energy_vec = bind_energy_vec;
+params.ffrac_obst_vec = ffrac_obst_vec;
+params.ffrac_tracer = ffrac_tracer;
+
 %grid stuff
 const.n_trials    = 4;
 const.n_gridpoints=100;    %number of grid points, same in x and y
@@ -33,6 +39,9 @@ const.nequil=0;           %number of timesteps for initial equilibration
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie
+
+%display everything
+disp(params); disp(const); disp(modelopt);
 
 %build a parameter matrix
 nbe      = length( bind_energy_vec );
