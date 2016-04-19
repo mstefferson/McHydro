@@ -9,6 +9,8 @@
 % clear all;
 %close all;
 
+StartTime = datestr(now);
+fprintf('In run_bindobs, %s\n', StartTime);
 %load params. check if it exists, if not, run it
 [status, result] =  system('ls Params.mat');
 if status == 1
@@ -17,6 +19,7 @@ end
 load Params.mat;
 
 %display everything
+fprintf('parameters read in\n');
 disp(params); disp(const); disp(modelopt);
 
 %build a parameter matrix
@@ -44,6 +47,7 @@ param_bind  = param_mat(:,2);
 param_ffo   = param_mat(:,3);
 
 fprintf('Starting paramloop \n')
+RunTimeID = tic;
 
 parfor j=1:nparams
     
@@ -67,6 +71,8 @@ parfor j=1:nparams
     movefile(filename,'./runfiles');
     
 end
-
-fprintf('Completed run\n');
+RunTime = toc(RunTimeID);
+fprintf('Run time %.2g min\n', RunTime / 60);
+EndTime = datestr(now);
+fprintf('Completed run: %s\n',EndTime);
 %elapsed_time=toc;
