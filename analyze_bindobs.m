@@ -2,8 +2,10 @@
 %clear all;
 %close all;
 
-% Get all the files you want to analyze
+%make output directories if they don't exist
+if exist('msdfiles','dir') == 0; mkdir('msdfiles');end;
 
+% Get all the files you want to analyze
 Files2Analyze = parserunfiles;
 NumFiles = size(Files2Analyze,1);
 
