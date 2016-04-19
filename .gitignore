@@ -6,3 +6,4 @@ results/
 *.txt
 msdfiles/
 runfiles/
+*.log
