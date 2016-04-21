@@ -30,7 +30,7 @@ nbe      = length( bind_energy_vec );
 nffo     = length( ffrac_obst_vec );
 nt       = const.n_trials;
 nparams  = nbe * nffo * nt;
-%param matrix.  (:,1) = trial (:,2) = binding (:,3) = ffrc obs
+%param matrix.  (:,1) = run ID (:,2) = binding (:,3) = ffrc obs
 param_mat = zeros( nparams, 3 );
 for i = 1:nt
     for j = 1:nbe
@@ -45,7 +45,7 @@ end
 
 % For some reason, param_mat gets "sliced". Create vectors to get arround
 % this
-param_trial = param_mat(:,1);
+param_RunID = param_mat(:,1);
 param_bind  = param_mat(:,2);
 param_ffo   = param_mat(:,3);
 
@@ -54,9 +54,9 @@ RunTimeID = tic;
 
 parfor j=1:nparams
     
-    trial = param_trial(j); 
+    RunID       = param_RunID(j); 
     bind_energy = param_bind(j); 
-    ffrac_obst = param_ffo(j);
+    ffrac_obst  = param_ffo(j);
     
     pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
     
@@ -65,7 +65,7 @@ parfor j=1:nparams
         num2str(const.size_obst),'_st',num2str(const.size_tracer),...
         '_oe',num2str(modelopt.obst_excl),'_ng',...
         num2str(const.n_gridpoints),'_nt',...
-        num2str(const.ntimesteps),'_t', num2str(trial)];
+        num2str(const.ntimesteps),'_t', num2str(trialmaster.tind),'.',num2str(RunID) ];
     filename=['data_',filestring,'.mat'];
     %fprintf(fileid,'%s',filename);
     
