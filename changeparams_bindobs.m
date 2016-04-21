@@ -1,9 +1,9 @@
 %initialize parameters here and save it to a Params.mat
 %allows for inputs
 
-function [] = paramsinpt_bindobs( beVec, ffoVec, numtrl, trlind, runind)
+function [] = changeparams_bindobs( beVec, ffoVec, numtrl, trlind, runind)
 
-paramsinit_bindobs;
+initparams_bindobs;
 
 %parameters in the inputs
 bind_energy_vec = beVec;
