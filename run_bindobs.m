@@ -12,13 +12,10 @@
 StartTime = datestr(now);
 fprintf('In run_bindobs, %s\n', StartTime);
 %make output directories if they don't exist
-if exist('runfiles','dir') == 0; mkdir('./runfiles');end;
+if exist('runfiles','dir') == 0; mkdir('./runfiles') ;end;
 
 %load params. check if it exists, if not, run it
-[status, result] =  system('ls Params.mat');
-if status == 1
-    initparams_bindobs
-end
+if exist('Params.mat','file') == 0; initparams_bindobs; end;
 load Params.mat;
 
 %display everything
