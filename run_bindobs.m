@@ -17,13 +17,13 @@ if exist('runfiles','dir') == 0; mkdir('./runfiles');end;
 %load params. check if it exists, if not, run it
 [status, result] =  system('ls Params.mat');
 if status == 1
-    paramsinit_bindobs
+    initparams_bindobs
 end
 load Params.mat;
 
 %display everything
 fprintf('parameters read in\n');
-disp(params); disp(const); disp(modelopt);
+disp(trialmaster); disp(params); disp(const); disp(modelopt);
 
 %build a parameter matrix
 nbe      = length( bind_energy_vec );
@@ -36,7 +36,7 @@ for i = 1:nt
     for j = 1:nbe
         for k = 1:nffo
             rowind = k + nffo * (j-1) + nffo * nbe * (i - 1);
-            param_mat( rowind, 1 ) = i;
+            param_mat( rowind, 1 ) = (i-1) + trialmaster.runstrtind;
             param_mat( rowind, 2 ) = bind_energy_vec(j);
             param_mat( rowind, 3 ) = ffrac_obst_vec(k);  
         end

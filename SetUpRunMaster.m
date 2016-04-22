@@ -1,7 +1,8 @@
 % Builds directories for all the runs %
 
 %number of runs to split job over. Each goes it it's own directory
-NumRuns = 4;
+NumDir = 3;
+trial  = 5; %trial indicator
 
 %parameters to that are looped as be, ffob, trials
 const.n_trials    = 3;
@@ -12,9 +13,11 @@ ffrac_obst_vec= [ 0.2 0.3 ];         %filling fraction of obstacles
 nbe      = length( bind_energy_vec );
 nffo     = length( ffrac_obst_vec );
 nt       = const.n_trials;
-nparams  = nbe * nffo * nt;
+nparams  = nbe * nffo;
+nruns    = nbe * nffo * nt;
+
 %param matrix.  (:,1) = trial (:,2) = binding (:,3) = ffrc obs
-param_mat = zeros( nparams, 3 );
+param_mat = zeros( nruns, 3 );
 for i = 1:nt
     for j = 1:nbe
         for k = 1:nffo
@@ -27,23 +30,36 @@ for i = 1:nt
 end
 
 % Build directories with parameter files in them
+groupsize = nffo * nbe; % Number of parameter configurations. files/dir 
+gsdivsors = divisors(groupsize); % # files/dir needs to be divisor of groupsize
+gsmult    =  groupsize * (1:nruns); % or a multiple
+possbinsize = [ gsdivsors(1:end-1) gsmult  ];
+binsizetemp = nruns / NumDir;
+[~, binind] = min( abs( binsizetemp - possbinsize ) );
+binsize = possbinsize( binind );
+NumDir  = nruns / binsize;
 
-pdInd = ceil( nparams / NumRuns );
 
-for i = 1:NumRuns
-  dirstr = ['dirRun' i ];
+%% Not finished %%%
+for i = 1:NumDir
+  dirstr = sprintf('dirRun%d', i );
   mkdir(dirstr);
-  if i ~= NumRuns
-    trTemp = param_mat( 1 + pdInd * (i-1) : pdInd * i, 1 ) 
-    beTemp = param_mat( 1 + pdInd * (i-1) : pdInd * i, 2 ) 
-    ffTemp = param_mat( 1 + pdInd * (i-1) : pdInd * i, 3 ) 
-  else
-    trTemp = param_mat( 1 + pdInd * (i-1) : end , 1 ) 
-    beTemp = param_mat( 1 + pdInd * (i-1) : end , 2 ) 
-    ffTemp = param_mat( 1 + pdInd * (i-1) : end , 3 ) 
-  end
 
-  paramsinpt_bindobs( beTemp, ffTemp, trTemp );
+  runIndTemp = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 1 ) );
+  beTemp     = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 2 ) );
+  ffTemp     = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 3 ) ); 
+  
+  % number of trials for each dir is the number of run ind in each
+  % parameter mat
+  ntrialtemp = length( runIndTemp );
+  fprintf('%s:\n',dirstr);
+  fprintf('RunInds:\n'); disp(runIndTemp'); 
+  fprintf('binding energy:\n'); disp(beTemp');
+  fprintf('ff obs:\n'); disp(ffTemp');
+  
+  changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
+      trial, runIndTemp(1) );
+  
   movefile('Params.mat',dirstr);
   copyfile('*.m', dirstr);
 
