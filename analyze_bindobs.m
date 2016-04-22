@@ -2,17 +2,21 @@
 %clear all;
 %close all;
 
-%make output directories if they don't exist
-if exist('msdfiles','dir') == 0; mkdir('msdfiles');end;
-
 % Get all the files you want to analyze
 Files2Analyze = parserunfiles;
-NumFiles = size(Files2Analyze,1);
+NumFilesTot = size(Files2Analyze,1);
+NumFiles2Analyze = 10; %if you dont/cant analyze them all at once, indicate #
+if NumFiles2Analyze > NumFilesTot; NumFiles2Analyze = NumFilesTot; end;
+
+%make output directories if they don't exist
+if exist('msdfiles','dir') == 0; mkdir('msdfiles');end;
+if exist('./runfiles/analyzed','dir') == 0; mkdir('./runfiles/analyzed');end;
+
 
 tic
 
 fprintf('Starting analysis\n');
-for j=1:NumFiles  
+for j=1:NumFiles2Analyze
    
      % Grab a file
      filename = Files2Analyze{j};
@@ -29,6 +33,9 @@ for j=1:NumFiles
     msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
         S.obst, S.paramvec, S.tracer);
     movefile(msdfilename, './msdfiles');
+    cd ./runfiles
+    movefile(filename,['./analyzed/' filename]);
+    cd ../
  
 end
 

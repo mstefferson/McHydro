@@ -4,7 +4,9 @@
 
 function [FileCell] = parserunfiles()
 % Get the long vector list of runfiles
-FileListVec = ls('./runfiles');
+cd ./runfiles
+FileListVec = ls('data*');
+cd ../
 
 % Find the blanks which tells you when we have a new file
 Blanks = find( isspace(FileListVec) );
