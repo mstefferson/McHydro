@@ -1,15 +1,15 @@
 function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
-% DIFFUSION_MODEL run model of tracers diffusing through obstacles 
+% DIFFUSION_MODEL run model of tracers diffusing through obstacles
 %   inputs are:
-%   pvec = parameter vector containing 
+%   pvec = parameter vector containing
 %     growth speed (micron/min)
 %   --also for ...
 %   const = structure of constant parameters, must include
-%     t_tot=total simulation timesteps, 
+%     t_tot=total simulation timesteps,
 %   modelopt = structure of model options, can include
 %     wt=1 for wild-type model, causes length-dependent catastrophe
 %   returns:
-%   kc = structure of kinetochore trajectories and info 
+%   kc = structure of kinetochore trajectories and info
 %   MDB 8/18/15 created
 %   MDB 9/28/15 specialized to immobile obstacles, noninteracting tracers
 %   so that moves can be done in parallel
@@ -21,7 +21,7 @@ if (length(paramvec)<4)
 elseif (length(paramvec)==4)
     ffrac_obst=paramvec(1);
     ffrac_tracer=paramvec(2);
-    slide_barr=paramvec(3) ;  
+    slide_barr=paramvec(3) ;
     bind_energy=paramvec(4);
 elseif (length(paramvec)>4)
     error('diffusion_model: parameter vector too long');
@@ -38,7 +38,14 @@ red=[1 0 0];
 n.gridpoints=const.n_gridpoints;
 n.len_obst=const.size_obst;
 n.len_tracer=const.size_tracer;
-n.timesteps=const.ntimesteps;   
+n.timesteps=const.ntimesteps;
+
+%time
+n.timesteps = const.ntimesteps;
+n.trec      = const.trec;
+n.twait     = const.twait;
+n.Nrec      = const.Nrec;
+recInd = 1;
 
 %model options
 animate=modelopt.animate;    %1 to show animation, 0 for no animation
@@ -46,7 +53,7 @@ tpause=modelopt.tpause;      %pause time in animation
 
 %derived parameters
 n.obst=round(ffrac_obst*(n.gridpoints/n.len_obst)^modelopt.dimension); %square lattice
-n.tracer=round(ffrac_tracer*(n.gridpoints/n.len_tracer)^modelopt.dimension); 
+n.tracer=round(ffrac_tracer*(n.gridpoints/n.len_tracer)^modelopt.dimension);
 
 % %square lattice definition - assume 2D for now
 lattice.moves=[1 0;
@@ -77,13 +84,12 @@ tracer.cen_nomod=tracer.center;
 %open file for incremental writing
 fileObj = matfile(filename,'Writable',true);
 
-% if n.obst
-    fileObj.obst_cen_rec=zeros(n.obst,2,n.timesteps);
-    fileObj.obst_cen_rec_nomod=zeros(n.obst,2,n.timesteps);
-% end
-fileObj.tracer_cen_rec=zeros(n.tracer,2,n.timesteps);
-fileObj.tracer_cen_rec_nomod=zeros(n.tracer,2,n.timesteps);
-fileObj.tracer_state_rec=zeros(n.tracer,n.timesteps);
+% Allocate memory for recording
+fileObj.obst_cen_rec=zeros(n.obst,2,n.Nrec);
+fileObj.obst_cen_rec_nomod=zeros(n.obst,2,n.Nrec);
+fileObj.tracer_cen_rec=zeros(n.tracer,2,n.Nrec);
+fileObj.tracer_cen_rec_nomod=zeros(n.tracer,2,n.Nrec);
+fileObj.tracer_state_rec=zeros(n.tracer,n.Nrec);
 
 
 %% loop over time points
@@ -112,7 +118,7 @@ for m=1:n.timesteps;
     %%%%%%%%indexing and sub2ind, ind2sub
     tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
     sites_new=sub2ind([n.gridpoints n.gridpoints], x_all_new, y_all_new); %********
- 
+    
     occ_old=sum(ismember(tracer.allpts(list.attempt,:), obst.allpts),2);
     occ_new=sum(ismember(sites_new, obst.allpts),2);
     rvec2=rand(length(occ_old),1);
@@ -125,29 +131,33 @@ for m=1:n.timesteps;
     
     list.reject=setdiff(list.attempt,list.accept);
     tracer.center(list.reject,:)=center_old(list.reject,:);
-
+    
     if animate
         for kTracer=1:n.tracer
-            tracer=update_rectangle(tracer,kTracer,n.len_tracer,n.gridpoints,tracer.color,tracer.curvature);
+            tracer=update_rectangle(tracer,kTracer,n.len_tracer,n.gridpoints,...
+                tracer.color,tracer.curvature);
             pause(tpause);
         end
     end
-
+    
     %recording
-    if n.obst
-        fileObj.obst_cen_rec(1:n.obst,1:2,m) = obst.center;
-        fileObj.obst_cen_rec_nomod(1:n.obst,1:2,m)=obst.cen_nomod;
-    end
-    fileObj.tracer_cen_rec(1:n.tracer,1:2,m)=tracer.center;
-    fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,m)=tracer.cen_nomod;
-    fileObj.tracer_state_rec(1:n.tracer,m)=tracer.state;
-end
+
+    if m >= n.twait
+        if mod( m, n.trec  ) == 1
+            if n.obst
+                fileObj.obst_cen_rec(1:n.obst,1:2,recInd) = obst.center;
+                fileObj.obst_cen_rec_nomod(1:n.obst,1:2,recInd)=obst.cen_nomod;
+            end
+            fileObj.tracer_cen_rec(1:n.tracer,1:2,recInd)=tracer.center;
+            fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,recInd)=tracer.cen_nomod;
+            fileObj.tracer_state_rec(1:n.tracer,recInd)=tracer.state;
+            recInd = recInd + 1;
+        end % mod(m,trec)
+    end % m > twait
+    
+end %loop over time
 
 if modelopt.movie
     movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
         const,n,modelopt.movie_timestep,modelopt.movie_filename);
 end
-
-% Write filename to a file
-fid = fopen('filelist.txt','a+');
-fprintf(fid,'%s\n',filename);

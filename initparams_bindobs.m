@@ -2,8 +2,8 @@
 
 %key parameters and constants
 slide_barr_height=0;    %barrier height to sliding, in kT
-bind_energy_vec = [1 6];
-ffrac_obst_vec= [ 0.2 0.3 ];         %filling fraction of obstacles
+bind_energy_vec = [1];
+ffrac_obst_vec= [ 0.1 ];         %filling fraction of obstacles
 ffrac_tracer=0.1;       %filling fraction of tracers
 
 %declare a params struct for organization as well
@@ -13,14 +13,16 @@ params.ffrac_obst_vec = ffrac_obst_vec;
 params.ffrac_tracer = ffrac_tracer;
 
 %grid stuff
-const.n_trials    = 3;
-const.n_gridpoints=100;    %number of grid points, same in x and y
-const.ntimesteps=1e1;       %number of timesteps NOte 1e5 gives errors on my laptop.
+const.n_trials      = 1;
+const.n_gridpoints  = 100;    % number of grid points, same in x and y
+const.ntimesteps    = 1e2;    % number of timesteps NOte 1e5 gives errors on my laptop.
+const.trec          = 10;      % time elapsed before recording
+const.twait         = 1;      % time waited before recording
 
 %trial master
-trialmaster.tind   = 3;
+trialmaster.tind       = 3;
 trialmaster.runstrtind = 6;
-trialmaster.nt     = const.n_trials;
+trialmaster.nt         = const.n_trials;
 
 %other constants and model options
 const.size_obst=1;      %obstacle linear dimension, MUST BE odd integer
@@ -36,5 +38,13 @@ const.nequil=0;           %number of timesteps for initial equilibration
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie
+
+
+% Fix time stuff and add some calculated things
+if const.twait < 1; const.twait = 1; end;
+const.ntimesteps = floor( const.ntimesteps / const.trec ) * const.trec; % fix ntimesteps
+const.Nwait = ceil( const.twait / const.trec) - 1; % Number of recorded points we skip due to waiting
+const.twait = (const.Nwait + 1) * const.trec; % fix wait time. Add 1 to start recording at twait
+const.Nrec = const.ntimesteps / const.trec - const.Nwait; % Number of recorded points
 
 save('Params')
