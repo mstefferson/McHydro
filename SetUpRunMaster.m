@@ -1,5 +1,8 @@
 % Builds directories for all the runs %
 
+%Run dir Path
+RunDirPath = '~/RunDir/McHydro/';
+
 %number of runs to split job over. Each goes it it's own directory
 NumDir = 3;
 trial  = 5; %trial indicator
@@ -39,11 +42,14 @@ binsizetemp = nruns / NumDir;
 binsize = possbinsize( binind );
 NumDir  = nruns / binsize;
 
+% random number for identifier
+randnum = floor( 1000 * rand() );
 
 %% Not finished %%%
 for i = 1:NumDir
-  dirstr = sprintf('dirRun%d', i );
-  mkdir(dirstr);
+  dirstr = sprintf('Run%d_%d_%d/', randnum, trial, i );
+  dirpath = [RunDirPath dirstr];
+  mkdir( dirpath );
 
   runIndTemp = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 1 ) );
   beTemp     = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 2 ) );
@@ -60,8 +66,8 @@ for i = 1:NumDir
   changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
       trial, runIndTemp(1) );
   
-  movefile('Params.mat',dirstr);
-  copyfile('*.m', dirstr);
+  movefile('Params.mat', dirpath);
+  copyfile('*.m', dirpath);
 
 end
 
