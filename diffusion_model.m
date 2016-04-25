@@ -41,6 +41,9 @@ n.len_tracer=const.size_tracer;
 n.timesteps=const.ntimesteps;
 
 %time
+n.TrRec     = const.TrRecFlag;
+n.ObRec     = const.ObsRecFlag;
+n.Rec       = n.TrRec + n.ObRec;
 n.timesteps = const.ntimesteps;
 n.trec      = const.trec;
 n.twait     = const.twait;
@@ -85,11 +88,15 @@ tracer.cen_nomod=tracer.center;
 fileObj = matfile(filename,'Writable',true);
 
 % Allocate memory for recording
-fileObj.obst_cen_rec=zeros(n.obst,2,n.Nrec);
-fileObj.obst_cen_rec_nomod=zeros(n.obst,2,n.Nrec);
-fileObj.tracer_cen_rec=zeros(n.tracer,2,n.Nrec);
-fileObj.tracer_cen_rec_nomod=zeros(n.tracer,2,n.Nrec);
-fileObj.tracer_state_rec=zeros(n.tracer,n.Nrec);
+if n.ObRec
+    fileObj.obst_cen_rec=zeros(n.obst,2,n.Nrec);
+    fileObj.obst_cen_rec_nomod=zeros(n.obst,2,n.Nrec);
+end
+if n.TrRec
+    fileObj.tracer_cen_rec=zeros(n.tracer,2,n.Nrec);
+    fileObj.tracer_cen_rec_nomod=zeros(n.tracer,2,n.Nrec);
+    fileObj.tracer_state_rec=zeros(n.tracer,n.Nrec);
+end
 
 
 %% loop over time points
@@ -141,19 +148,23 @@ for m=1:n.timesteps;
     end
     
     %recording
-
-    if m >= n.twait
-        if mod( m, n.trec  ) == 1
-            if n.obst
-                fileObj.obst_cen_rec(1:n.obst,1:2,recInd) = obst.center;
-                fileObj.obst_cen_rec_nomod(1:n.obst,1:2,recInd)=obst.cen_nomod;
-            end
-            fileObj.tracer_cen_rec(1:n.tracer,1:2,recInd)=tracer.center;
-            fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,recInd)=tracer.cen_nomod;
-            fileObj.tracer_state_rec(1:n.tracer,recInd)=tracer.state;
-            recInd = recInd + 1;
-        end % mod(m,trec)
-    end % m > twait
+    
+    if n.Rec > 0
+        if m >= n.twait
+            if mod( m, n.trec  ) == 0
+                if n.ObRec
+                    fileObj.obst_cen_rec(1:n.obst,1:2,recInd) = obst.center;
+                    fileObj.obst_cen_rec_nomod(1:n.obst,1:2,recInd)=obst.cen_nomod;
+                end
+                if n.TrRec
+                    fileObj.tracer_cen_rec(1:n.tracer,1:2,recInd)=tracer.center;
+                    fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,recInd)=tracer.cen_nomod;
+                    fileObj.tracer_state_rec(1:n.tracer,recInd)=tracer.state;
+                    recInd = recInd + 1;
+                end
+            end % mod(m,trec)
+        end % m > twait
+    end % record
     
 end %loop over time
 

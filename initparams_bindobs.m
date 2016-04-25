@@ -18,6 +18,8 @@ const.n_gridpoints  = 100;    % number of grid points, same in x and y
 const.ntimesteps    = 1e2;    % number of timesteps NOte 1e5 gives errors on my laptop.
 const.trec          = 10;      % time elapsed before recording
 const.twait         = 1;      % time waited before recording
+const.TrRecFlag     = 1;     % Flag to record tracers or not
+const.ObsRecFlag    = 0;     % Flag to record obstacles or not
 
 %trial master
 trialmaster.tind       = 3;
