@@ -1,4 +1,4 @@
-# Script to run run_bindobs. 
+# Sample PBS job script
 #
 # Copy this script, customize it and then submit it with the ``qsub''
 # command. For example:
@@ -23,7 +23,7 @@
 # Any directives placed after the first shell command will be ignored.
 
 ### Set the job name
-#PBS -N bindobs
+#PBS -N analobs
 
 ### Run in the queue named "short"
 #PBS -q short
@@ -78,11 +78,12 @@ echo Using ${NPROCS} processors across ${NNODES} nodes
 ### Or, just run your serial program
 ## $HOME/my-program
 module load matlab_R2015b
+cd /Users/mist7261/McHydro
 
 # Run matlab program
 matlab -nodesktop -nosplash \
-  -r  "try, run_bindobs, catch, exit(1), end, exit(0);" \
-  2>&1 | tee runbind.out
+  -r  "try, analyze_bindobs, catch, exit(1), end, exit(0);" \
+  2>&1 | tee analbind.out
 echo "Finished. Matlab exit code: $?" 
 echo Time is `date`
 

@@ -22,8 +22,8 @@ const.TrRecFlag     = 1;     % Flag to record tracers or not
 const.ObsRecFlag    = 0;     % Flag to record obstacles or not
 
 %trial master
-trialmaster.tind       = 3;
-trialmaster.runstrtind = 6;
+trialmaster.tind       = 1;
+trialmaster.runstrtind = 1;
 trialmaster.nt         = const.n_trials;
 
 %other constants and model options
