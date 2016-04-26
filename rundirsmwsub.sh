@@ -10,7 +10,7 @@ echo "In dir `pwd` "
 echo "Making all directories"
 
 matlab -nodesktop -nosplash \
--r  "try, SetUpRunMaster, catch, exit(1), end, exit(0);" \
+  -r  "try, SetUpRunMasterDirInpt('$RunDirPath'), catch, exit(1), end, exit(0);" \
 2>&1 | tee makedir.out
 
 echo "Made Directories running executeables"

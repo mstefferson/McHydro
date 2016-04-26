@@ -1,7 +1,8 @@
-% Builds directories for all the runs %
+% Builds directories for all the runs 
 
+function SetUpRunMasterDirInpt(DirInpt)
 %Run dir Path
-RunDirPath = '~/RunDir/McHydro';
+RunDirPath = DirInpt;
 
 %number of runs to split job over. Each goes it it's own directory
 NumDir = 3;
