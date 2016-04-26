@@ -8,3 +8,4 @@ msdfiles/
 runfiles/
 *.log
 *.out
+eo/
