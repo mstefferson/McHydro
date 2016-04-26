@@ -68,6 +68,7 @@ for i = 1:NumDir
   
   movefile('Params.mat', dirpath);
   copyfile('*.m', dirpath);
+  copyfile('*.sh', dirpath);
 
 end
 

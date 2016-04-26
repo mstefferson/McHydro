@@ -9,8 +9,8 @@ NumDir = 3;
 trial  = 5; %trial indicator
 
 %parameters to that are looped as be, ffob, trials
-const.n_trials    = 3;
-bind_energy_vec = [1 6];
+const.n_trials    = 2;
+bind_energy_vec = [2 4];
 ffrac_obst_vec= [ 0.2 0.3 ];         %filling fraction of obstacles
 
 %build a parameter matrix
@@ -69,6 +69,8 @@ for i = 1:NumDir
   
   movefile('Params.mat', dirpath);
   copyfile('*.m', dirpath);
+  copyfile('*.sh', dirpath);
 
 end
+
 
