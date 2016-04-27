@@ -1,4 +1,6 @@
 # Sample PBS job script
+# squb -v nfiles=blah analyzebindPBS.sh
+# runs nfiles=5 if left blank
 #
 # Copy this script, customize it and then submit it with the ``qsub''
 # command. For example:
@@ -80,9 +82,16 @@ echo Using ${NPROCS} processors across ${NNODES} nodes
 module load matlab_R2015b
 cd /Users/mist7261/McHydro
 
+if [ -z ${nfiles+x} ]; then 
+  nfiles=5; 
+fi
+
 # Run matlab program
+echo "Starting analysis. Trying to analyze $nfiles"
+echo "In dir `pwd` "
+
 matlab -nodesktop -nosplash \
-  -r  "try, analyze_bindobs, catch, exit(1), end, exit(0);" \
+  -r  "try, analyze_bindobs( $nfiles ), catch, exit(1), end, exit(0);" \
   2>&1 | tee analbind.out
 echo "Finished. Matlab exit code: $?" 
 echo Time is `date`
