@@ -9,3 +9,4 @@ runfiles/
 *.log
 *.out
 eo/
+initparams.m

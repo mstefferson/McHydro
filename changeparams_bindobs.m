@@ -3,7 +3,7 @@
 
 function [] = changeparams_bindobs( beVec, ffoVec, numtrl, trlind, runind)
 
-initparams_bindobs;
+initparams;
 
 %parameters in the inputs
 bind_energy_vec = beVec;

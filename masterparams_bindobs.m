@@ -1,4 +1,8 @@
-%initialize parameters here and save it to a Params.mat
+% Initialize parameters here and save it to a Params.mat
+% This is the tracked copy of the params. this should not be
+% edited unless you are adding a new parameter. The parameter
+% file that is called, initparams_bindobs, should be a copy of this.
+% initparams_bindobs should not be tracked.
 
 %key parameters and constants
 slide_barr_height=0;    %barrier height to sliding, in kT

@@ -8,15 +8,31 @@
 %tic;
 % clear all;
 %close all;
-
 StartTime = datestr(now);
 fprintf('In run_bindobs, %s\n', StartTime);
+
+% Check run status
+if exist('StatusRunning.txt','file') ~= 0; 
+    error('Code is already running in directory');
+elseif exist('StatusFinished.txt','file') ~= 0; 
+    movefile('StatusFinished.txt','StatusRunning.txt');
+else
+    fopen('StatusRunning.txt','w'); 
+end
+
 %make output directories if they don't exist
 if exist('runfiles','dir') == 0; mkdir('./runfiles') ;end;
 
-%load params. check if it exists, if not, run it
-if exist('Params.mat','file') == 0; initparams_bindobs; end;
+%load params. check if it exists, if not, run it, then delete it
+%initparams on tracked, so make it if it's not there
+if exist('Params.mat','file') == 0;
+    if exist('initparams.m','file') == 0;
+        copyfile('masterparams_bindobs.m','initparams.m')
+    end;
+    initparams
+end
 load Params.mat;
+movefile('Params.mat','ParamsLastRun.mat');
 
 %display everything
 fprintf('parameters read in\n');
@@ -35,7 +51,7 @@ for i = 1:nt
             rowind = k + nffo * (j-1) + nffo * nbe * (i - 1);
             param_mat( rowind, 1 ) = (i-1) + trialmaster.runstrtind;
             param_mat( rowind, 2 ) = bind_energy_vec(j);
-            param_mat( rowind, 3 ) = ffrac_obst_vec(k);  
+            param_mat( rowind, 3 ) = ffrac_obst_vec(k);
         end
     end
 end
@@ -51,8 +67,8 @@ RunTimeID = tic;
 
 parfor j=1:nparams
     
-    RunID       = param_RunID(j); 
-    bind_energy = param_bind(j); 
+    RunID       = param_RunID(j);
+    bind_energy = param_bind(j);
     ffrac_obst  = param_ffo(j);
     
     pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
@@ -76,4 +92,6 @@ RunTime = toc(RunTimeID);
 fprintf('Run time %.2g min\n', RunTime / 60);
 EndTime = datestr(now);
 fprintf('Completed run: %s\n',EndTime);
+fclose('all');
+movefile('StatusRunning.txt','StatusFinished.txt')
 %elapsed_time=toc;
