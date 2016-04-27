@@ -1,50 +1,74 @@
-% MWS edited original analyze program written by MB and LH to be more general  
+% MWS edited original analyze program written by MB and LH to be more general
 %clear all;
 %close all;
 
 % Get all the files you want to analyze
-Files2Analyze = parserunfiles;
-NumFilesTot = size(Files2Analyze,1);
-NumFiles2Analyze = 10; %if you dont/cant analyze them all at once, indicate #
-if NumFiles2Analyze > NumFilesTot; NumFiles2Analyze = NumFilesTot; end;
+function analyze_bindobs(NumFiles2Analyze)
+if nargin == 0; NumFiles2Analyze = 1; end;
+
+tstart = tic;
+fprintf('In analyze_bindobs\n');
+%Make sure it's not a string (bash)
+if isa(NumFiles2Analyze,'string');
+    fprintf('You gave me a string, turning it to an int\n');
+    NumFiles2Analyze = str2int('NumFiles2Analyze');
+end;
 
 %make output directories if they don't exist
 if exist('msdfiles','dir') == 0; mkdir('msdfiles');end;
 if exist('./runfiles/analyzed','dir') == 0; mkdir('./runfiles/analyzed');end;
+if exist('./runfiles/analyzing','dir') == 0; mkdir('./runfiles/analyzing');end;
 
+%grab files
+Files2Analyze = parserunfiles;
+NumFilesTot = size(Files2Analyze,1);
 
-tic
+%Fix issues if Numfiles is less than desired amount
+if NumFiles2Analyze > NumFilesTot;
+    NumFiles2Analyze = NumFilesTot;
+end;
 
-fprintf('Starting analysis\n');
-for j=1:NumFiles2Analyze
-   
-     % Grab a file
-     filename = Files2Analyze{j};
+% Move the files you want to analyze to an analyzing folder
+if NumFiles2Analyze;
+    fprintf('Moving files to analyzing directory\n');
+    
+    for j=1:NumFiles2Analyze
+        % Grab a file
+        filename = Files2Analyze{j};
+        movefile( ['./runfiles/' filename], ['./runfiles/analyzing/' filename] );
+    end
+    
 
-     % Put all variables in a struct
-     S = load( ['./runfiles/' filename] );
- 
-     %test calling msd function
-    [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod);
-
-    msdfilename=['msd_',filename(6:end)];
-    %msdsave(msdfilename, msd, dtime, slide_barr_height, ffrac_obst, bind_energy,...
+    
+    fprintf('Starting analysis\n');
+    for j=1:NumFiles2Analyze
+        
+        % Grab a file
+        filename = Files2Analyze{j};
+        
+        % Put all variables in a struct
+        S = load( ['./runfiles/analyzing/' filename] );
+        
+        %test calling msd function
+        [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod);
+        
+        msdfilename=['msd_',filename(6:end)];
+        %msdsave(msdfilename, msd, dtime, slide_barr_height, ffrac_obst, bind_energy,...
         %ffrac_tracer, const, modelopt);
-    msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
-        S.obst, S.paramvec, S.tracer);
-    movefile(msdfilename, './msdfiles');
-    cd ./runfiles
-    movefile(filename,['./analyzed/' filename]);
-    cd ../
- 
-end
-
-end_time = toc;
-
-fprintf('Finished analysis\n');
+        msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
+            S.obst, S.paramvec, S.tracer);
+        movefile(msdfilename, './msdfiles');
+        movefile( ['./runfiles/analyzing/' filename],...
+            ['./runfiles/analyzed/' filename] );
+        
+    end %loop over files  
+end %if analyzing
+end_time = toc(tstart);
+fprintf('Finished analysis. Analyzed %d files in %.2g min\n', NumFiles2Analyze, end_time / 60);
 
 
-    %   HOW IT IS ALL DEFINED:
+
+%   HOW IT IS ALL DEFINED:
 %         msd_distrib(dt,:) = [mean(squared_dis(:)); ... % average
 %         std(squared_dis(:)); ...; % std
 %         length(squared_dis(:)); ... % n (how many points used to compute mean)

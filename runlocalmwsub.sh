@@ -1,8 +1,6 @@
 # Bash executable
 #!/bin/bash
 
-# On mac, give path to matlab
-
 echo "Starting run"
 echo "In dir `pwd` "
 matlab -nodesktop -nosplash \
