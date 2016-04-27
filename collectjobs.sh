@@ -19,11 +19,18 @@ for i in `ls`;
   do 
   cd $i 
   echo "In dir `pwd` "
-  mv ./runfiles/* $HomeDir/runfiles
-  cd ../ 
-  rm -rf $i
+  if [ -f StatusFinished.txt ]; then
+    echo "Run finished. Collecting outputs"
+    mv ./runfiles/* $HomeDir/runfiles
+    cd ../ 
+    rm -rf $i
+  else
+    echo "Still Running. Not collecting"
+  cd ../
+  fi
 done
-echo "Collected all data and deleted temporary directories"
+
+echo "Collected all finished data and deleted temporary directories"
 
 exit
 
