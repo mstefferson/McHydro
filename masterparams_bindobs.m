@@ -17,11 +17,12 @@ params.ffrac_obst_vec = ffrac_obst_vec;
 params.ffrac_tracer = ffrac_tracer;
 
 %grid stuff
-const.n_trials      = 1;
-const.n_gridpoints  = 100;    % number of grid points, same in x and y
-const.ntimesteps    = 1e2;    % number of timesteps NOte 1e5 gives errors on my laptop.
-const.trec          = 10;      % time elapsed before recording
-const.twait         = 1;      % time waited before recording
+const.n_trials       = 1;
+const.n_gridpoints   = 100;    % number of grid points, same in x and y
+const.ntimesteps     = 1e2;   % number of timesteps Note 1e5 gives errors on my laptop.
+const.rec_interval   = 6;    % time elapsed before recording
+const.rec_chunk      = 25;   % time elapsed before writing to file
+const.twait          = 1;    % time waited before recording
 const.TrRecFlag     = 1;     % Flag to record tracers or not
 const.ObsRecFlag    = 0;     % Flag to record obstacles or not
 
@@ -48,9 +49,13 @@ modelopt.movie=0;           %1 to record movie
 
 % Fix time stuff and add some calculated things
 if const.twait < 1; const.twait = 1; end;
-const.ntimesteps = floor( const.ntimesteps / const.trec ) * const.trec; % fix ntimesteps
-const.Nwait = ceil( const.twait / const.trec) - 1; % Number of recorded points we skip due to waiting
-const.twait = (const.Nwait + 1) * const.trec; % fix wait time. Add 1 to start recording at twait
-const.Nrec = const.ntimesteps / const.trec - const.Nwait; % Number of recorded points
+const.rec_chunk  = round( const.rec_chunk / const.rec_interval ) * const.rec_interval; % fix rec_chunk
+const.NrecChunk  = const.rec_chunk / const.rec_interval; % Number of recorded points / chunk
+const.ntimesteps = floor( const.ntimesteps / const.rec_chunk ) * const.rec_chunk; % fix ntimesteps
+const.Nreclost   = ceil( const.twait / const.rec_interval) - 1; % Number of recorded points we skip due to waiting
+const.Nchunklost = ceil( const.twait / const.rec_chunk) - 1; % Number of chunks we skip due to waiting
+const.twait      = (const.Nreclost + 1) * const.rec_interval; % fix wait time. Add 1 to start recording at twait
+const.NrecTot    = const.ntimesteps / const.rec_interval - const.Nreclost; % Number of recorded points
+const.NchunkTot  = const.ntimesteps / const.rec_chunk - const.Nchunklost; % Number of recorded points
 
-save('Params')
+save('Params')% Fix time stuff and add some calculated things

@@ -45,10 +45,14 @@ n.TrRec     = const.TrRecFlag;
 n.ObRec     = const.ObsRecFlag;
 n.Rec       = n.TrRec + n.ObRec;
 n.timesteps = const.ntimesteps;
-n.trec      = const.trec;
+n.rec_interval = const.rec_interval;
 n.twait     = const.twait;
-n.Nrec      = const.Nrec;
-recInd = 1;
+n.rec_chunk = const.rec_chunk;
+n.NrecChunk = const.NrecChunk;
+n.NrecTot   = const.NrecTot;
+jrectemp = 1;
+jrec     = 1;
+jchunk   = 1;
 
 %model options
 animate=modelopt.animate;    %1 to show animation, 0 for no animation
@@ -89,13 +93,21 @@ fileObj = matfile(filename,'Writable',true);
 
 % Allocate memory for recording
 if n.ObRec
-    fileObj.obst_cen_rec=zeros(n.obst,2,n.Nrec);
-    fileObj.obst_cen_rec_nomod=zeros(n.obst,2,n.Nrec);
+    obst_cen_rec_temp = zeros(n.obst,2,n.NrecChunk);
+    obst_cen_rec_nomod_temp = zeros(n.obst,2,n.NrecChunk);
+    
+    fileObj.obst_cen_rec=zeros(n.obst,2,n.NrecTot);
+    fileObj.obst_cen_rec_nomod=zeros(n.obst,2,n.NrecTot);
 end
+
 if n.TrRec
-    fileObj.tracer_cen_rec=zeros(n.tracer,2,n.Nrec);
-    fileObj.tracer_cen_rec_nomod=zeros(n.tracer,2,n.Nrec);
-    fileObj.tracer_state_rec=zeros(n.tracer,n.Nrec);
+    tracer_cen_rec_temp = zeros(n.tracer,2,n.NrecChunk);
+    tracer_cen_rec_nomod_temp = zeros(n.tracer,2,n.NrecChunk);
+    tracer_state_rec_temp =zeros(n.tracer,n.NrecChunk);
+    
+    fileObj.tracer_cen_rec=zeros(n.tracer,2,n.NrecTot);
+    fileObj.tracer_cen_rec_nomod=zeros(n.tracer,2,n.NrecTot);
+    fileObj.tracer_state_rec=zeros(n.tracer,n.NrecTot);
 end
 
 
@@ -151,18 +163,40 @@ for m=1:n.timesteps;
     
     if n.Rec > 0
         if m >= n.twait
-            if mod( m, n.trec  ) == 0
+            if mod( m, n.rec_interval  ) == 0
                 if n.ObRec
-                    fileObj.obst_cen_rec(1:n.obst,1:2,recInd) = obst.center;
-                    fileObj.obst_cen_rec_nomod(1:n.obst,1:2,recInd)=obst.cen_nomod;
+                    obst_cen_rec_temp(1:n.obst,1:2,jrectemp) = obst.center;
+                    obst_cen_rec_nomod_temp(1:n.obst,1:2,jrectemp) = obst.cen_nomod;
                 end
                 if n.TrRec
-                    fileObj.tracer_cen_rec(1:n.tracer,1:2,recInd)=tracer.center;
-                    fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,recInd)=tracer.cen_nomod;
-                    fileObj.tracer_state_rec(1:n.tracer,recInd)=tracer.state;
-                    recInd = recInd + 1;
+                    tracer_cen_rec_temp(1:n.tracer,1:2,jrectemp) = tracer.center;
+                    tracer_cen_rec_nomod_temp(1:n.tracer,1:2,jrectemp) = tracer.cen_nomod;
+                    tracer_state_rec_temp(1:n.tracer,jrectemp) = tracer.state;
                 end
-            end % mod(m,trec)
+                
+                if mod( m, const.rec_chunk  ) == 0
+                    fprintf('Recording %d\n', jchunk);
+                    RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
+                    if n.ObRec
+                        fileObj.obst_cen_rec(1:n.obst,1:2,RecIndTemp) = ...
+                            obst_cen_rec_temp;
+                        fileObj.obst_cen_rec_nomod(1:n.obst,1:2,RecIndTemp) = ...
+                            obst_cen_rec_nomod_temp;
+                    end
+                    if n.TrRec
+                        fileObj.tracer_cen_rec(1:n.tracer,1:2,RecIndTemp) = ...
+                            tracer_cen_rec_temp;
+                        fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,RecIndTemp) = ...
+                            tracer_cen_rec_nomod_temp;
+                        fileObj.tracer_state_rec(1:n.tracer,RecIndTemp) = ...
+                            tracer_state_rec_temp;
+                    end
+                    jrectemp = 0;
+                    jchunk = jchunk + 1;
+                end % write mod(m, chuck)
+                jrectemp = jrectemp + 1;
+                jrec = jrec + 1;
+            end % rec mod(m,trec)
         end % m > twait
     end % record
     

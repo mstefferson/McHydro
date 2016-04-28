@@ -13,7 +13,7 @@ fprintf('In run_bindobs, %s\n', StartTime);
 
 % Check run status
 if exist('StatusRunning.txt','file') ~= 0; 
-    error('Code is already running in directory');
+%     error('Code is already running in directory');
 elseif exist('StatusFinished.txt','file') ~= 0; 
     movefile('StatusFinished.txt','StatusRunning.txt');
 else
@@ -65,7 +65,7 @@ param_ffo   = param_mat(:,3);
 fprintf('Starting paramloop \n')
 RunTimeID = tic;
 
-parfor j=1:nparams
+for j=1:nparams
     
     RunID       = param_RunID(j);
     bind_energy = param_bind(j);
@@ -78,7 +78,7 @@ parfor j=1:nparams
         num2str(const.size_obst),'_st',num2str(const.size_tracer),...
         '_oe',num2str(modelopt.obst_excl),'_ng',...
         num2str(const.n_gridpoints),'_nt',num2str(const.ntimesteps),...
-        '_nrec', num2str(const.Nrec),...
+        '_nrec', num2str(const.NrecTot),...
         '_t', num2str(trialmaster.tind),'.',num2str(RunID) ];
     filename=['data_',filestring,'.mat'];
     %fprintf(fileid,'%s',filename);
