@@ -7,7 +7,9 @@ function analyze_bindobs(NumFiles2Analyze)
 if nargin == 0; NumFiles2Analyze = 1; end;
 
 tstart = tic;
-fprintf('In analyze_bindobs\n');
+StartTime = datestr(now);
+fprintf('In analyze_bindobs, %s\n', StartTime);
+
 %Make sure it's not a string (bash)
 if isa(NumFiles2Analyze,'string');
     fprintf('You gave me a string, turning it to an int\n');
@@ -52,9 +54,10 @@ if NumFiles2Analyze;
         %test calling msd function
         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod);
         
+        %dtime doesn't take the record time into account, do fix it
+        dtime = dtime * const.rec_interval;
+        
         msdfilename=['msd_',filename(6:end)];
-        %msdsave(msdfilename, msd, dtime, slide_barr_height, ffrac_obst, bind_energy,...
-        %ffrac_tracer, const, modelopt);
         msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
             S.obst, S.paramvec, S.tracer);
         movefile(msdfilename, './msdfiles');
