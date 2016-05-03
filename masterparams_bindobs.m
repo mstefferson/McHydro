@@ -21,12 +21,15 @@ const.n_trials      = 4;
 const.n_gridpoints  = 100;    % number of grid points, same in x and y
 const.ntimesteps    = 1e5;   % number of timesteps Note 1e5 gives errors on my laptop.
 const.rec_interval  = 1e2;    % time elapsed before recording
-const.rec_chunk     = 1e6;   % time elapsed before writing to file
+const.rec_chunk     = 1e4;   % time elapsed before writing to file
 const.twait         = 1;    % time waited before recording
 const.TrRecFlag     = 1;     % Flag to record tracers or not
 const.ObsRecFlag    = 0;     % Flag to record obstacles or not
 const.size_obst     = 1;      %obstacle linear dimension, MUST BE odd integer
 const.size_tracer   = 1;     %tracer linear dimension, MUST BE odd integer
+
+%msd stuff
+const.calcQuad      = 0;         % Flag for calculating quad
 
 %trial master
 trialmaster.tind       = 1;

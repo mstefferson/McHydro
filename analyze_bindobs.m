@@ -12,8 +12,8 @@ fprintf('In analyze_bindobs, %s\n', StartTime);
 
 %Make sure it's not a string (bash)
 if isa(NumFiles2Analyze,'string');
-    fprintf('You gave me a string, turning it to an int\n');
-    NumFiles2Analyze = str2int('NumFiles2Analyze');
+   fprintf('You gave me a string, turning it to an int\n');
+   NumFiles2Analyze = str2int('NumFiles2Analyze');
 end;
 
 %make output directories if they don't exist
@@ -27,49 +27,49 @@ NumFilesTot = size(Files2Analyze,1);
 
 %Fix issues if Numfiles is less than desired amount
 if NumFiles2Analyze > NumFilesTot;
-    NumFiles2Analyze = NumFilesTot;
+   NumFiles2Analyze = NumFilesTot;
 end;
 
 % Move the files you want to analyze to an analyzing folder
 if NumFiles2Analyze;
-    fprintf('Moving files to analyzing directory\n');
-    
-    for j=1:NumFiles2Analyze
-        % Grab a file
-        filename = Files2Analyze{j};
-        movefile( ['./runfiles/' filename], ['./runfiles/analyzing/' filename] );
-    end
-    
-
-    
-    fprintf('Starting analysis\n');
-    for j=1:NumFiles2Analyze
-        
-        % Grab a file
-        filename = Files2Analyze{j};
-        
-        % Put all variables in a struct
-        S = load( ['./runfiles/analyzing/' filename] );
-        
-        %test calling msd function
-        [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod);
-        
-        %dtime doesn't take the record time into account, do fix it
-        dtime = dtime * const.rec_interval;
-        
-        msdfilename=['msd_',filename(6:end)];
-        msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
-            S.obst, S.paramvec, S.tracer);
-        movefile(msdfilename, './msdfiles');
-        movefile( ['./runfiles/analyzing/' filename],...
-            ['./runfiles/analyzed/' filename] );
-        
-    end %loop over files  
+   fprintf('Moving files to analyzing directory\n');
+   
+   for j=1:NumFiles2Analyze
+      % Grab a file
+      filename = Files2Analyze{j};
+      movefile( ['./runfiles/' filename], ['./runfiles/analyzing/' filename] );
+   end
+   
+   fprintf('Starting analysis\n');
+   for j=1:NumFiles2Analyze
+      
+      % Grab a file
+      filename = Files2Analyze{j};
+      
+      % Put all variables in a struct
+      S = load( ['./runfiles/analyzing/' filename] );
+      
+      %test calling msd function
+      if isfield(S.const,'calcQuad')
+         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, const.calcQuad);
+      else
+         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 1);
+      end
+      
+      %dtime doesn't take the record time into account, do fix it
+      dtime = dtime * S.const.rec_interval;
+      
+      msdfilename=['msd_',filename(6:end)];
+      msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
+         S.obst, S.paramvec, S.tracer);
+      movefile(msdfilename, './msdfiles');
+      movefile( ['./runfiles/analyzing/' filename],...
+         ['./runfiles/analyzed/' filename] );
+      
+   end %loop over files
 end %if analyzing
 end_time = toc(tstart);
 fprintf('Finished analysis. Analyzed %d files in %.2g min\n', NumFiles2Analyze, end_time / 60);
-
-
 
 %   HOW IT IS ALL DEFINED:
 %         msd_distrib(dt,:) = [mean(squared_dis(:)); ... % average

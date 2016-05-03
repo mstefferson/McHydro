@@ -175,7 +175,7 @@ for m=1:n.timesteps;
                 end
                 
                 if mod( m, const.rec_chunk  ) == 0
-                    fprintf('Recording %d\n', jchunk);
+%                     fprintf('Recording %d\n', jchunk);
                     RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
                     if n.ObRec
                         fileObj.obst_cen_rec(1:n.obst,1:2,RecIndTemp) = ...
