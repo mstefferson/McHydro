@@ -91,23 +91,26 @@ tracer.cen_nomod=tracer.center;
 %open file for incremental writing
 fileObj = matfile(filename,'Writable',true);
 
-% Allocate memory for recording
+% Allocate memory for recording. for matfile---fileobj---just let it know
+% what some of it's fields is 3d. You don't need to allocate space for
+% everything though
+
 if n.ObRec
-    obst_cen_rec_temp = zeros(n.obst,2,n.NrecChunk);
-    obst_cen_rec_nomod_temp = zeros(n.obst,2,n.NrecChunk);
+    obst_cen_rec_temp = zeros( n.obst, 2, n.NrecChunk );
+    obst_cen_rec_nomod_temp = zeros( n.obst,2, n.NrecChunk );
     
-    fileObj.obst_cen_rec=zeros(n.obst,2,n.NrecTot);
-    fileObj.obst_cen_rec_nomod=zeros(n.obst,2,n.NrecTot);
+    fileObj.obst_cen_rec = zeros( n.obst, 2, 2 );
+    fileObj.obst_cen_rec_nomod = zeros( n.obst, 2, 2);
 end
 
 if n.TrRec
-    tracer_cen_rec_temp = zeros(n.tracer,2,n.NrecChunk);
-    tracer_cen_rec_nomod_temp = zeros(n.tracer,2,n.NrecChunk);
-    tracer_state_rec_temp =zeros(n.tracer,n.NrecChunk);
+    tracer_cen_rec_temp = zeros( n.tracer, 2, n.NrecChunk );
+    tracer_cen_rec_nomod_temp = zeros( n.tracer, 2, n.NrecChunk );
+    tracer_state_rec_temp = zeros( n.tracer, n.NrecChunk );
     
-    fileObj.tracer_cen_rec=zeros(n.tracer,2,n.NrecTot);
-    fileObj.tracer_cen_rec_nomod=zeros(n.tracer,2,n.NrecTot);
-    fileObj.tracer_state_rec=zeros(n.tracer,n.NrecTot);
+     fileObj.tracer_cen_rec = zeros( n.tracer, 2, 2 );
+     fileObj.tracer_cen_rec_nomod = zeros( n.tracer, 2, 2 );
+     fileObj.tracer_state_rec = zeros( n.tracer, 2 );
 end
 
 
