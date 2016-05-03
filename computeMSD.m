@@ -23,7 +23,7 @@ end
 msd_distrib=msd_local;
 parfor dt = 1:number_delta_t
 
-    if number_delta_t-dt > maxpts_msd
+    if number_delta_t-dt >= maxpts_msd
         index_start = randperm(number_delta_t-dt, maxpts_msd);
         index_end = index_start+dt;
         delta_coords=(x(:,:,index_start)-x(:,:,index_end));
