@@ -30,6 +30,7 @@ const.size_tracer   = 1;     %tracer linear dimension, MUST BE odd integer
 
 %msd stuff
 const.calcQuad      = 0;         % Flag for calculating quad
+const.maxpts_msd    = 100;         % Flag for calculating quad
 
 %trial master
 trialmaster.tind       = 1;

@@ -50,10 +50,14 @@ if NumFiles2Analyze;
       S = load( ['./runfiles/analyzing/' filename] );
       
       %test calling msd function
-      if isfield(S.const,'calcQuad')
-         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, const.calcQuad);
-      else
-         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 1);
+      if isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 1
+         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, const.maxpts_msd, const.calcQuad);
+      elseif isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 0
+         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, const.maxpts_msd, 0);
+      elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 1
+         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, const.calcQuad);
+      elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 0
+         [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, 0);
       end
       
       %dtime doesn't take the record time into account, do fix it
