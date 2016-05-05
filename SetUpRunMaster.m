@@ -1,6 +1,15 @@
 % Builds directories for all the runs 
 
-function SetUpRunMasterDirInpt(DirInpt)
+function SetUpRunMaster(DirInpt)
+
+%number of runs to split job over. Each goes it it's own directory
+trial  = 2; %trial indicator
+
+%parameters to that are looped as be, ffob, trials
+const.n_trials    = 4;
+bind_energy_vec = [1 0];
+ffrac_obst_vec= [ 1  2 3];         %filling fraction of obstacles
+
 
 %Run dir Path
 if nargin == 0
@@ -10,14 +19,15 @@ else
 RunDirPath = DirInpt;
 end
 
-%number of runs to split job over. Each goes it it's own directory
-NumDir = 1;
-trial  = 1; %trial indicator
+%Find number of workers a pool can have
+poolobj = gcp('nocreate'); % If no pool, do not create new one.
+if isempty(poolobj)
+    Workers = 0;
+else
+    Workers = poolobj.NumWorkers;
+end
 
-%parameters to that are looped as be, ffob, trials
-const.n_trials    = 2;
-bind_energy_vec = [1];
-ffrac_obst_vec= [ 1 ];         %filling fraction of obstacles
+
 
 %build a parameter matrix
 nbe      = length( bind_energy_vec );
@@ -40,14 +50,17 @@ for i = 1:nt
 end
 
 % Build directories with parameter files in them
-groupsize = nffo * nbe; % Number of parameter configurations. files/dir 
-gsdivsors = divisors(groupsize); % # files/dir needs to be divisor of groupsize
-gsmult    =  groupsize * (1:nruns); % or a multiple
-possbinsize = [ gsdivsors(1:end-1) gsmult  ];
-binsizetemp = nruns / NumDir;
-[~, binind] = min( abs( binsizetemp - possbinsize ) );
-binsize = possbinsize( binind );
-NumDir  = nruns / binsize;
+% groupsize = nffo * nbe; % Number of parameter configurations. files/dir 
+% gsdivsors = divisors(groupsize); % # files/dir needs to be divisor of groupsize
+% gsmult    =  groupsize * (1:nruns); % or a multiple
+% possbinsize = [ gsdivsors(1:end-1) gsmult  ];
+% binsizetemp = nruns / NumDir;
+% [~, binind] = min( abs( binsizetemp - possbinsize ) );
+% binsize = possbinsize( binind );
+% NumDir  = nruns / binsize;
+
+% We the number of runs in a dir to be equal to the workers
+NumDir = ceil( nruns / Workers );
 
 % random number for identifier
 randnum = floor( 1000 * rand() );
@@ -58,10 +71,16 @@ for i = 1:NumDir
   dirpath = [RunDirPath dirstr];
   mkdir( dirpath );
 
-  runIndTemp = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 1 ) );
-  beTemp     = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 2 ) );
-  ffTemp     = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 3 ) ); 
-  
+  if i < NumDir
+    runIndTemp = unique( param_mat( 1 + Workers * (i-1) : Workers * i, 1 ) );
+    beTemp     = unique( param_mat( 1 + Workers * (i-1) : Workers * i, 2 ) );
+    ffTemp     = unique( param_mat( 1 + Workers * (i-1) : Workers * i, 3 ) ); 
+  else
+    runIndTemp = unique( param_mat( 1 + Workers * (i-1) : end, 1 ) );
+    beTemp     = unique( param_mat( 1 + Workers * (i-1) : end, 2 ) );
+    ffTemp     = unique( param_mat( 1 + Workers * (i-1) : end, 3 ) ); 
+ end
+
   % number of trials for each dir is the number of run ind in each
   % parameter mat
   ntrialtemp = length( runIndTemp );
@@ -78,5 +97,7 @@ for i = 1:NumDir
   copyfile('*.sh', dirpath);
 
 end
+
+
 
 
