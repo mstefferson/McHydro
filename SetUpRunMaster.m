@@ -1,16 +1,23 @@
-% Builds directories for all the runs %
+% Builds directories for all the runs 
+
+function SetUpRunMasterDirInpt(DirInpt)
 
 %Run dir Path
-RunDirPath = '~/RunDir/McHydro';
+if nargin == 0
+  RunDirPath = '~/RunDir/McHydro';
+  if exist(RunDirPath,'dir') == 0; mkdir(RunDirPath); end;
+else
+RunDirPath = DirInpt;
+end
 
 %number of runs to split job over. Each goes it it's own directory
-NumDir = 3;
-trial  = 5; %trial indicator
+NumDir = 1;
+trial  = 1; %trial indicator
 
 %parameters to that are looped as be, ffob, trials
-const.n_trials    = 3;
-bind_energy_vec = [1 6];
-ffrac_obst_vec= [ 0.2 0.3 ];         %filling fraction of obstacles
+const.n_trials    = 2;
+bind_energy_vec = [1];
+ffrac_obst_vec= [ 1 ];         %filling fraction of obstacles
 
 %build a parameter matrix
 nbe      = length( bind_energy_vec );
@@ -71,4 +78,5 @@ for i = 1:NumDir
   copyfile('*.sh', dirpath);
 
 end
+
 
