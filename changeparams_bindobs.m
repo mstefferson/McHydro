@@ -4,7 +4,10 @@
 
 function [] = changeparams_bindobs( beVec, ffoVec, numtrl, trlind, runind)
 
-initparams;
+if exist('Params','file') == 0 ; 
+  fprintf('No params yet, running initparams \n');
+  initparams; 
+end;
 
 %parameters in the inputs
 params.bind_energy_vec = beVec;
@@ -18,6 +21,6 @@ if nargin > 2
   trialmaster.nt         = const.n_trials; 
 end
 
-save('Params', 'const', 'params','trialmaster','modelopt')
+save('Params', 'const','params','trialmaster','modelopt')
 
 end % function
