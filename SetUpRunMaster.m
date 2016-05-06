@@ -6,8 +6,8 @@ function SetUpRunMaster(DirInpt)
 trial  = 2; %trial indicator
 
 %parameters to that are looped as be, ffob, trials
-const.n_trials    = 4;
-bind_energy_vec = [1 0];
+const.n_trials    = 5;
+bind_energy_vec = [1] ;
 ffrac_obst_vec= [ 1  2 3];         %filling fraction of obstacles
 
 
@@ -19,15 +19,9 @@ else
 RunDirPath = DirInpt;
 end
 
-%Find number of workers a pool can have
-poolobj = gcp('nocreate'); % If no pool, do not create new one.
-if isempty(poolobj)
-    Workers = 0;
-else
-    Workers = poolobj.NumWorkers;
-end
-
-
+%Find number of workers a pool can have. 
+poolobj = gcp(); % If no pool,  create new one. 
+Workers = poolobj.NumWorkers;
 
 %build a parameter matrix
 nbe      = length( bind_energy_vec );
@@ -65,6 +59,7 @@ NumDir = ceil( nruns / Workers );
 % random number for identifier
 randnum = floor( 1000 * rand() );
 
+keyboard
 %% Not finished %%%
 for i = 1:NumDir
   dirstr = sprintf('/Run%d_%d_%d/', randnum, trial, i );
@@ -84,7 +79,7 @@ for i = 1:NumDir
   % number of trials for each dir is the number of run ind in each
   % parameter mat
   ntrialtemp = length( runIndTemp );
-  fprintf('%s:\n',dirstr);
+  fprintf('%s:\n',dirstr)
   fprintf('RunInds:\n'); disp(runIndTemp'); 
   fprintf('binding energy:\n'); disp(beTemp');
   fprintf('ff obs:\n'); disp(ffTemp');
@@ -98,6 +93,6 @@ for i = 1:NumDir
 
 end
 
-
+delete(poolobj); % delete pool
 
 
