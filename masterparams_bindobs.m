@@ -57,4 +57,5 @@ const.NchunkTot  = const.ntimesteps / const.rec_chunk - const.Nchunklost; % Numb
 % Number of particles on the grid
 const.num_tracer    = params.ffrac_tracer .* const.n_gridpoints ^ 2;
 
-save('Params')% Fix time stuff and add some calculated things
+% Save it
+save('Params', 'const','params','trialmaster','modelopt');
