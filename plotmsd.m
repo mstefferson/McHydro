@@ -1,9 +1,9 @@
 % just a test to fit 
 load('./msdfiles/msd_bar0_bind0_fo0.1_ft0.1_so1_st1_oe1_ng100_nt1000_nrec1000_t1.3.mat')
-
+load('./msdfiles/msd_bar0_bind0_fo0_ft0.1_so1_st1_oe1_ng100_nt10000_nrec10000_t4.1.mat')
 %%
 tPnts = length(dtime);
-tInd  = 2:round(tPnts)/2;
+tInd  = 2:round(tPnts);
 % Calculate standard error bars. Skip first point because SE is zero
 errors  = ( msd(tInd,2) ./ sqrt( msd(tInd,3) ) ) ; % Column vector 
 

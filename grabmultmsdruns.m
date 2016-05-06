@@ -1,10 +1,11 @@
 %% Grab multiple files to load
 
+cd ~/McHydro/
 alphaFit = 0.68;
-trialind = 3;
-fileind = ['./msdfiles/msd_bar0_bind0_fo0_ft0.1_so1_st1_oe1_ng100_nt10000_nrec10000_t' int2str(trialind) '.' ];
+trialind = 10;
+fileind = ['./msdfiles/msd_bar0_bind0_fo0_ft0.1_so1_st1_oe1_ng100_nt10000_nrec1000_t' int2str(trialind) '.' ];
 runstart = 1;
-runend = 8;
+runend = 100;
 
 % Grad some parameters
 filetemp = [fileind int2str(runstart) '.mat' ];
@@ -40,11 +41,11 @@ DsigV   = zeros( NumFiles, 1 );
 
 
 masterIndstr = 1;
-for i=1:4
+for i=1:NumFiles
    
   load(FileCell{i})
   % Measure D for run
-  NrecPoints = length(tInd);
+  NrecPoints = round( length(dtime) / 2);
   % Skip t = 1 because error is zero
   tInd = 2:NrecPoints;
   
@@ -68,10 +69,18 @@ for i=1:4
   masterIndstr = masterIndend + 1;
 
 end
-
+ % Cut off zeros if there are any
+  NotZeroInd = length( dtimeM ( dtimeM > 0 ) );
+  dtimeM = dtimeM(1:NotZeroInd);
+  msdM = msdM(1:NotZeroInd);
+  errorM = errorM(1:NotZeroInd);
+  
+% Fit it
   [DaveFit, DsigFit, ~, ~] = poly1fitw( dtimeM, msdM, errorM, alphaFit );
   [DaveW, DsigW] = wmean( DfitV, DsigV );
 
   fprintf('Weighted Ave: D = %.4g +/- %.4g\n', DaveW, DsigW);
   fprintf('Fit: D = %.4g +/- %.4g\n', DaveFit, DsigFit);
+  fprintf('All: D = %.4g +/- %.4g\n', [DfitV'; DsigV']);
+  
   
