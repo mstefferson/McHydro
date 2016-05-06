@@ -5,23 +5,17 @@
 % initparams_bindobs should not be tracked.
 
 %key parameters and constants
-slide_barr_height=0;    %barrier height to sliding, in kT
-bind_energy_vec = [0];
-ffrac_obst_vec= [ 0.1 ];         %filling fraction of obstacles
-ffrac_tracer=0.1;       %filling fraction of tracers
-
-%declare a params struct for organization as well
-params.slide_barr_height = slide_barr_height;
-params.bind_energy_vec = bind_energy_vec;
-params.ffrac_obst_vec = ffrac_obst_vec;
-params.ffrac_tracer = ffrac_tracer;
+params.slide_barr_height=0;    %barrier height to sliding, in kT
+params.bind_energy_vec = [0];
+params.ffrac_obst_vec= [ 0.1 ];         %filling fraction of obstacles
+params.ffrac_tracer=0.1;       %filling fraction of tracers
 
 %grid stuff
 const.n_trials      = 4;
 const.n_gridpoints  = 100;    % number of grid points, same in x and y
-const.ntimesteps    = 1e5;   % number of timesteps Note 1e5 gives errors on my laptop.
-const.rec_interval  = 1e2;    % time elapsed before recording
-const.rec_chunk     = 1e4;   % time elapsed before writing to file
+const.ntimesteps    = 1e3;   % number of timesteps Note 1e5 gives errors on my laptop.
+const.rec_interval  = 1e1;    % time elapsed before recording
+const.rec_chunk     = 1e2;   % time elapsed before writing to file
 const.twait         = 1;    % time waited before recording
 const.TrRecFlag     = 1;     % Flag to record tracers or not
 const.ObsRecFlag    = 0;     % Flag to record obstacles or not
@@ -61,7 +55,6 @@ const.NrecTot    = const.ntimesteps / const.rec_interval - const.Nreclost; % Num
 const.NchunkTot  = const.ntimesteps / const.rec_chunk - const.Nchunklost; % Number of recorded points
 
 % Number of particles on the grid
-const.num_tracer    = ffrac_tracer .* const.n_gridpoints ^ 2;
-
+const.num_tracer    = params.ffrac_tracer .* const.n_gridpoints ^ 2;
 
 save('Params')% Fix time stuff and add some calculated things

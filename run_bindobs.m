@@ -71,7 +71,7 @@ for j=1:nparams
     bind_energy = param_bind(j);
     ffrac_obst  = param_ffo(j);
     
-    pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
+    pvec=[ffrac_obst params.ffrac_tracer params.slide_barr_height bind_energy]; %parameter vector
     
     filestring=['bar',num2str(params.slide_barr_height),'_bind',num2str(bind_energy),...
         '_fo',num2str(ffrac_obst),'_ft',num2str(params.ffrac_tracer),'_so',...
