@@ -39,8 +39,8 @@ fprintf('parameters read in\n');
 disp(trialmaster); disp(params); disp(const); disp(modelopt);
 
 %build a parameter matrix
-nbe      = length( bind_energy_vec );
-nffo     = length( ffrac_obst_vec );
+nbe      = length( params.bind_energy_vec );
+nffo     = length( params.ffrac_obst_vec );
 nt       = const.n_trials;
 nparams  = nbe * nffo * nt;
 %param matrix.  (:,1) = run ID (:,2) = binding (:,3) = ffrc obs
@@ -50,8 +50,8 @@ for i = 1:nt
         for k = 1:nffo
             rowind = k + nffo * (j-1) + nffo * nbe * (i - 1);
             param_mat( rowind, 1 ) = (i-1) + trialmaster.runstrtind;
-            param_mat( rowind, 2 ) = bind_energy_vec(j);
-            param_mat( rowind, 3 ) = ffrac_obst_vec(k);
+            param_mat( rowind, 2 ) = params.bind_energy_vec(j);
+            param_mat( rowind, 3 ) = params.ffrac_obst_vec(k);
         end
     end
 end
@@ -73,8 +73,8 @@ for j=1:nparams
     
     pvec=[ffrac_obst ffrac_tracer slide_barr_height bind_energy]; %parameter vector
     
-    filestring=['bar',num2str(slide_barr_height),'_bind',num2str(bind_energy),...
-        '_fo',num2str(ffrac_obst),'_ft',num2str(ffrac_tracer),'_so',...
+    filestring=['bar',num2str(params.slide_barr_height),'_bind',num2str(bind_energy),...
+        '_fo',num2str(ffrac_obst),'_ft',num2str(params.ffrac_tracer),'_so',...
         num2str(const.size_obst),'_st',num2str(const.size_tracer),...
         '_oe',num2str(modelopt.obst_excl),'_ng',...
         num2str(const.n_gridpoints),'_nt',num2str(const.ntimesteps),...
