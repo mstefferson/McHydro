@@ -4,6 +4,11 @@
 % file that is called, initparams_bindobs, should be a copy of this.
 % initparams_bindobs should not be tracked.
 
+%trial master
+trialmaster.tind       = 1; % trial indicator
+trialmaster.runstrtind = 1; % run indicator
+trialmaster.nt         = 1; % number of trials
+
 %key parameters and constants
 params.slide_barr_height=0;    %barrier height to sliding, in kT
 params.bind_energy_vec = [0];
@@ -11,7 +16,7 @@ params.ffrac_obst_vec= [ 0.1 ];         %filling fraction of obstacles
 params.ffrac_tracer=0.1;       %filling fraction of tracers
 
 %grid stuff
-const.n_trials      = 4;
+const.n_trials      = trialmaster.nt;
 const.n_gridpoints  = 100;    % number of grid points, same in x and y
 const.ntimesteps    = 1e3;   % number of timesteps Note 1e5 gives errors on my laptop.
 const.rec_interval  = 1e1;    % time elapsed before recording
@@ -25,11 +30,6 @@ const.size_tracer   = 1;     %tracer linear dimension, MUST BE odd integer
 %msd stuff
 const.calcQuad      = 0;         % Flag for calculating quad
 const.maxpts_msd    = 100;         % Flag for calculating quad
-
-%trial master
-trialmaster.tind       = 1;
-trialmaster.runstrtind = 1;
-trialmaster.nt         = const.n_trials;
 
 %model stuff
 modelopt.animate=0;          %1 to show animation, 0 for no animation
