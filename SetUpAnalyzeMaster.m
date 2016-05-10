@@ -34,11 +34,13 @@ if NumFilesTot
    %end
    
    % random number for identifier
+   % Pick a random seed
+   rng shuffle
    randnum = floor( 1000 * rand() );
    
    %% Not finished %%%
    for i = 1:NumDirs
-      dirstr = sprintf('/Analyze%d_%d_%d/', randnum, trial, i );
+      dirstr = sprintf('/AnalyzeMe%d_%d_%d/', randnum, trial, i );
       dirpath = [RunDirPath dirstr];
       mkdir( dirpath );
       mkdir( [dirpath './runfiles'] )
@@ -58,7 +60,7 @@ if NumFilesTot
          movefile( PathStart, PathEnd);
          copyfile('./*.m', [dirpath] );
          copyfile('./*.sh', [dirpath] );
-         copyfile('./src/*.m', [dirpath 'src/'] );
+         copyfile('./src', [dirpath 'src/'] );
       end
       
    end % loop of dirs
