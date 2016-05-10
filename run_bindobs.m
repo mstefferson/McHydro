@@ -33,7 +33,6 @@ if exist('Params.mat','file') == 0;
     initparams
 end
 load Params.mat;
-movefile('Params.mat','ParamsLastRun.mat');
 
 %display everything
 fprintf('parameters read in\n');
@@ -95,4 +94,5 @@ EndTime = datestr(now);
 fprintf('Completed run: %s\n',EndTime);
 fclose('all');
 movefile('StatusRunning.txt','StatusFinished.txt')
+movefile('Params.mat','ParamsLastRun.mat');
 %elapsed_time=toc;
