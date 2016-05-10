@@ -1,98 +1,193 @@
-% Builds directories for all the runs 
+% Builds directories for all the runs
+% Currently, will divide up jobs by the number of trials
+% unless trials = 1, then it will divide it up by the number of
+% parameters. This could be smarter, but it's currently
+% better than nothing
 
-function SetUpRunMaster(DirInpt)
+function SetUpRunMaster()
 
-%number of runs to split job over. Each goes it it's own directory
-trial  = 2; %trial indicator
-
-%parameters to that are looped as be, ffob, trials
-const.n_trials    = 5;
-bind_energy_vec = [1] ;
-ffrac_obst_vec= [ 1  2 3];         %filling fraction of obstacles
-
-
-%Run dir Path
-if nargin == 0
-  RunDirPath = '~/RunDir/McHydro';
-  if exist(RunDirPath,'dir') == 0; mkdir(RunDirPath); end;
+%Find number of workers a pool can have.
+if isempty(gcp)
+  poolobj = parpool;
 else
-RunDirPath = DirInpt;
+  poolobj = gcp(); % If no pool,  create new one.
+end
+AvailWorkers = poolobj.NumWorkers;
+
+%Initialize the setup params
+if exist('initsetupParams.m', 'file');
+  initsetupParams
+else
+  cpmatparams
+  initsetupParams
 end
 
-%Find number of workers a pool can have. 
-poolobj = gcp(); % If no pool,  create new one. 
-Workers = poolobj.NumWorkers;
+% Fix
+if n_trials > 1
+   n_trials = round( n_trials / AvailWorkers ) .* AvailWorkers;
+   TrialsPerWorker = n_trials / AvailWorkers; % equal to trial chunk
+   PossDirs = divisors( TrialsPerWorker );
+   PossFilesInDir = TrialsPerWorker ./ PossDirs .* AvailWorkers ;
 
-%build a parameter matrix
+   [minPoss, indPoss] = min( abs( PossFilesInDir - FilesInDir ) );
+   
+   FilesInDir = PossFilesInDir( indPoss );
+   NumDirsTr = n_trials ./ FilesInDir;
+ else
+   FilesInDir = round( FilesInDir/AvailWorkers ) * AvailWorkers;
+   if FilesInDir == 0; FilesInDir = 1; end;
+end
+
+%Find how long everything is
 nbe      = length( bind_energy_vec );
 nffo     = length( ffrac_obst_vec );
-nt       = const.n_trials;
+nt       = n_trials;
 nparams  = nbe * nffo;
 nruns    = nbe * nffo * nt;
-
-%param matrix.  (:,1) = trial (:,2) = binding (:,3) = ffrc obs
-param_mat = zeros( nruns, 3 );
-for i = 1:nt
-    for j = 1:nbe
-        for k = 1:nffo
-            rowind = k + nffo * (j-1) + nffo * nbe * (i - 1);
-            param_mat( rowind, 1 ) = i;
-            param_mat( rowind, 2 ) = bind_energy_vec(j);
-            param_mat( rowind, 3 ) = ffrac_obst_vec(k);  
-        end
-    end
-end
-
-% Build directories with parameter files in them
-% groupsize = nffo * nbe; % Number of parameter configurations. files/dir 
-% gsdivsors = divisors(groupsize); % # files/dir needs to be divisor of groupsize
-% gsmult    =  groupsize * (1:nruns); % or a multiple
-% possbinsize = [ gsdivsors(1:end-1) gsmult  ];
-% binsizetemp = nruns / NumDir;
-% [~, binind] = min( abs( binsizetemp - possbinsize ) );
-% binsize = possbinsize( binind );
-% NumDir  = nruns / binsize;
-
-% We the number of runs in a dir to be equal to the workers
-NumDir = ceil( nruns / Workers );
 
 % random number for identifier
 randnum = floor( 1000 * rand() );
 
-keyboard
-%% Not finished %%%
-for i = 1:NumDir
-  dirstr = sprintf('/Run%d_%d_%d/', randnum, trial, i );
-  dirpath = [RunDirPath dirstr];
-  mkdir( dirpath );
+fprintf('Let us make some dirs\n')
+% One parameter per dir is nt is a multiple of the workers
+if nt > 1
+   
+   %NumDirsTr = nt / Workers;
+   NumDirs = nffo * nbe * NumDirsTr;
+   RunIndVec = 1:FilesInDir;
+   %WorkersVec = 1:Workers;
+   
+   for i = 1:nbe
+      for j = 1:nffo
+         for k = 1:NumDirsTr
+            
+            dirstr = sprintf('/Run%d_%d_%d/', ...
+               randnum, trialind, k + (j-1)*NumDirsTr + (i-1)*NumDirsTr* nffo );
+            dirpath = [RunDirPath dirstr];
+            mkdir( dirpath );
+            
+            runIndTemp = (k-1) * FilesInDir + RunIndVec;
+            %runIndTemp = (k-1) * Workers + WorkersVec;
+            ntrialtemp = length(runIndTemp);
+            beTemp     = bind_energy_vec(i);
+            ffTemp     = ffrac_obst_vec(j);
+            
+      % Print parameters to stdout
+            fprintf('\n%s:\n',dirstr)
+            runstring = [ 'RunInds: ' int2str(runIndTemp) ];
+            bestring = [ 'BE: ' num2str(beTemp) ];
+            ffstring = [ 'FF: ' num2str(ffTemp) ];
+            fprintf('%s \n',runstring);
+            fprintf('%s \n',bestring);
+            fprintf('%s \n',ffstring);
+            
+            changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
+               trialind, runIndTemp(1) );
+            
+            movefile('Params.mat', dirpath);
+            copyfile('*.m', dirpath);
+            copyfile('*.sh', dirpath);
+            
+         end
+      end
+   end
+   
+   % nt < workers. nt = 1 because of rounding
+else
+   
+   NumParamsPerDir = FilesInDir;
+   ntrialtemp  = 1;
+   runIndTemp  = 1;
+   
+   if ( mod( nbe, NumParamsPerDir )  <= mod( nffo, NumParamsPerDir ) )
+      
+      fprintf( 'Selecting Binding Energy \n' );
+      beSelect = 1;
+      NumDirBE  = floor( nbe / NumParamsPerDir ) ;
+      NumDirFF  = nffo;
+      ExtraDir  = 0;
+      if mod( nbe, NumParamsPerDir ) ~= 0; ExtraDir = 1; end;
+      
+   else
+      
+      fprintf( 'Selecting FF \n' );
+      beSelect = 0;
+      NumDirFF  = floor( nffo / NumParamsPerDir ) ;
+      NumDirBE  = nbe ;
+      ExtraDir  = 0;
+      if mod( nffo, NumParamsPerDir ) ~= 0; ExtraDir = 1; end;
+   end % Find SelectVec
+   
+   %Number of dirs total
+   NumDirs =  NumDirBE * NumDirFF;
+   
+   if ExtraDir; NumDirs = NumDirs + 1; end;
+   
+   for i = 1: NumDirBE
+      for j = 1: NumDirFF
+         dirstr = sprintf('/Run%d_%d_%d/', ...
+            randnum, trialind, j + (i-1) * NumDirFF );
+         dirpath = [RunDirPath dirstr];
+         mkdir( dirpath );
+         
+         if beSelect
+            beTemp = bind_energy_vec( 1 + (i-1) * NumParamsPerDir : i * NumParamsPerDir );
+            ffTemp = ffrac_obst_vec(j);
+         else
+            beTemp = bind_energy_vec(i);
+            ffTemp = ffrac_obst_vec( 1 + (j-1) * NumParamsPerDir : j * NumParamsPerDir);
+            
+         end % end beSelect
+         
+      % Print parameters to stdout
+          fprintf('\n%s:\n',dirstr)
+          runstring = [ 'RunInds: ' int2str(runIndTemp) ];
+          bestring = [ 'BE: ' num2str(beTemp) ];
+          ffstring = [ 'FF: ' num2str(ffTemp) ];
+          fprintf('%s \n',runstring);
+          fprintf('%s \n',bestring);
+          fprintf('%s \n',ffstring);
 
-  if i < NumDir
-    runIndTemp = unique( param_mat( 1 + Workers * (i-1) : Workers * i, 1 ) );
-    beTemp     = unique( param_mat( 1 + Workers * (i-1) : Workers * i, 2 ) );
-    ffTemp     = unique( param_mat( 1 + Workers * (i-1) : Workers * i, 3 ) ); 
-  else
-    runIndTemp = unique( param_mat( 1 + Workers * (i-1) : end, 1 ) );
-    beTemp     = unique( param_mat( 1 + Workers * (i-1) : end, 2 ) );
-    ffTemp     = unique( param_mat( 1 + Workers * (i-1) : end, 3 ) ); 
- end
+         changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
+            trialind, runIndTemp );
+         movefile('Params.mat', dirpath);
+         copyfile('*.m', dirpath);
+         copyfile('*.sh', dirpath);
+      end
+   end
+   
+   if ExtraDir
+      dirstr = sprintf('/Run%d_%d_%d/', ...
+         randnum, trialind, 1+(NumDirBE-1)+(NumDirFF-1) + 1);
+      dirpath = [RunDirPath dirstr];
+      mkdir( dirpath );
+      
+      if beSelect
+         beTemp = bind_energy_vec( NumDirBE * NumParamsPerDir  + 1:end);
+         ffTemp = ffrac_obst_vec;
+      else
+         beTemp = bind_energy_vec;
+         ffTemp = ffrac_obst_vec( NumDirFF * NumParamsPerDir + 1:end);
+      end
 
-  % number of trials for each dir is the number of run ind in each
-  % parameter mat
-  ntrialtemp = length( runIndTemp );
-  fprintf('%s:\n',dirstr)
-  fprintf('RunInds:\n'); disp(runIndTemp'); 
-  fprintf('binding energy:\n'); disp(beTemp');
-  fprintf('ff obs:\n'); disp(ffTemp');
-  
-  changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
-      trial, runIndTemp(1) );
-  
-  movefile('Params.mat', dirpath);
-  copyfile('*.m', dirpath);
-  copyfile('*.sh', dirpath);
+      % Print parameters to stdout
+          fprintf('\n%s:\n',dirstr)
+          runstring = [ 'RunInds: ' int2str(runIndTemp) ];
+          bestring = [ 'BE: ' num2str(beTemp) ];
+          ffstring = [ 'FF: ' num2str(ffTemp) ];
+          fprintf('%s \n',runstring);
+          fprintf('%s \n',bestring);
+          fprintf('%s \n',ffstring);
 
-end
+      changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
+       trialind, runIndTemp );
+      movefile('Params.mat', dirpath);
+      copyfile('*.m', dirpath);
+      copyfile('*.sh', dirpath);
+   end % ExtraDir
+   
+end % nt > workers
 
-delete(poolobj); % delete pool
-
+% Delete pool
+delete(poolobj);
 

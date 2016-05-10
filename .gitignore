@@ -10,3 +10,4 @@ runfiles/
 *.out
 eo/
 initparams.m
+initsetupParams.m

@@ -4,5 +4,5 @@
 
 cp ./paramsTmpl.m ./initparams.m
 
-
+cp ./setupParamsTmpl.m ./initsetupParams.m
 
