@@ -4,6 +4,8 @@
 
 % Get all the files you want to analyze
 function analyze_bindobs(NumFiles2Analyze)
+addpath('./src');
+
 if nargin == 0; NumFiles2Analyze = 1; end;
 
 tstart = tic;

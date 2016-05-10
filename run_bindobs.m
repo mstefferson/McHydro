@@ -8,6 +8,7 @@
 %tic;
 % clear all;
 %close all;
+addpath('./src');
 StartTime = datestr(now);
 fprintf('In run_bindobs, %s\n', StartTime);
 

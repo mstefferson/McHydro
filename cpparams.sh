@@ -2,7 +2,7 @@
 #
 # Just copy master params to init params
 
-cp ./paramsTmpl.m ./initparams.m
+cp ./src/paramsTmpl.m ./initparams.m
 
-cp ./setupParamsTmpl.m ./initsetupParams.m
+cp ./src/setupParamsTmpl.m ./initsetupParams.m
 
