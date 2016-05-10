@@ -15,11 +15,11 @@ end
 AvailWorkers = poolobj.NumWorkers;
 
 %Initialize the setup params
-if exist('initsetupParams.m', 'file');
-  initsetupParams
+if exist('initSetupParams.m', 'file');
+  initSetupParams
 else
   cpmatparams
-  initsetupParams
+  initSetupParams
 end
 
 % Fix
