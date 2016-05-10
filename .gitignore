@@ -10,4 +10,5 @@ runfiles/
 *.out
 eo/
 initparams.m
-initsetupParams.m
+initAnalyzeParams.m
+initSetupParams.m

@@ -1,4 +1,10 @@
 % Just copy master params to init params
-copyfile('./paramsTmpl.m','initparams.m')
 
-copyfile('./setupParamsTmpl.m','./initsetupParams.m')
+% run parameters
+copyfile('./src/paramsTmpl.m','initparams.m')
+
+% set-up run dir parameters
+copyfile('./src/setupParamsTmpl.m','./initSetupParams.m')
+
+% set-up analyze dir parametes
+copyfile('./src/analyzeParamsTmpl.m','./initAnalyzeParams.m')
