@@ -20,7 +20,6 @@ end;
 
 %make output directories if they don't exist
 if exist('msdfiles','dir') == 0; mkdir('msdfiles');end;
-if exist('./runfiles/analyzed','dir') == 0; mkdir('./runfiles/analyzed');end;
 if exist('./runfiles/analyzing','dir') == 0; mkdir('./runfiles/analyzing');end;
 
 %grab files
@@ -69,8 +68,7 @@ if NumFiles2Analyze;
       msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
          S.obst, S.paramvec, S.tracer);
       movefile(msdfilename, './msdfiles');
-      movefile( ['./runfiles/analyzing/' filename],...
-         ['./runfiles/analyzed/' filename] );
+      delete( ['./runfiles/analyzing/' filename] );
       
    end %loop over files
 end %if analyzing
