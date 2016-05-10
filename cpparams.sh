@@ -2,7 +2,7 @@
 #
 # Just copy master params to init params
 
-cp ./masterparams_bindobs.m ./initparams.m
+cp ./paramsTmpl.m ./initparams.m
 
 
 
