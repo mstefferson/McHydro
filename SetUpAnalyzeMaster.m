@@ -1,47 +1,70 @@
-% Builds directories for all analysis 
+% Builds directories for all analysis
 
-function SetUpAnalyzeMaster(DirInpt)
+function SetUpAnalyzeMaster()
+addpath('./src');
 
-%Run dir Path
-if nargin == 0
-  RunDirPath = '~/RunDir/McHydro';
-  if exist(RunDirPath,'dir') == 0; mkdir(RunDirPath); end;
+% Directory stuff
+CurrentDir = pwd;
+
+%Initialize the setup params
+if exist('initAnalyzeParams.m', 'file');
+   initAnalyzeParams
 else
-RunDirPath = DirInpt;
+   cpmatparams
+   initAnalyzeParams
 end
 
-%number of runs to split job over. Each goes it it's own directory
-NumDir = 1;
-trial  = 1; %trial indicator
+%grab files
+Files2Analyze = parserunfiles;
+NumFilesTot = size(Files2Analyze,1);
 
-% random number for identifier
-randnum = floor( 1000 * rand() );
+% Only run if there are files to analyze
+if NumFilesTot
+   % Number of Dirs
+   NumDirs = ceil( NumFilesTot / FilesInDir );
+   
+   fprintf('Analyzing %d files in %d dirs\n', NumFilesTot, NumDirs);
+   
+   %Initialize the setup params
+   %if exist('initsetupParams.m', 'file');
+   %initsetupParams
+   %else
+   %cpmatparams
+   %initsetupParams
+   %end
+   
+   % random number for identifier
+   randnum = floor( 1000 * rand() );
+   
+   %% Not finished %%%
+   for i = 1:NumDirs
+      dirstr = sprintf('/Analyze%d_%d_%d/', randnum, trial, i );
+      dirpath = [RunDirPath dirstr];
+      mkdir( dirpath );
+      mkdir( [dirpath './runfiles'] )
+      
+      FileStart = (i-1) * FilesInDir + 1;
+      FileEnd = (i) * FilesInDir;
+      if FileEnd > NumFilesTot; FileEnd = NumFilesTot; end;
+      TotFilesInDir = ( FileEnd - FileStart ) + 1;
+      
+      fprintf('Moving %d files to %s\n', TotFilesInDir, dirstr);
+      for j = 1:TotFilesInDir
+         % Need to use strcat. I don't know why vector notation isn't working
+         filename = Files2Analyze{ FileStart + (j-1) };
+         PathStart = [CurrentDir '/runfiles/' filename ];
+         PathEnd =  [dirpath 'runfiles/' filename];
+         %fprintf(' Moving %s to %s\n', PathStart, PathEnd );
+         movefile( PathStart, PathEnd);
+         copyfile('./*.m', [dirpath] );
+         copyfile('./*.sh', [dirpath] );
+         copyfile('./src/*.m', [dirpath 'src/'] );
+      end
+      
+   end % loop of dirs
+else
+   fprintf('Nothing to analyze\n');
+end % if Num files
 
-%% Not finished %%%
-for i = 1:NumDir
-  dirstr = sprintf('/Run%d_%d_%d/', randnum, trial, i );
-  dirpath = [RunDirPath dirstr];
-  mkdir( dirpath );
-
-  runIndTemp = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 1 ) );
-  beTemp     = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 2 ) );
-  ffTemp     = unique( param_mat( 1 + binsize * (i-1) : binsize * i, 3 ) ); 
-  
-  % number of trials for each dir is the number of run ind in each
-  % parameter mat
-  ntrialtemp = length( runIndTemp );
-  fprintf('%s:\n',dirstr);
-  fprintf('RunInds:\n'); disp(runIndTemp'); 
-  fprintf('binding energy:\n'); disp(beTemp');
-  fprintf('ff obs:\n'); disp(ffTemp');
-  
-  changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
-      trial, runIndTemp(1) );
-  
-  movefile('Params.mat', dirpath);
-  copyfile('*.m', dirpath);
-  copyfile('*.sh', dirpath);
-
-end
-
+end %function
 
