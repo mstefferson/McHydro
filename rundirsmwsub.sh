@@ -1,33 +1,46 @@
 # Bash executable
 #!/bin/bash
 
-# On mac, give path to matlab
+# Give some dir names and path variables
 RunDirPath=~/RunDir/McHydro
 HomeDir=`pwd`
+# Pick out all the dirs that begin with 'RunMe'
+# When running, move then to Run
+DirStrName='RunMe'
+LengthDirStr=${#DirStrName}
+NewDirName='Run'
 
 echo "Starting run"
 echo "In dir `pwd` "
 echo "Making all directories"
 
 matlab -nodesktop -nosplash \
-  -r  "try, SetUpRunMasterDirInpt('$RunDirPath'), catch, exit(1), end, exit(0);" \
-2>&1 | tee makedir.out
+  -r  "try, SetUpRunMaster, catch, exit(1), end, exit(0);" 
 
-echo "Made Directories running executeables"
+echo  "Made Dirs. Matlab exit code: $?" 
 cd $RunDirPath
 echo "In dir `pwd` "
 
-for i in `ls`; 
-  do 
-  cd $i 
-  echo "In dir `pwd` "
-  matlab -nodesktop -nosplash \
-  -r  "try, run_bindobs, catch, exit(1), end, exit(0);" 
+# For all the files that start with RunMe
+for i in `ls | grep ^${DirStrName}`; do 
+    # Get the file identifier
+    indstr=${i:${LengthDirStr}}
+    # Set new name
+    newname=${NewDirName}${indstr}
+    # Move file
+    mv ./$i ./$newname
+      
+    # cd in a run
+    cd ${newname} 
+    echo "In dir `pwd` "
+    matlab -nodesktop -nosplash \
+    -r  "try, run_bindobs, catch, exit(1), end, exit(0);" 2>&1 | tee runlog.out
 
-  echo "Finished. Matlab exit code: $?" 
-  cp ./runfiles/* $HomeDir/runfiles
-  cd ../ 
-  rm -rf $i
+    echo "Finished. Matlab exit code: $?" 
+    mv ./runfiles/* $HomeDir/runfiles
+    mv runlog.out $HomeDir/runlog.out
+    cd ../ 
+    rm -rf ${newname}
 done
 
 exit
