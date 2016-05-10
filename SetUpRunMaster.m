@@ -6,6 +6,8 @@
 
 function SetUpRunMaster()
 
+addpath('./src')
+
 %Find number of workers a pool can have.
 if isempty(gcp)
   poolobj = parpool;
@@ -46,6 +48,8 @@ nparams  = nbe * nffo;
 nruns    = nbe * nffo * nt;
 
 % random number for identifier
+% Pick a random seed
+rng shuffle
 randnum = floor( 1000 * rand() );
 
 fprintf('Let us make some dirs\n')
@@ -61,7 +65,7 @@ if nt > 1
       for j = 1:nffo
          for k = 1:NumDirsTr
             
-            dirstr = sprintf('/Run%d_%d_%d/', ...
+            dirstr = sprintf('/RunMe%d_%d_%d/', ...
                randnum, trialind, k + (j-1)*NumDirsTr + (i-1)*NumDirsTr* nffo );
             dirpath = [RunDirPath dirstr];
             mkdir( dirpath );
@@ -81,12 +85,11 @@ if nt > 1
             fprintf('%s \n',bestring);
             fprintf('%s \n',ffstring);
             
+      % change parameters and move everything
             changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
                trialind, runIndTemp(1) );
             
-            movefile('Params.mat', dirpath);
-            copyfile('*.m', dirpath);
-            copyfile('*.sh', dirpath);
+      moveandcopy(dirpath)
             
          end
       end
@@ -125,7 +128,7 @@ else
    
    for i = 1: NumDirBE
       for j = 1: NumDirFF
-         dirstr = sprintf('/Run%d_%d_%d/', ...
+         dirstr = sprintf('/RunMe%d_%d_%d/', ...
             randnum, trialind, j + (i-1) * NumDirFF );
          dirpath = [RunDirPath dirstr];
          mkdir( dirpath );
@@ -148,17 +151,16 @@ else
           fprintf('%s \n',bestring);
           fprintf('%s \n',ffstring);
 
+      % change parameters and move everything
          changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
             trialind, runIndTemp );
-         movefile('Params.mat', dirpath);
-         copyfile('*.m', dirpath);
-         copyfile('*.sh', dirpath);
+      moveandcopy(dirpath)
       end
    end
    
    if ExtraDir
-      dirstr = sprintf('/Run%d_%d_%d/', ...
-         randnum, trialind, 1+(NumDirBE-1)+(NumDirFF-1) + 1);
+      dirstr = sprintf('/RunMe%d_%d_%d/', ...
+         randnum, trialind, 1+(NumDirBE-1)+(NumDirFF-1) + 1 );
       dirpath = [RunDirPath dirstr];
       mkdir( dirpath );
       
@@ -179,15 +181,26 @@ else
           fprintf('%s \n',bestring);
           fprintf('%s \n',ffstring);
 
+      % change parameters and move everything
       changeparams_bindobs( beTemp, ffTemp, ntrialtemp,...
        trialind, runIndTemp );
-      movefile('Params.mat', dirpath);
-      copyfile('*.m', dirpath);
-      copyfile('*.sh', dirpath);
+      moveandcopy(dirpath)
+
    end % ExtraDir
    
 end % nt > workers
 
 % Delete pool
 delete(poolobj);
+
+end % main function
+
+function moveandcopy(dirpath)
+
+movefile('Params.mat', dirpath)
+copyfile('*.m', dirpath);
+copyfile('*.sh', dirpath);
+copyfile('./src', [dirpath 'src']);
+
+end %moveandcopy
 
