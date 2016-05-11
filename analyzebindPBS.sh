@@ -80,7 +80,7 @@ echo Using ${NPROCS} processors across ${NNODES} nodes
 ### Or, just run your serial program
 ## $HOME/my-program
 module load matlab_R2015b
-cd /Users/mist7261/McHydro
+#  cd /Users/mist7261/McHydro
 
 # if no input, analyze 5 files
 if [ -z ${nfiles+x} ]; then 
