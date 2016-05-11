@@ -24,6 +24,13 @@ if NumFilesTot
    NumDirs = ceil( NumFilesTot / FilesInDir );
    
    fprintf('Analyzing %d files in %d dirs\n', NumFilesTot, NumDirs);
+   % Print the filenames
+
+   fprintf('Printing all files\n');
+   for i = 1:NumFilesTot
+     filename = Files2Analyze{i};
+     fprintf('%s\n',filename);
+   end
    
    %Initialize the setup params
    %if exist('initsetupParams.m', 'file');
@@ -40,10 +47,10 @@ if NumFilesTot
    
    %% Not finished %%%
    for i = 1:NumDirs
-      dirstr = sprintf('/AnalyzeMe%d_%d_%d/', randnum, trial, i );
+      dirstr = sprintf('/AnalyzeMe%d_%d_%d', randnum, trial, i );
       dirpath = [RunDirPath dirstr];
       mkdir( dirpath );
-      mkdir( [dirpath './runfiles'] )
+      mkdir( [dirpath '/runfiles'] )
       
       FileStart = (i-1) * FilesInDir + 1;
       FileEnd = (i) * FilesInDir;
@@ -54,13 +61,14 @@ if NumFilesTot
       for j = 1:TotFilesInDir
          % Need to use strcat. I don't know why vector notation isn't working
          filename = Files2Analyze{ FileStart + (j-1) };
+         sprintf('file: %s\n',filename);
          PathStart = [CurrentDir '/runfiles/' filename ];
-         PathEnd =  [dirpath 'runfiles/' filename];
-         %fprintf(' Moving %s to %s\n', PathStart, PathEnd );
+         PathEnd =  [dirpath '/runfiles/' filename];
+         fprintf(' Moving %s to %s\n', PathStart, PathEnd );
          movefile( PathStart, PathEnd);
          copyfile('./*.m', [dirpath] );
          copyfile('./*.sh', [dirpath] );
-         copyfile('./src', [dirpath 'src/'] );
+         copyfile('./src', [dirpath '/src/'] );
       end
       
    end % loop of dirs
