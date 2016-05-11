@@ -10,6 +10,8 @@
 %close all;
 addpath('./src');
 StartTime = datestr(now);
+currentdir=pwd;
+fprintf('In dir %s\n',currentdir);
 fprintf('In run_bindobs, %s\n', StartTime);
 
 % Check run status
@@ -22,7 +24,7 @@ else
 end
 
 %make output directories if they don't exist
-if exist('runfiles','dir') == 0; mkdir('./runfiles') ;end;
+if exist('./runfiles','dir') == 0; mkdir('./runfiles') ;end;
 
 %load params. check if it exists, if not, run it, then delete it
 %initparams on tracked, so make it if it's not there
