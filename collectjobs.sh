@@ -4,6 +4,7 @@
 # On mac, give path to matlab
 RunDirPath=~/RunDir/McHydro
 HomeDir=`pwd`
+DirStrName='Ran'
 
 ### Display the job context
 echo "Starting run"
@@ -15,7 +16,7 @@ echo "Collecting Data and deleting temporary directories"
 cd $RunDirPath
 echo "In dir `pwd` "
 
-for i in `ls`; 
+for i in `ls | grep ^${DirStrName}`; 
   do 
   cd $i 
   echo "In dir `pwd` "

@@ -4,6 +4,10 @@
 # On mac, give path to matlab
 RunDirPath=~/RunDir/McHydro
 HomeDir=`pwd`
+# Pick out all the dirs that begin with 'RunMe'
+DirStrName='RunMe'
+LengthDirStr=${#DirStrName}
+NewDirName='Ran'
 
 ### Display the job context
 echo Running on host `hostname`
@@ -19,16 +23,23 @@ echo "Making all directories"
 
 # Run matlab program
 matlab -nodesktop -nosplash \
-  -r  "try, SetUpRunMasterDirInpt('$RunDirPath'), catch, exit(1), end, exit(0);" \
-2>&1 | tee makedir.out
+  -r  "try, SetUpRunMaster, catch, exit(1), end, exit(0);" 
 
-echo "Made Directories running executeables"
+echo  "Made Dirs. Matlab exit code: $?" 
 cd $RunDirPath
 echo "In dir `pwd` "
+echo "Submitting jobs"
 
-for i in `ls`; 
-  do 
-  cd $i 
+# For all the files that start with RunMe
+for i in `ls | grep ^${DirStrName}`; do 
+  # Get the file identifier
+  indstr=${i:${LengthDirStr}}
+  # Set new name
+  newname=${NewDirName}${indstr}
+  # Move file
+  mv ./$i ./$newname
+  # cd in and submit
+  cd ${newname} 
   echo "In dir `pwd` "
   qsub runbindPBS.sh
   cd ../

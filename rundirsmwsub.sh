@@ -8,7 +8,7 @@ HomeDir=`pwd`
 # When running, move then to Run
 DirStrName='RunMe'
 LengthDirStr=${#DirStrName}
-NewDirName='Run'
+NewDirName='Ran'
 
 echo "Starting run"
 echo "In dir `pwd` "
