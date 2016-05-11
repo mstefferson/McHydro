@@ -5,6 +5,7 @@
 % Directory stuff
 RunDirPath = '~/RunDir/McHydro';
 FilesInDir = 4;
+AvailWorkers = 4;
 
 %trial indicator
 trialind  = 1; 

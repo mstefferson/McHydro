@@ -8,13 +8,14 @@ function SetUpRunMaster()
 
 addpath('./src')
 
+% AvailWorkers set by a parameter now in initSetUpParams
 %Find number of workers a pool can have.
-if isempty(gcp)
-  poolobj = parpool;
-else
-  poolobj = gcp(); % If no pool,  create new one.
-end
-AvailWorkers = poolobj.NumWorkers;
+%if isempty(gcp)
+  %poolobj = parpool;% If no pool,  create new one.
+%else
+  %poolobj = gcp(); 
+%end
+%AvailWorkers = poolobj.NumWorkers;
 
 %Initialize the setup params
 if exist('initSetupParams.m', 'file');
@@ -191,7 +192,9 @@ else
 end % nt > workers
 
 % Delete pool
-delete(poolobj);
+%if isempty(gcp) == 0
+%delete(gcp);
+%end
 
 end % main function
 
