@@ -82,8 +82,9 @@ echo Using ${NPROCS} processors across ${NNODES} nodes
 module load matlab_R2015b
 cd /Users/mist7261/McHydro
 
+# if no input, analyze 5 files
 if [ -z ${nfiles+x} ]; then 
-  nfiles=5; 
+  nfiles=100; 
 fi
 
 # Run matlab program

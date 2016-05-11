@@ -8,7 +8,7 @@ HomeDir=`pwd`
 # When running, move then to Run
 DirStrName='AnalyzeMe'
 LengthDirStr=${#DirStrName}
-NewDirName='Analyze'
+NewDirName='Analyzed'
 NumFiles=1000;
 
 echo "Starting run"
