@@ -33,3 +33,22 @@ end
 for i = 1:NumFiles
     FileCell{i} =  FileListVec( Blanks(i) + 1 : Blanks(i+1)-1 );
 end
+
+% There is a chance of empty cells. Get rid of them
+CellTemp = cell( NumFiles, 1 );
+
+counter = 0;
+for i = 1:NumFiles
+  if ~isempty( FileCell{i} )
+    counter = counter + 1;
+    CellTemp{counter} = FileCell{i};
+  end
+end
+
+FileCell = cell( counter , 1 );
+
+for i = 1:counter
+  FileCell{i} = CellTemp{i};
+end
+
+NumFiles = counter;
