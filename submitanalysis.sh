@@ -8,7 +8,7 @@
 
 RunDirPath=~/RunDir/McHydro
 HomeDir=`pwd`
-# Pick out all the dirs that begin with 'RunMe'
+# Pick out all the dirs that begin with 'AnalyzeMe'
 DirStrName='AnalyzeMe'
 LengthDirStr=${#DirStrName}
 NewDirName='Analyzed'

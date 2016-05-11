@@ -34,13 +34,12 @@ for i in `ls | grep ^${DirStrName}`;
   if [ "${#files[@]}" -eq "0" ]; then
     echo "Run finished. Collecting outputs"
     mv ./msdfiles/* $HomeDir/msdfiles
-    cd ../
+    cd ../ 
     rm -rf $i
   else
     echo "Still Running. Not collecting"
+    cd ../ 
   fi
-  #mv ./msdfiles/* $HomeDir/msdfiles
-  cd ../ 
 done
 
 echo "Collected all finished data and deleted temporary directories"
