@@ -15,7 +15,7 @@ else
 end
 
 %grab files
-Files2Analyze = parserunfiles;
+Files2Analyze = filelist( './runfiles','.mat');
 NumFilesTot = size(Files2Analyze,1);
 
 % Only run if there are files to analyze

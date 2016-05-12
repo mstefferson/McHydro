@@ -23,7 +23,7 @@ if exist('msdfiles','dir') == 0; mkdir('msdfiles');end;
 if exist('./runfiles/analyzing','dir') == 0; mkdir('./runfiles/analyzing');end;
 
 %grab files
-Files2Analyze = parserunfiles;
+Files2Analyze = filelist( './runfiles','.mat');
 NumFilesTot = size(Files2Analyze,1);
 
 %Fix issues if Numfiles is less than desired amount
