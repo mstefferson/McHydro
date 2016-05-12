@@ -1,14 +1,23 @@
+# Temporary files
 *.swp
 *~
-results/
-*.avi
-*.mat
-*.txt
+
+# Directories
 msdfiles/
 runfiles/
-*.log
-*.out
+results/
 eo/
+figs/
+
+# Input parameters
 initparams.m
 initAnalyzeParams.m
 initSetupParams.m
+
+# Outputs, logs, etc.
+*.avi
+*.mat
+*.txt
+*.log
+*.out
+
