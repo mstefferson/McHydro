@@ -15,7 +15,7 @@ else
 end
 
 %grab files
-Files2Analyze = filelist( './runfiles','.mat');
+Files2Analyze = filelist( '.mat', './runfiles');
 NumFilesTot = size(Files2Analyze,1);
 
 % Only run if there are files to analyze
