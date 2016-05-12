@@ -5,22 +5,22 @@
 %
 % Description: Returns a cell list of all the file names (strings) in a directory
 
-function [files] = filelist(DirStr,fileExt)
+function [files] = filelist(strId, DirPath)
 
 if nargin == 0
-  DirStr = pwd;
-  fileExt = '';
+  strId = '';
+  DirPath = pwd;
 end
 
 if nargin == 1
-  fileExt = '';
+  DirPath = pwd;
 end
 
 % Get length of file extension for parsing purposes
-extLength = length(fileExt);
+strLength = length(strId);
 
 % Grab everything in
-files = dir( DirStr );
+files = dir( DirPath );
 TotItems = length( files );
 
 % Store things we want in a temp then extract what we want;
@@ -31,10 +31,10 @@ counter = 0;
 for i = 1:TotItems
   if files(i).isdir == 0
 
-    if extLength == 0
+    if strLength == 0
       counter  = counter + 1;
       fileTemp{counter} = files(i).name;
-    elseif strcmp( files(i).name( end - extLength + 1:end), fileExt )
+    elseif findstr( files(i).name, strId )
       counter  = counter + 1;
       fileTemp{counter} = files(i).name; 
     end
