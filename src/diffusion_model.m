@@ -34,6 +34,12 @@ tracer_color=[0 1 1]; %cyan
 tracer_curv=1; %curvature for animations
 red=[1 0 0];
 
+%paramvec as a struct
+paramslist.ffo   = paramvec(1);
+paramslist.fft   = paramvec(2);
+paramslist.slide = paramvec(3);
+paramslist.be    = paramvec(4);
+
 %assign internal variables
 n.gridpoints=const.n_gridpoints;
 n.len_obst=const.size_obst;
@@ -83,7 +89,7 @@ tracer.ffrac=ffrac_tracer;
 tracer.pmove=exp(-slide_barr);
 tracer.state=sum(ismember(tracer.allpts, obst.allpts),2);
 
-parsave(filename,paramvec,tracer,obst,const,modelopt);
+parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 %set up things for recording
 obst.cen_nomod=obst.center;

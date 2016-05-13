@@ -1,5 +1,5 @@
-function parsave(fname,paramvec,tracer,obst,const,modelopt)
+function parsave(fname,paramlist,tracer,obst,const,modelopt)
 
-save(fname, 'paramvec','tracer','obst','const','modelopt','-v7.3');
+save(fname, 'paramlist','tracer','obst','const','modelopt','-v7.3');
 
 end

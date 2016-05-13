@@ -66,7 +66,7 @@ if NumFiles2Analyze;
       
       msdfilename=['msd_',filename(6:end)];
       msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
-         S.obst, S.paramvec, S.tracer);
+         S.obst, S.paramlist, S.tracer);
       movefile(msdfilename, './msdfiles');
       delete( ['./runfiles/analyzing/' filename] );
       
