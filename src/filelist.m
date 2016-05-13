@@ -1,9 +1,11 @@
-% Function: fileclist.m
-%
-% Michael Stefferson
-% 12-May-2016
+% Function: filelist(strId, DirPath)
+% strId = file name identifier
+% DirPath = Dir to look in
 %
 % Description: Returns a cell list of all the file names (strings) in a directory
+% 
+% Michael Stefferson
+% 12-May-2016
 
 function [files] = filelist(strId, DirPath)
 
