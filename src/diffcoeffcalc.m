@@ -112,7 +112,7 @@ for i=1:NumFiles
   end
   
   % Calculate Dave from a weighted fit (poly1fitw uses matlab's fit.m)
-  [Dave, Dsig, ~, ~] = poly1fitw( t_temp, msd_temp, error_temp, alphaFit );
+  [Dave, Dsig, Shift, ~] = poly1fitw( t_temp, msd_temp, error_temp, alphaFit );
   
   % Store it for weighted average
   DfitV(i) = Dave;
@@ -147,7 +147,7 @@ msdM = msdM(1:NotZeroInd);
 errorM = errorM(1:NotZeroInd);
 
 % Fit it
-[Dfit, DsigFit, Shift, ~] = poly1fitw( dtimeM, msdM, errorM, alphaFit );
+[Dfit, DsigFit, ~, ~] = poly1fitw( dtimeM, msdM, errorM, alphaFit );
 [DaveW, DsigW] = wmean( DfitV, DsigV );
 DaveUw = mean(DfitV);
 DsigUw = std(DfitV);
@@ -168,7 +168,7 @@ Dstruct.tstart = timestart;
 % Plot it
 if plotflag
   
-  % Parameters
+   % Parameters
   ParamList1 = sprintf('ffo: %.1g BE = %.1g', ffoM, bindenM);
   ParamList2 = sprintf( ' ntrials: %d \n ng: %d \n ntime: %d',...
     const.rec_chunk, const.maxpts_msd,const.num_tracer);
@@ -178,9 +178,12 @@ if plotflag
   TitleStr1 = 'msd';
   TitleStr2 = ParamList1;
   
-  Dstr1 =  sprintf('W: D = %.4f +/- %.2e', DaveW, DsigW);
-  Dstr2 = sprintf('UW: D = %.4f +/- %.2e', DaveUw, DsigUw);
-  Dstr3 =  sprintf('Fit: D = %.4f +/- %.2e', Dfit, DsigFit);
+  Dstr1 =  sprintf('W: D = %.4f +/- %.2e', ...
+    Dstruct.DaveW, Dstruct.DsigW);
+  Dstr2 = sprintf('UW: D = %.4f +/- %.2e',...
+    Dstruct.DaveUw, Dstruct.DsigUw);
+  Dstr3 =  sprintf('Fit: D = %.4f +/- %.2e',...
+    Dstruct.Dfit, Dstruct.DsigFit);
   Dstr = sprintf('%s\n%s\n%s\n', Dstr1, Dstr2, Dstr3);
   
   
@@ -228,67 +231,75 @@ if plotflag
   savestr = sprintf('logbe%.1foff%.1f.fig', bindenM, ffoM);
   
   %Fitted regime %%%%%%%%%%%%%%%%%%%%%%%
-%%
+
+  % All points r^2 vs t
   Ha = subplot(2,2,1);
-  
-  % Axis stuff
-
-  loglog(  [ dtimeAveNf ; dtimeAveF ]   , [ msdAveNf ; msdAveF ]   )
+  loglog(  [ dtimeAveNf ; dtimeAveF ] , [ msdAveNf ; msdAveF ] );
   axis square
-  xlabel('t'); ylabel('r^2')
-%   base10Yend = ceil( log10( msdAveF(end) ) );
-%   Ha.YTick = 10 .^( 0:base10Yend) ;
   
-%    
-%   Ha.XTick = Ha.YTick ;
-%   Ha.XTickLabel = Ha.YTickLabel ;
-  Ha.YGrid = 'on';
-  Ha.XGrid = 'on';
-  title( 'All' )
-  
+  xlabel('t'); ylabel('r^2'); title( 'All' );
 
+  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
+  base10Ystr = 0;  base10Yend = ceil( log10( msdAveF(end) ) );
+  
+  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
+  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
+  Ha.XLim =  10 .^ [base10Xstr base10Xend];
+  Ha.YLim =  10 .^ [base10Ystr base10Yend];
+  Ha.YGrid = 'on'; Ha.XGrid = 'on';
+  
+  % All points r^2 / t vs t  
   Ha = subplot(2,2,2);
   loglog(  [ dtimeAveNf ; dtimeAveF ], ...
     [ msdAveNf ; msdAveF ] ./  [ dtimeAveNf ; dtimeAveF ] )
-
   axis square
-  xlabel('t'); ylabel('r^2 / t')
+  xlabel('t'); ylabel('r^2'); title( [ 'All: ' TitleStr2 ]  );
   
-%   base10Xend = 2;
-%   Ha.XLim  = [ 0 10 ^ base10Xend ];
-%   Ha.XTick = [ 0 10 .^( 0:base10Xend) ];
-%   Ha.XLim  = Ha.YLim; 
-%   Ha.XTick = Ha.YTick;
-  Ha.YGrid = 'on';
-  Ha.XGrid = 'on';
-  title( [ 'All: ' TitleStr2 ]  )
+  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
+  base10Ystr = -1; base10Yend = 1; 
   
-  % Not fitted (Possibly anomalous) %%%%%%%%%%%%%%%%%%%%%%%%%
+  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
+  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
+  Ha.XLim =  10 .^ [base10Xstr base10Xend];
+  Ha.YLim =  10 .^ [base10Ystr base10Yend];
+  Ha.YGrid = 'on'; Ha.XGrid = 'on';
+  
+  %% Just the fitted regime
+  
+  % Just fit r^2
   Ha = subplot(2,2,3);
-
   loglog(  dtimeAveF  , msdAveF )
   axis square
-  xlabel('t'); ylabel('r^2 ')  
-%   base10Yend = ceil( log10(msdPlotend ) );
-%   Ha.YLim  = [ 0 10 ^ base10Yend ];
-%   Ha.YTick = [ 0 10 .^( 0:base10Yend) ];
-  Ha.YGrid = 'on';
-  Ha.XGrid = 'on';
-  title( ' Just Fit' )
+
+  xlabel('t'); ylabel('r^2');   title( 'Fit' );
   
-  Ha = subplot(2,2,4)
+  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
+  base10Ystr = 0;  base10Yend = ceil( log10( msdAveF(end) ) );
+  
+  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
+  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
+  Ha.XLim =  10 .^ [base10Xstr base10Xend];
+  Ha.YLim =  10 .^ [base10Ystr base10Yend];
+  Ha.YGrid = 'on'; Ha.XGrid = 'on';
+
+  % Just fit r^2 / t
+  Ha = subplot(2,2,4);
   loglog(  dtimeAveF  , msdAveF ./dtimeAveF )
   axis square
-  xlabel('t'); ylabel('r^2 / t')
-%   axisVec = [ 0 tPlotend 0 msddivtPlottend];
-%   axis( axisVec )
-  Ha.YGrid = 'on';
-  Ha.XGrid = 'on';
-  title( [ 'F: ' TitleStr2 ]  )
-
+  
+  xlabel('t'); ylabel('r^2'); title( [ 'F: ' TitleStr2 ]  );
+  
+  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
+  base10Ystr = -1; base10Yend = 1; 
+  
+  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
+  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
+  Ha.XLim =  10 .^ [base10Xstr base10Xend];
+  Ha.YLim =  10 .^ [base10Ystr base10Yend];
+  Ha.YGrid = 'on'; Ha.XGrid = 'on';
+  
   % Save it
   savefig( savestr );
-  
 end % if Plotflag
 
 
