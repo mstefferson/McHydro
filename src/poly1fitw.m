@@ -1,3 +1,4 @@
+% [p1, p1err, p2, p2err] =  poly1fitw( x, y, yerr, alpha )
 % x: dependent var
 % y: indepent var
 % yerr: uncertainty in y (Standard errror)
