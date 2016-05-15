@@ -1,5 +1,5 @@
 %% Grab multiple files to load
-function [Dstruct] = diffcoeffcalc( filename, timestart, plotflag, alphaFit )
+function [Dstruct] = diffCoeffCalc( filename, timestart, plotflag, alphaFit )
 
 if nargin == 1
   timestart = 1;
@@ -70,14 +70,9 @@ FpntsTot = zeros(recLength, 1);
 DfitV   = zeros( NumFiles, 1 );
 DsigV   = zeros( NumFiles, 1 );
 
-
-
-
 for i=1:NumFiles
   
   load(SameParamFiles{i})
-  
-%   keyboard
   totTpnts = length( dtime );
   if totTpnts ~= totTpntsOld; error('Record lengths changing'); end;
   
@@ -132,7 +127,6 @@ for i=1:NumFiles
   masterIndstr = masterIndend + 1;
   
   totTpntsOld = totTpnts;
-  
 end
 
 % Calculate average;
@@ -151,10 +145,6 @@ errorM = errorM(1:NotZeroInd);
 [DaveW, DsigW] = wmean( DfitV, DsigV );
 DaveUw = mean(DfitV);
 DsigUw = std(DfitV);
-
-fprintf('Weighted: D = %.4g +/- %.4g\n', DaveW, DsigW);
-fprintf('Unweight: D = %.4g +/- %.4g\n', DaveUw, DsigUw);
-fprintf('Fit: D = %.4g +/- %.4g\n', Dfit, DsigFit);
 
 % Put it in a struct
 Dstruct.Dfit  = Dfit;
@@ -185,7 +175,6 @@ if plotflag
   Dstr3 =  sprintf('Fit: D = %.4f +/- %.2e',...
     Dstruct.Dfit, Dstruct.DsigFit);
   Dstr = sprintf('%s\n%s\n%s\n', Dstr1, Dstr2, Dstr3);
-  
   
   %% Fig 1: scatter plot with fit and average vals with fit
   figure()
@@ -221,17 +210,16 @@ if plotflag
   subplot( 2, 2, 4)
   axis square
   text( 0.1, 0.5, ParamList2 )
+
   % Save it
   savefig( savestr );
 
 
-%% Fig 2: log plots to show anomalous
+  %% Fig 2: log plots to show anomalous
 
   figure()
   savestr = sprintf('logbe%.1foff%.1f.fig', bindenM, ffoM);
   
-  %Fitted regime %%%%%%%%%%%%%%%%%%%%%%%
-
   % All points r^2 vs t
   Ha = subplot(2,2,1);
   loglog(  [ dtimeAveNf ; dtimeAveF ] , [ msdAveNf ; msdAveF ] );
@@ -264,9 +252,7 @@ if plotflag
   Ha.YLim =  10 .^ [base10Ystr base10Yend];
   Ha.YGrid = 'on'; Ha.XGrid = 'on';
   
-  %% Just the fitted regime
-  
-  % Just fit r^2
+  % Just fit r^2 vs t
   Ha = subplot(2,2,3);
   loglog(  dtimeAveF  , msdAveF )
   axis square
@@ -282,7 +268,7 @@ if plotflag
   Ha.YLim =  10 .^ [base10Ystr base10Yend];
   Ha.YGrid = 'on'; Ha.XGrid = 'on';
 
-  % Just fit r^2 / t
+  % Just fit r^2 / t v t
   Ha = subplot(2,2,4);
   loglog(  dtimeAveF  , msdAveF ./dtimeAveF )
   axis square
@@ -300,6 +286,7 @@ if plotflag
   
   % Save it
   savefig( savestr );
+
 end % if Plotflag
 
 
