@@ -13,16 +13,18 @@ elseif nargin == 3
 elseif nargin == 3
   
 end
+
+% Grab some parameters
+load(filename);
+
 % Find all the files
-fileId = filename(1:end-5);
+fileId = filename( 1: strfind( filename, '_t' ) + 2);
 fprintf('Analyzing all files begining with \n%s\n', fileId );
 SameParamFiles = filelist( fileId, pwd);
 NumFiles = length(SameParamFiles);
 
-
-% Grad some parameters
-load(filename);
-
+% Check for paramlist. Old files didn't have this, it was saved
+% as paramvec
 if exist('paramlist','var')
   ffoM = paramlist.ffo;
   bindenM = paramlist.be;
