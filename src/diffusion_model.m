@@ -39,6 +39,9 @@ paramslist.ffo   = paramvec(1);
 paramslist.fft   = paramvec(2);
 paramslist.slide = paramvec(3);
 paramslist.be    = paramvec(4);
+paramslist.bindFlag = 0;
+
+bindFlag = paramslist.bindFlag;
 
 % Assign internal variables
 n.gridpoints=const.n_gridpoints;
@@ -148,21 +151,25 @@ for m=1:n.timesteps;
   tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
 
   % Find old and new occupancy, i.e, wheh tracer and obs on same site
-  % Why are they using a sum?
   occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
   occ_new=ismember(sites_new, obst.allpts);
   
+  % Accept or not due to binding. taccept in (1, numAttempts);  accept in (1, numTracer)
   % Generate random vector, if it's less than exp( \DeltaBE ) accept
   rvec2=rand(length(occ_old),1);
     
+  if bindFlag
   % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
   deltaOcc = occ_new - occ_old + 2;
   ProbAcceptBind = expBE( deltaOcc )';
   
-  % taccept in (1, numAttempts);  accept in (1, numTracer)
   list.taccept=find( rvec2 <= ProbAcceptBind );
+  else 
+  list.taccept = find( occ_new == 0 );
+  end
+
   list.accept=list.attempt(list.taccept);
-  
+
   % Move all accepted changes
   tracer.center(list.accept,:) = center_new(list.accept,:); %temporary update rule for drawing
   tracer.cen_nomod(list.accept,:) = tracer.cen_nomod(list.accept,:)+...
