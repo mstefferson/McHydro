@@ -133,32 +133,52 @@ for m=1:n.timesteps;
     center_old=tracer.center(list.attempt,:);
     center_temp= center_old+lattice.moves(list.tracerdir,:);
     %convert object points to coordinates
+    %x,y_obj is current x,y position
+    %x,y_obj_new only used to find periodic coordinates
     [x_obj,y_obj] = ind2sub([n.gridpoints,n.gridpoints],... %*****
         tracer.allpts(list.attempt,:));
     x_obj_new=x_obj+lattice.moves(list.tracerdir,1);
     y_obj_new=y_obj+lattice.moves(list.tracerdir,2);
     %enforce periodic boundary conditions
-    center_new = mod(center_temp-ones(size(center_temp)),...
-        ones(size(center_temp))*n.gridpoints)+ones(size(center_temp));
+    % Need to calculate new x,y position to find sites_new
+    center_new = mod( center_temp-ones(size(center_temp)),...
+        ones(size(center_temp))*n.gridpoints )+ones(size(center_temp));
     x_all_new = mod(x_obj_new-1,n.gridpoints)+1;
     y_all_new = mod(y_obj_new-1,n.gridpoints)+1;
-    %%%%%%%%PLAN: make tracer.allptsX, tracer.allptsY, use those instead of
-    %%%%%%%%indexing and sub2ind, ind2sub
     tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
     sites_new=sub2ind([n.gridpoints n.gridpoints], x_all_new, y_all_new); %********
+    % Suggest: delete x,y_all_new, x,y_obj
+    %sites_new = ...
+    % sub2ind([n.gridpoints n.gridpoints], center_new(1,:), center_new(2,:))
     
+    % Find old and new occupancy, i.e, wheh tracer and obs on same site
+    % Why are they using a sum?
     occ_old=sum(ismember(tracer.allpts(list.attempt,:), obst.allpts),2);
     occ_new=sum(ismember(sites_new, obst.allpts),2);
+    % Generate random vector, if it's less than exp( \DeltaBE ) accept
     rvec2=rand(length(occ_old),1);
+    % taccept: index of accepted moves from energetics. 
+    % taccept in (1, numAttempts)
+    % accept:  index of accepted moves from attempts list
+    % accept in (1, numTracer)
+    % Suggest
+    % expbe(:) == [exp(-be) 1 exp(be) ]
+    % deltaOcc = occ_new - occ_old + 3 % + 3 to give index
+    % expAttemp = expbe( deltaOcc )
     list.taccept=find(rvec2<exp(-(occ_new-occ_old)*bind_energy));
     list.accept=list.attempt(list.taccept);
+    
+    % Suggestion: 
+    % tracer.cen_nomod(list.accept,:)=center_temp(list.accept,:);
     tracer.cen_nomod(list.accept,:)=tracer.cen_nomod(list.accept,:)+...
         lattice.moves(list.tracerdir(list.taccept),:); %center, no periodic wrapping
     tracer.allpts(list.accept,:)=sites_new(list.taccept,:); %update other sites
     tracer.state(list.accept)=occ_new(list.taccept);
     
+    % Since we already moved centers, put the rejected ones back
     list.reject=setdiff(list.attempt,list.accept);
     tracer.center(list.reject,:)=center_old(list.reject,:);
+    keyboard
     
     if animate
         for kTracer=1:n.tracer
