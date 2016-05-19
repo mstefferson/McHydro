@@ -139,11 +139,12 @@ for m=1:n.timesteps;
     sites_new = ...
      sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
     
-   % keyboard
+   
     % Find old and new occupancy, i.e, wheh tracer and obs on same site
     % Why are they using a sum?
-    occ_old=sum(ismember(tracer.allpts(list.attempt,:), obst.allpts),2);
-    occ_new=sum(ismember(sites_new, obst.allpts),2);
+    occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
+    occ_new=ismember(sites_new, obst.allpts);  
+
     % Generate random vector, if it's less than exp( \DeltaBE ) accept
     rvec2=rand(length(occ_old),1);
     % taccept: index of accepted moves from energetics. 
@@ -157,6 +158,7 @@ for m=1:n.timesteps;
     list.taccept=find(rvec2<exp(-(occ_new-occ_old)*bind_energy));
     list.accept=list.attempt(list.taccept);
     
+    %keyboard
     % Suggestion: 
     % tracer.cen_nomod(list.accept,:)=center_temp(list.accept,:);
     tracer.cen_nomod(list.accept,:)=tracer.cen_nomod(list.accept,:)+...
