@@ -14,8 +14,8 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
 %   MDB 9/28/15 specialized to immobile obstacles, noninteracting tracers
 %   so that moves can be done in parallel
 
-%% initialize
-%parameters from pvec
+% initialize everythin 
+% Parameters from pvec
 if (length(paramvec)<4)
   error('diffusion_model: parameter vector too short');
 elseif (length(paramvec)==4)
@@ -27,26 +27,26 @@ elseif (length(paramvec)>4)
   error('diffusion_model: parameter vector too long');
 end
 
-%colors
+% Colors
 obst_color=[0 0 0]; %black
 obst_curv=0.2; %curvature for animations
 tracer_color=[0 1 1]; %cyan
 tracer_curv=1; %curvature for animations
 red=[1 0 0];
 
-%paramvec as a struct
+% Paramvec as a struct
 paramslist.ffo   = paramvec(1);
 paramslist.fft   = paramvec(2);
 paramslist.slide = paramvec(3);
 paramslist.be    = paramvec(4);
 
-%assign internal variables
+% Assign internal variables
 n.gridpoints=const.n_gridpoints;
 n.len_obst=const.size_obst;
 n.len_tracer=const.size_tracer;
 n.timesteps=const.ntimesteps;
 
-%time
+% Time
 n.TrRec     = const.TrRecFlag;
 n.ObRec     = const.ObsRecFlag;
 n.Rec       = n.TrRec + n.ObRec;
@@ -60,15 +60,15 @@ jrectemp = 1;
 jrec     = 1;
 jchunk   = 1;
 
-%model options
+% Model options
 animate=modelopt.animate;    %1 to show animation, 0 for no animation
 tpause=modelopt.tpause;      %pause time in animation
 
-%derived parameters
+% Derived parameters
 n.obst=round(ffrac_obst*(n.gridpoints/n.len_obst)^modelopt.dimension); %square lattice
 n.tracer=round(ffrac_tracer*(n.gridpoints/n.len_tracer)^modelopt.dimension);
 
-% %square lattice definition - assume 2D for now
+% Square lattice definition - assume 2D for now
 lattice.moves=[1 0;
   -1 0;
   0 1;
@@ -96,10 +96,10 @@ tracer.state=sum(ismember(tracer.allpts, obst.allpts),2);
 
 parsave(filename,paramslist,tracer,obst,const,modelopt);
 
-%set up things for recording
+% Set up things for recording
 obst.cen_nomod=obst.center;
 tracer.cen_nomod=tracer.center;
-%open file for incremental writing
+% Open file for incremental writing
 fileObj = matfile(filename,'Writable',true);
 
 % Allocate memory for recording. for matfile---fileobj---just let it know
@@ -128,17 +128,17 @@ end
 %% loop over time points
 for m=1:n.timesteps;
   
-  %pick particles to attempt move based on probability
+  % Pick particles to attempt move based on probability
   rvec=rand(n.tracer,1);
   list.attempt=find(rvec<tracer.pmove);
-  %pick direction of move
+  % Pick direction of move
   list.tracerdir=randi(length(lattice.moves),length(list.attempt),1);
   
-  %attempt new tracer positions
+  % Attempt new tracer positions
   center_old=tracer.center(list.attempt,:);
   center_temp= center_old+lattice.moves(list.tracerdir,:);
   
-  %enforcing periodic boundary conditions
+  % Enforcing periodic boundary conditions
   center_new = mod( center_temp-ones(size(center_temp)),...
     ones(size(center_temp))*n.gridpoints )+ones(size(center_temp));
   sites_new = ...
@@ -174,6 +174,7 @@ for m=1:n.timesteps;
   % Track reject changes
   list.reject=setdiff(list.attempt,list.accept);
    
+  % Animations
   if animate
     for kTracer=1:n.tracer
       tracer=update_rectangle(tracer,kTracer,n.len_tracer,n.gridpoints,...
@@ -182,8 +183,7 @@ for m=1:n.timesteps;
     end
   end
   
-  %recording
-  
+  % Recording
   if n.Rec > 0
     if m >= n.twait
       if mod( m, n.rec_interval  ) == 0
