@@ -144,6 +144,9 @@ for m=1:n.timesteps;
   sites_new = ...
     sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
   
+  % Temporarily move all tracers to their attempt. Used for drawing?
+  tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
+
   % Find old and new occupancy, i.e, wheh tracer and obs on same site
   % Why are they using a sum?
   occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
@@ -160,17 +163,16 @@ for m=1:n.timesteps;
   list.taccept=find( rvec2 <= ProbAcceptBind );
   list.accept=list.attempt(list.taccept);
   
-  % Suggestion:
-  % tracer.cen_nomod(list.accept,:)=center_temp(list.accept,:);
+  % Move all accepted changes
   tracer.cen_nomod(list.accept,:)=tracer.cen_nomod(list.accept,:)+...
     lattice.moves(list.tracerdir(list.taccept),:); %center, no periodic wrapping
+
   tracer.allpts(list.accept,:)=sites_new(list.taccept,:); %update other sites
   tracer.state(list.accept)=occ_new(list.taccept);
   
   % Since we already moved centers, put the rejected ones back
   list.reject=setdiff(list.attempt,list.accept);
   tracer.center(list.reject,:)=center_old(list.reject,:);
-  
   
   if animate
     for kTracer=1:n.tracer
