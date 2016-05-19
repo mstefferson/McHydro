@@ -132,25 +132,14 @@ for m=1:n.timesteps;
     %attempt new tracer positions
     center_old=tracer.center(list.attempt,:);
     center_temp= center_old+lattice.moves(list.tracerdir,:);
-    %convert object points to coordinates
-    %x,y_obj is current x,y position
-    %x,y_obj_new only used to find periodic coordinates
-    [x_obj,y_obj] = ind2sub([n.gridpoints,n.gridpoints],... %*****
-        tracer.allpts(list.attempt,:));
-    x_obj_new=x_obj+lattice.moves(list.tracerdir,1);
-    y_obj_new=y_obj+lattice.moves(list.tracerdir,2);
-    %enforce periodic boundary conditions
-    % Need to calculate new x,y position to find sites_new
+
+    %enforcing periodic boundary conditions
     center_new = mod( center_temp-ones(size(center_temp)),...
         ones(size(center_temp))*n.gridpoints )+ones(size(center_temp));
-    x_all_new = mod(x_obj_new-1,n.gridpoints)+1;
-    y_all_new = mod(y_obj_new-1,n.gridpoints)+1;
-    tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
-    sites_new=sub2ind([n.gridpoints n.gridpoints], x_all_new, y_all_new); %********
-    % Suggest: delete x,y_all_new, x,y_obj
-    %sites_new = ...
-    % sub2ind([n.gridpoints n.gridpoints], center_new(1,:), center_new(2,:))
+    sites_new = ...
+     sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
     
+   % keyboard
     % Find old and new occupancy, i.e, wheh tracer and obs on same site
     % Why are they using a sum?
     occ_old=sum(ismember(tracer.allpts(list.attempt,:), obst.allpts),2);
@@ -178,7 +167,7 @@ for m=1:n.timesteps;
     % Since we already moved centers, put the rejected ones back
     list.reject=setdiff(list.attempt,list.accept);
     tracer.center(list.reject,:)=center_old(list.reject,:);
-    keyboard
+    
     
     if animate
         for kTracer=1:n.tracer
