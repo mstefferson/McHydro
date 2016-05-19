@@ -17,14 +17,14 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
 %% initialize
 %parameters from pvec
 if (length(paramvec)<4)
-    error('diffusion_model: parameter vector too short');
+  error('diffusion_model: parameter vector too short');
 elseif (length(paramvec)==4)
-    ffrac_obst=paramvec(1);
-    ffrac_tracer=paramvec(2);
-    slide_barr=paramvec(3) ;
-    bind_energy=paramvec(4);
+  ffrac_obst=paramvec(1);
+  ffrac_tracer=paramvec(2);
+  slide_barr=paramvec(3) ;
+  bind_energy=paramvec(4);
 elseif (length(paramvec)>4)
-    error('diffusion_model: parameter vector too long');
+  error('diffusion_model: parameter vector too long');
 end
 
 %colors
@@ -70,19 +70,24 @@ n.tracer=round(ffrac_tracer*(n.gridpoints/n.len_tracer)^modelopt.dimension);
 
 % %square lattice definition - assume 2D for now
 lattice.moves=[1 0;
-    -1 0;
-    0 1;
-    0 -1];
+  -1 0;
+  0 1;
+  0 -1];
 lattice.size=[n.gridpoints,n.gridpoints];
 
+% Take exponential of binding energy out of time loop, then pick a value
+% based on occupancy change.
+% expBE(1): unbinding expBE(2): no change expBE(3): binding
+expBE = [ exp(bind_energy) 1 exp(-bind_energy) ];
+
 obst=place_objects(n.obst,n.len_obst,n.gridpoints,modelopt,modelopt.obst_excl,...
-    0,obst_color,obst_curv);
+  0,obst_color,obst_curv);
 obst.color=obst_color;
 obst.curvature=obst_curv;
 obst.ffrac=ffrac_obst;
 
 tracer=place_objects(n.tracer,n.len_tracer,n.gridpoints,modelopt,...
-    modelopt.tracer_excl,1,tracer_color,tracer_curv,obst);
+  modelopt.tracer_excl,1,tracer_color,tracer_curv,obst);
 tracer.color=tracer_color;
 tracer.curvature=tracer_curv;
 tracer.ffrac=ffrac_tracer;
@@ -102,127 +107,123 @@ fileObj = matfile(filename,'Writable',true);
 % everything though
 
 if n.ObRec
-    obst_cen_rec_temp = zeros( n.obst, 2, n.NrecChunk );
-    obst_cen_rec_nomod_temp = zeros( n.obst,2, n.NrecChunk );
-    
-    fileObj.obst_cen_rec = zeros( n.obst, 2, 2 );
-    fileObj.obst_cen_rec_nomod = zeros( n.obst, 2, 2);
+  obst_cen_rec_temp = zeros( n.obst, 2, n.NrecChunk );
+  obst_cen_rec_nomod_temp = zeros( n.obst,2, n.NrecChunk );
+  
+  fileObj.obst_cen_rec = zeros( n.obst, 2, 2 );
+  fileObj.obst_cen_rec_nomod = zeros( n.obst, 2, 2);
 end
 
 if n.TrRec
-    tracer_cen_rec_temp = zeros( n.tracer, 2, n.NrecChunk );
-    tracer_cen_rec_nomod_temp = zeros( n.tracer, 2, n.NrecChunk );
-    tracer_state_rec_temp = zeros( n.tracer, n.NrecChunk );
-    
-     fileObj.tracer_cen_rec = zeros( n.tracer, 2, 2 );
-     fileObj.tracer_cen_rec_nomod = zeros( n.tracer, 2, 2 );
-     fileObj.tracer_state_rec = zeros( n.tracer, 2 );
+  tracer_cen_rec_temp = zeros( n.tracer, 2, n.NrecChunk );
+  tracer_cen_rec_nomod_temp = zeros( n.tracer, 2, n.NrecChunk );
+  tracer_state_rec_temp = zeros( n.tracer, n.NrecChunk );
+  
+  fileObj.tracer_cen_rec = zeros( n.tracer, 2, 2 );
+  fileObj.tracer_cen_rec_nomod = zeros( n.tracer, 2, 2 );
+  fileObj.tracer_state_rec = zeros( n.tracer, 2 );
 end
 
 
 %% loop over time points
 for m=1:n.timesteps;
+  
+  %pick particles to attempt move based on probability
+  rvec=rand(n.tracer,1);
+  list.attempt=find(rvec<tracer.pmove);
+  %pick direction of move
+  list.tracerdir=randi(length(lattice.moves),length(list.attempt),1);
+  
+  %attempt new tracer positions
+  center_old=tracer.center(list.attempt,:);
+  center_temp= center_old+lattice.moves(list.tracerdir,:);
+  
+  %enforcing periodic boundary conditions
+  center_new = mod( center_temp-ones(size(center_temp)),...
+    ones(size(center_temp))*n.gridpoints )+ones(size(center_temp));
+  sites_new = ...
+    sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
+  
+  % Find old and new occupancy, i.e, wheh tracer and obs on same site
+  % Why are they using a sum?
+  occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
+  occ_new=ismember(sites_new, obst.allpts);
+  
+  % Generate random vector, if it's less than exp( \DeltaBE ) accept
+  rvec2=rand(length(occ_old),1);
     
-    %pick particles to attempt move based on probability
-    rvec=rand(n.tracer,1);
-    list.attempt=find(rvec<tracer.pmove);
-    %pick direction of move
-    list.tracerdir=randi(length(lattice.moves),length(list.attempt),1);
-    
-    %attempt new tracer positions
-    center_old=tracer.center(list.attempt,:);
-    center_temp= center_old+lattice.moves(list.tracerdir,:);
-
-    %enforcing periodic boundary conditions
-    center_new = mod( center_temp-ones(size(center_temp)),...
-        ones(size(center_temp))*n.gridpoints )+ones(size(center_temp));
-    sites_new = ...
-     sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
-    
-   
-    % Find old and new occupancy, i.e, wheh tracer and obs on same site
-    % Why are they using a sum?
-    occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
-    occ_new=ismember(sites_new, obst.allpts);  
-
-    % Generate random vector, if it's less than exp( \DeltaBE ) accept
-    rvec2=rand(length(occ_old),1);
-    % taccept: index of accepted moves from energetics. 
-    % taccept in (1, numAttempts)
-    % accept:  index of accepted moves from attempts list
-    % accept in (1, numTracer)
-    % Suggest
-    % expbe(:) == [exp(-be) 1 exp(be) ]
-    % deltaOcc = occ_new - occ_old + 3 % + 3 to give index
-    % expAttemp = expbe( deltaOcc )
-    list.taccept=find(rvec2<exp(-(occ_new-occ_old)*bind_energy));
-    list.accept=list.attempt(list.taccept);
-    
-    %keyboard
-    % Suggestion: 
-    % tracer.cen_nomod(list.accept,:)=center_temp(list.accept,:);
-    tracer.cen_nomod(list.accept,:)=tracer.cen_nomod(list.accept,:)+...
-        lattice.moves(list.tracerdir(list.taccept),:); %center, no periodic wrapping
-    tracer.allpts(list.accept,:)=sites_new(list.taccept,:); %update other sites
-    tracer.state(list.accept)=occ_new(list.taccept);
-    
-    % Since we already moved centers, put the rejected ones back
-    list.reject=setdiff(list.attempt,list.accept);
-    tracer.center(list.reject,:)=center_old(list.reject,:);
-    
-    
-    if animate
-        for kTracer=1:n.tracer
-            tracer=update_rectangle(tracer,kTracer,n.len_tracer,n.gridpoints,...
-                tracer.color,tracer.curvature);
-            pause(tpause);
-        end
+  % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
+  deltaOcc = occ_new - occ_old + 2;
+  ProbAcceptBind = expBE( deltaOcc )';
+  
+  % taccept in (1, numAttempts);  accept in (1, numTracer)
+  list.taccept=find( rvec2 <= ProbAcceptBind );
+  list.accept=list.attempt(list.taccept);
+  
+  % Suggestion:
+  % tracer.cen_nomod(list.accept,:)=center_temp(list.accept,:);
+  tracer.cen_nomod(list.accept,:)=tracer.cen_nomod(list.accept,:)+...
+    lattice.moves(list.tracerdir(list.taccept),:); %center, no periodic wrapping
+  tracer.allpts(list.accept,:)=sites_new(list.taccept,:); %update other sites
+  tracer.state(list.accept)=occ_new(list.taccept);
+  
+  % Since we already moved centers, put the rejected ones back
+  list.reject=setdiff(list.attempt,list.accept);
+  tracer.center(list.reject,:)=center_old(list.reject,:);
+  
+  
+  if animate
+    for kTracer=1:n.tracer
+      tracer=update_rectangle(tracer,kTracer,n.len_tracer,n.gridpoints,...
+        tracer.color,tracer.curvature);
+      pause(tpause);
     end
-    
-    %recording
-    
-    if n.Rec > 0
-        if m >= n.twait
-            if mod( m, n.rec_interval  ) == 0
-                if n.ObRec
-                    obst_cen_rec_temp(1:n.obst,1:2,jrectemp) = obst.center;
-                    obst_cen_rec_nomod_temp(1:n.obst,1:2,jrectemp) = obst.cen_nomod;
-                end
-                if n.TrRec
-                    tracer_cen_rec_temp(1:n.tracer,1:2,jrectemp) = tracer.center;
-                    tracer_cen_rec_nomod_temp(1:n.tracer,1:2,jrectemp) = tracer.cen_nomod;
-                    tracer_state_rec_temp(1:n.tracer,jrectemp) = tracer.state;
-                end
-                
-                if mod( m, const.rec_chunk  ) == 0
-%                     fprintf('Recording %d\n', jchunk);
-                    RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
-                    if n.ObRec
-                        fileObj.obst_cen_rec(1:n.obst,1:2,RecIndTemp) = ...
-                            obst_cen_rec_temp;
-                        fileObj.obst_cen_rec_nomod(1:n.obst,1:2,RecIndTemp) = ...
-                            obst_cen_rec_nomod_temp;
-                    end
-                    if n.TrRec
-                        fileObj.tracer_cen_rec(1:n.tracer,1:2,RecIndTemp) = ...
-                            tracer_cen_rec_temp;
-                        fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,RecIndTemp) = ...
-                            tracer_cen_rec_nomod_temp;
-                        fileObj.tracer_state_rec(1:n.tracer,RecIndTemp) = ...
-                            tracer_state_rec_temp;
-                    end
-                    jrectemp = 0;
-                    jchunk = jchunk + 1;
-                end % write mod(m, chuck)
-                jrectemp = jrectemp + 1;
-                jrec = jrec + 1;
-            end % rec mod(m,trec)
-        end % m > twait
-    end % record
-    
+  end
+  
+  %recording
+  
+  if n.Rec > 0
+    if m >= n.twait
+      if mod( m, n.rec_interval  ) == 0
+        if n.ObRec
+          obst_cen_rec_temp(1:n.obst,1:2,jrectemp) = obst.center;
+          obst_cen_rec_nomod_temp(1:n.obst,1:2,jrectemp) = obst.cen_nomod;
+        end
+        if n.TrRec
+          tracer_cen_rec_temp(1:n.tracer,1:2,jrectemp) = tracer.center;
+          tracer_cen_rec_nomod_temp(1:n.tracer,1:2,jrectemp) = tracer.cen_nomod;
+          tracer_state_rec_temp(1:n.tracer,jrectemp) = tracer.state;
+        end
+        
+        if mod( m, const.rec_chunk  ) == 0
+          %                     fprintf('Recording %d\n', jchunk);
+          RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
+          if n.ObRec
+            fileObj.obst_cen_rec(1:n.obst,1:2,RecIndTemp) = ...
+              obst_cen_rec_temp;
+            fileObj.obst_cen_rec_nomod(1:n.obst,1:2,RecIndTemp) = ...
+              obst_cen_rec_nomod_temp;
+          end
+          if n.TrRec
+            fileObj.tracer_cen_rec(1:n.tracer,1:2,RecIndTemp) = ...
+              tracer_cen_rec_temp;
+            fileObj.tracer_cen_rec_nomod(1:n.tracer,1:2,RecIndTemp) = ...
+              tracer_cen_rec_nomod_temp;
+            fileObj.tracer_state_rec(1:n.tracer,RecIndTemp) = ...
+              tracer_state_rec_temp;
+          end
+          jrectemp = 0;
+          jchunk = jchunk + 1;
+        end % write mod(m, chuck)
+        jrectemp = jrectemp + 1;
+        jrec = jrec + 1;
+      end % rec mod(m,trec)
+    end % m > twait
+  end % record
+  
 end %loop over time
 
 if modelopt.movie
-    movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
-        const,n,modelopt.movie_timestep,modelopt.movie_filename);
+  movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
+    const,n,modelopt.movie_timestep,modelopt.movie_filename);
 end
