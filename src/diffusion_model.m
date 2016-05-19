@@ -164,16 +164,16 @@ for m=1:n.timesteps;
   list.accept=list.attempt(list.taccept);
   
   % Move all accepted changes
-  tracer.cen_nomod(list.accept,:)=tracer.cen_nomod(list.accept,:)+...
+  tracer.center(list.accept,:) = center_new(list.accept,:); %temporary update rule for drawing
+  tracer.cen_nomod(list.accept,:) = tracer.cen_nomod(list.accept,:)+...
     lattice.moves(list.tracerdir(list.taccept),:); %center, no periodic wrapping
 
   tracer.allpts(list.accept,:)=sites_new(list.taccept,:); %update other sites
   tracer.state(list.accept)=occ_new(list.taccept);
   
-  % Since we already moved centers, put the rejected ones back
+  % Track reject changes
   list.reject=setdiff(list.attempt,list.accept);
-  tracer.center(list.reject,:)=center_old(list.reject,:);
-  
+   
   if animate
     for kTracer=1:n.tracer
       tracer=update_rectangle(tracer,kTracer,n.len_tracer,n.gridpoints,...
