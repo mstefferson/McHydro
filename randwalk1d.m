@@ -1,7 +1,13 @@
 % Just to test a 1D random walk
 
-Np = 2000;
-Nt = 100;
+function DisplacementInfo = randwalk1d( Np, Nt, deltaT, deltaInd )
+
+%deltaT = 20;
+%deltaInd = deltaT;
+
+%Np = 1000;
+%Nt = 100;
+
 TotPoints = Np * Nt;
 
 Xrec = zeros(Np, Nt );
@@ -33,9 +39,7 @@ aveX4 = mean( Xrec .^ 4 , 1);
 
 %% Time slice
 
-deltaT = 10;
-
-indexstart    = 1:(Nt - deltaT);
+indexstart    = 1:deltaInd:(Nt - deltaT);
 indexend      = indexstart + deltaT;
 numTimeSlices = length( indexstart );
 
@@ -81,4 +85,5 @@ DisplacementInfo.x4Ms     = x4Ave;
 
 disp(DisplacementInfo)
 
+plotrw1d
 
