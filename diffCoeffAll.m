@@ -67,7 +67,7 @@ cd ./msdfiles
     end
     
     if isinf( bindEn )
-      timestart = 0 
+      timestart = 0 ;
     else
       timestart = timestrMult * max( exp( bindEn ) , exp(-bindEn) );
     end

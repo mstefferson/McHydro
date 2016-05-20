@@ -67,7 +67,7 @@ param_ffo   = param_mat(:,3);
 fprintf('Starting paramloop \n')
 RunTimeID = tic;
 
-for j=1:nparams
+parfor j=1:nparams
     
     RunID       = param_RunID(j);
     bind_energy = param_bind(j);
