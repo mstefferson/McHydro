@@ -39,9 +39,17 @@ paramslist.ffo   = paramvec(1);
 paramslist.fft   = paramvec(2);
 paramslist.slide = paramvec(3);
 paramslist.be    = paramvec(4);
-paramslist.bindFlag = 0;
 
-bindFlag = paramslist.bindFlag;
+% binding flag stuff
+% Take exponential of binding energy out of time loop, then pick a value
+% based on occupancy change.
+% expBE(1): unbinding expBE(2): no change expBE(3): binding
+if isinf( paramslist.be );
+  bindFlag = 0;
+else
+  bindFlag = 1;
+  expBE = [ exp(bind_energy) 1 exp(-bind_energy) ];
+end
 
 % Assign internal variables
 n.gridpoints=const.n_gridpoints;
@@ -77,11 +85,6 @@ lattice.moves=[1 0;
   0 1;
   0 -1];
 lattice.size=[n.gridpoints,n.gridpoints];
-
-% Take exponential of binding energy out of time loop, then pick a value
-% based on occupancy change.
-% expBE(1): unbinding expBE(2): no change expBE(3): binding
-expBE = [ exp(bind_energy) 1 exp(-bind_energy) ];
 
 obst=place_objects(n.obst,n.len_obst,n.gridpoints,modelopt,modelopt.obst_excl,...
   0,obst_color,obst_curv);
@@ -154,20 +157,18 @@ for m=1:n.timesteps;
   occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
   occ_new=ismember(sites_new, obst.allpts);
   
+  % Accept moves based on binding energetics
+  if bindFlag
   % Accept or not due to binding. taccept in (1, numAttempts);  accept in (1, numTracer)
   % Generate random vector, if it's less than exp( \DeltaBE ) accept
   rvec2=rand(length(occ_old),1);
-    
-  if bindFlag
-  % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
+   % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
   deltaOcc = occ_new - occ_old + 2;
   ProbAcceptBind = expBE( deltaOcc )';
-  
   list.taccept=find( rvec2 <= ProbAcceptBind );
   else 
   list.taccept = find( occ_new == 0 );
   end
-
   list.accept=list.attempt(list.taccept);
 
   % Move all accepted changes

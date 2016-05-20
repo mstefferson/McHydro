@@ -65,7 +65,12 @@ cd ./msdfiles
     else
       error('I cannot find any parameters');
     end
-    timestart = timestrMult * max( exp( bindEn ) , exp(-bindEn) );
+    
+    if isinf( bindEn )
+      timestart = 0 
+    else
+      timestart = timestrMult * max( exp( bindEn ) , exp(-bindEn) );
+    end
     
     % Run diffcoeffcalc
     [Dout] = diffCoeffCalc( filename, timestart, plotflag, alphaFit );
