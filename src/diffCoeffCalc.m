@@ -159,7 +159,9 @@ Dstruct.tstart = timestart;
 
 % Plot it
 if plotflag
-  
+  % Get some parameters for axis
+  tMax = dtimeAveF(end);
+
    % Parameters
   ParamList1 = sprintf('ffo: %.1g BE = %.1g', ffoM, bindenM);
   ParamList2 = sprintf( ' ntrials: %d \n ng: %d \n ntime: %d',...
@@ -189,6 +191,7 @@ if plotflag
   scatter( dtimeM , msdM )
   plot( [ dtimeAveNf; dtimeAveF] , Shift + Dfit .* [ dtimeAveNf; dtimeAveF] )
   axis square
+  axis( [0 tMax 0 tMax] )
   xlabel('time'); ylabel('r^2')
   title( [TitleStr1 '(all)' ] )
   legend('Data NF', 'Data F', 'Fit line','location','best')
@@ -200,6 +203,7 @@ if plotflag
   scatter( dtimeAveF , msdAveF )
   plot( [ dtimeAveNf; dtimeAveF] , Shift + Dfit .* [ dtimeAveNf; dtimeAveF] )
   axis square
+  axis( [0 tMax 0 tMax] )
   xlabel('time'); ylabel('r^2')
   title( [TitleStr2] )
   legend('Data NF', 'Data F', 'Fit line','location','best') 
