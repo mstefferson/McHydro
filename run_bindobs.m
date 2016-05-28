@@ -30,7 +30,7 @@ if exist('./runfiles','dir') == 0; mkdir('./runfiles') ;end;
 %initparams on tracked, so make it if it's not there
 if exist('Params.mat','file') == 0;
     if exist('initparams.m','file') == 0;
-        copyfile('masterparams_bindobs.m','initparams.m')
+        cpmatparams
     end;
     initparams
 end
