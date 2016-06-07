@@ -5,6 +5,8 @@ clear
 clc
 close all
 
+DiffSaveId = 'Diff1';
+
 cd ~/McHydro/
 % Add paths
 addpath('~/McHydro/src')
@@ -13,11 +15,11 @@ addpath('~/McHydro/msdfiles')
 fprintf('Startng diffCoeffAll. Analyzing all files in ./msdfiles \n');
 % diffcoeffCal inputs
 timestrMult = 10;
-alphaFit    = 0.68;
-plotflag    = 1;
+plotflag    = 0;
 
 % Output directory
 if ~exist('figs','dir'); mkdir('figs'); end;
+if ~exist('diffcalc','dir'); mkdir('diffcalc'); end;
 
 % Grab all the files in the msd folder
 msdLall = filelist( '.mat','./msdfiles');
@@ -46,7 +48,8 @@ fprintf('%d total files. %d parameter configs. %d trials/config\n',...
   totFiles, numUnqParams, numTrials);
 
 % Allocate memory for everything
-BindFFDiff = zeros( numUnqParams ,  3); % m(:,1) : be; m(:,2) = ff; m(:,3) = D
+% m(:,1) : be; m(:,2) = ff; m(:,3) = D m(:,4) = sig D
+BindFFDiff = zeros( numUnqParams ,  4); 
 
 % cd into directory with msdfiles--- that's where diffcoeffCalc needs to be run
 cd ./msdfiles
@@ -57,11 +60,13 @@ cd ./msdfiles
     filename = msdLUnParam{ii};
     load( filename );
     if exist('paramlist','var')
-      ffo  = paramlist.ffo;
-      bindEn  = paramlist.be;
+      ffo  = floor( paramlist.ffo * 1e10 ) / 1e10;
+      bindEn  = floor( paramlist.be * 1e10 ) / 1e10;
+      clear paramlist % Just in case
     elseif exist('paramvec','var' )
       ffo = paramvec(1);
       bindEn = paramvec(4);
+      clear paramvec % Just in case
     else
       error('I cannot find any parameters');
     end
@@ -73,7 +78,7 @@ cd ./msdfiles
     end
     
     % Run diffcoeffcalc
-    [Dout] = diffCoeffCalc( filename, timestart, plotflag, alphaFit );
+    [Dout] = diffCoeffCalc( filename, timestart, plotflag );
 
     % Display it
     disp(Dout);
@@ -82,6 +87,7 @@ cd ./msdfiles
     BindFFDiff(ii,1) = bindEn;
     BindFFDiff(ii,2) = ffo;
     BindFFDiff(ii,3) = Dout.Dfit;
+    BindFFDiff(ii,4) = Dout.DsigFit;
 
  end
 
@@ -90,24 +96,54 @@ if plotflag; movefile('*.fig', '~/McHydro/figs'); end;
 cd ~/McHydro/
 
 % Rearrang things into a more friendly matrix
-% Find the number of binding energies
-beVec = unique( BindFFDiff(:,1) );
+% Find the num_ber of binding energies
+beVec = uniquetol( BindFFDiff(:,1), 1e-9 );
+num_be = length(beVec);
 
-% Find the number of filling fractions
-ffoVec = unique( BindFFDiff(:,2) );
+% Find the num_ber of filling fractions
+ffoVec = uniquetol( BindFFDiff(:,2), 1e-9 );
+num_ffo = length(ffoVec);
 
 % Diffusion Mat
-DiffMat = zeros( length(beVec), length(ffoVec) );
+DiffMat    = zeros( length(beVec), length(ffoVec) );
+DiffMatSig = zeros( length(beVec), length(ffoVec) );
 
-for ii = 1:length(beVec)
-  for jj = 1:length(ffoVec)
+for ii = 1:num_be
+  for jj = 1:num_ffo
     % Use conditional statements to find row with given BE and FF
-    row =  BindFFDiff(:,1) == beVec(ii) & BindFFDiff(:,2) == ffoVec(jj) ; 
+    row = (ii-1) * num_ffo + jj; 
     DiffMat(ii,jj) = BindFFDiff( row, 3 );
+    DiffMatSig(ii,jj) = BindFFDiff( row, 4 );
   end
 end
 
-% Display the Diffusion Coeff
+% Plot it
+% All on one
+figure()
+hold all
+for ii = 1:num_be
+  errorbar( ffoVec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
+end
+xlabel('\nu obstacles'); ylabel('D')
+
+legcell = cell( num_be, 1 );
+
+for i = 1:num_be
+  legcell{i} = ['be = ' num2str( beVec(i) ) ];
+end
+legend( legcell,'location', 'best' );
+
+%Color bar
+figure()
+imagesc( ffoVec, beVec, DiffMat );
+colorbar;
+title('Diffusion Coeff')
+xlabel('\nu obstacles'); ylabel('binding energy')
+% Save the Diffusion Coeff
+DiffSaveName = [ DiffSaveId 'be' num2str(num_be)...
+  'ffo' num2str(num_ffo) '.mat' ];
+save( DiffSaveName, 'DiffMat', 'beVec','ffoVec');
+movefile(DiffSaveName, '~/McHydro/diffcalc');
 
 fprintf('Finished run\n');
 

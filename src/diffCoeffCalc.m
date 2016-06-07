@@ -1,17 +1,12 @@
 %% Grab multiple files to load
-function [Dstruct] = diffCoeffCalc( filename, timestart, plotflag, alphaFit )
+function [Dstruct] = diffCoeffCalc( filename, timestart, plotflag )
+
 
 if nargin == 1
   timestart = 1;
   plotflag  = 1;
-  alphaFit  = 0.67;
 elseif nargin == 2
   plotflag  = 1;
-  alphaFit  = 0.67;
-elseif nargin == 3
-  alphaFit  = 0.67;
-elseif nargin == 3
-  
 end
 
 % Grab some parameters
@@ -72,9 +67,14 @@ FpntsTot = zeros(recLength, 1);
 DfitV   = zeros( NumFiles, 1 );
 DsigV   = zeros( NumFiles, 1 );
 
+if NumFiles == 0
+  error('I am not analyzing anything')
+end
+
 for i=1:NumFiles
   
   load(SameParamFiles{i})
+ 
   totTpnts = length( dtime );
   if totTpnts ~= totTpntsOld; error('Record lengths changing'); end;
   
@@ -99,6 +99,10 @@ for i=1:NumFiles
   nPts_temp   = msd(tInd,3);
   error_temp  = ( msd(tInd,2) ./ sqrt( nPts_temp ) ) ; % Column vector
   
+  %Make sure nothing is broken
+   if isinf( msd_temp )
+    error('msd is infinite')
+  end
   % Record points not in fit if plotting
   if plotflag
     NfIndend = NfIndstr + tstartInd - 2;
@@ -109,7 +113,10 @@ for i=1:NumFiles
   end
   
   % Calculate Dave from a weighted fit (poly1fitw uses matlab's fit.m)
-  [Dave, Dsig, Shift, ~] = poly1fitw( t_temp, msd_temp, error_temp, alphaFit );
+  %[Dave, Dsig, Shift, ~] = poly1fitw( t_temp, msd_temp, error_temp, alphaFit );
+  fitcoeff = lsfLin( t_temp, msd_temp, error_temp ); 
+  Dave = fitcoeff.Coeff(2);
+  Dsig = fitcoeff.StdErrProp( 2 );
   
   % Store it for weighted average
   DfitV(i) = Dave;
@@ -143,7 +150,12 @@ msdM = msdM(1:NotZeroInd);
 errorM = errorM(1:NotZeroInd);
 
 % Fit it
-[Dfit, DsigFit, ~, ~] = poly1fitw( dtimeM, msdM, errorM, alphaFit );
+%[Dfit, DsigFit, ~, ~] = poly1fitw( dtimeM, msdM, errorM, alphaFit );
+fitcoeff = lsfLin( dtimeM, msdM, errorM ); 
+Dfit = fitcoeff.Coeff(2);
+DsigFit = fitcoeff.StdErrProp( 2 );
+Shift = fitcoeff.Coeff(1);
+
 [DaveW, DsigW] = wmean( DfitV, DsigV );
 DaveUw = mean(DfitV);
 DsigUw = std(DfitV);

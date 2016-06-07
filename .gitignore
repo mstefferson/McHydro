@@ -20,4 +20,6 @@ initSetupParams.m
 *.txt
 *.log
 *.out
+*.fig
+*.jpg
 

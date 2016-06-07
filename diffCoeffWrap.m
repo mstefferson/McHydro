@@ -9,11 +9,26 @@
 % alphaFit: Confindence inverval of fit
 
 function [DiffMat] = diffCoeffWrap( ...
-  bindVec, ffoVec, timestrMult, plotflag, alphaFit )
+  bindVec, ffoVec, timestrMult, plotflag)
+
+if nargin == 2
+  timestrMult = 1; 
+  plotflag = 1;
+
+end
+if nargin == 3 
+  plotflag = 1;
+end
+
+% Vector lengths
+num_be = length( bindVec );
+num_ffo = length( ffoVec );
 
 % Add paths
 addpath('~/McHydro/src')
-addpath('~/McHydro/msdfiles')
+
+% cd into msd files
+cd ./msdfiles
 
 % Currently, barrier height is zero
 barEn = 0;
@@ -22,10 +37,11 @@ barEn = 0;
 if ~exist('figs','dir'); mkdir('figs'); end;
 
 % Diffusion Mat
-DiffMat = zeros( length(bindVec), length( ffoVec ) );
+DiffMat   = zeros( length(bindVec), length( ffoVec ) );
+DiffMatSig = zeros( length(bindVec), length( ffoVec ) );
 
-for ii = 1:length(bindVec)
-   for jj = 1:length(ffoVec)
+for ii = 1:num_be
+   for jj = 1:num_ffo
       
       bindEn = bindVec(ii);
       ffo = ffoVec(jj);
@@ -37,18 +53,45 @@ for ii = 1:length(bindVec)
       msdlist     = filelist( msd2analyze, pwd); 
       filename = msdlist{1};
       load(filename);
-
+      
       % Run diffcoeffcalc
-      [Dout] = diffCoeffCalc( filename, timestart, plotflag, alphaFit );
+      [Dout] = diffCoeffCalc( filename, timestart, plotflag );
 
       % Display it
-      disp('Dout');
+      disp(Dout);
 
       % Store it in mat
       DiffMat(ii,jj) = Dout.Dfit;
+      DiffMatSig(ii,jj) = Dout.DsigFit;
 
-      movefile('*.fig', './figs')
+      if plotflag
+        movefile('*.fig', './figs')
+      end
       
    end
 end
 
+cd ../
+
+% Plot if
+% All on one
+figure()
+hold all
+for ii = 1:num_be
+  errorbar( ffoVec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
+end
+xlabel('\nu obstacles'); ylabel('D')
+
+legcell = cell( num_be, 1 );
+
+for i = 1:num_be
+  legcell{i} = ['be = ' num2str( bindVec(i) ) ];
+end
+legend( legcell,'location', 'best' );
+
+% color map
+figure()
+imagesc( ffoVec, bindVec, DiffMat );
+colorbar;
+title('Diffusion Coeff')
+xlabel('\nu obstacles'); ylabel('binding energy')
