@@ -1,6 +1,6 @@
 # Sample PBS job script
 # squb -v nfiles=blah analyzebindPBS.sh
-# runs nfiles=5 if left blank
+# runs nfiles=100 if left blank
 #
 # Copy this script, customize it and then submit it with the ``qsub''
 # command. For example:
@@ -82,7 +82,7 @@ echo Using ${NPROCS} processors across ${NNODES} nodes
 module load matlab_R2015b
 #  cd /Users/mist7261/McHydro
 
-# if no input, analyze 5 files
+# if no input, analyze 100 files
 if [ -z ${nfiles+x} ]; then 
   nfiles=100; 
 fi
