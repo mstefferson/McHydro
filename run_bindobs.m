@@ -67,8 +67,8 @@ param_ffo   = param_mat(:,3);
 fprintf('Starting paramloop \n')
 RunTimeID = tic;
 
-parfor j=1:nparams
-    
+if nparams > 1
+  parfor j=1:nparams
     RunID       = param_RunID(j);
     bind_energy = param_bind(j);
     ffrac_obst  = param_ffo(j);
@@ -88,7 +88,28 @@ parfor j=1:nparams
     %run the model!
     [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
     movefile(filename,'./runfiles');
-    
+  end
+else
+  RunID       = param_RunID(1);
+  bind_energy = param_bind(1);
+  ffrac_obst  = param_ffo(1);
+  
+  pvec=[ffrac_obst params.ffrac_tracer params.slide_barr_height bind_energy]; %parameter vector
+  
+  filestring=['bar',num2str(params.slide_barr_height),'_bind',num2str(bind_energy),...
+      '_fo',num2str(ffrac_obst),'_ft',num2str(params.ffrac_tracer),'_so',...
+      num2str(const.size_obst),'_st',num2str(const.size_tracer),...
+      '_oe',num2str(modelopt.obst_excl),'_ng',...
+      num2str(const.n_gridpoints),'_nt',num2str(const.ntimesteps),...
+      '_nrec', num2str(const.NrecTot),...
+      '_t', num2str(trialmaster.tind),'.',num2str(RunID) ];
+  filename=['data_',filestring,'.mat'];
+  %fprintf(fileid,'%s',filename);
+  
+  %run the model!
+  [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
+  fprintf('Finished %s \n', filename);
+  movefile(filename,'./runfiles');
 end
 RunTime = toc(RunTimeID);
 fprintf('Run time %.2g min\n', RunTime / 60);
