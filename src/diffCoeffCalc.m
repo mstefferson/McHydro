@@ -97,7 +97,8 @@ for i=1:NumFiles
   t_temp      = dtime(tInd);
   msd_temp    = msd(tInd,2);
   nPts_temp   = msd(tInd,3);
-  error_temp  = ( msd(tInd,2) ./ sqrt( nPts_temp ) ) ; % Column vector
+  %error_temp  = ( msd(tInd,2) ./ sqrt( nPts_temp ) ) ; % Column vector
+  error_temp  =  msd(tInd,2) ; % Column vector
   
   %Make sure nothing is broken
    if isinf( msd_temp )
@@ -231,7 +232,6 @@ if plotflag
 
   % Save it
   savefig( savestr );
-
 
   %% Fig 2: log plots to show anomalous
 

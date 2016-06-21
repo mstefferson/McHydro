@@ -91,6 +91,10 @@ cd ./msdfiles
 
  end
 
+% Sort it by binding energy
+[~,I] = sort(BindFFDiff);
+BindFFDiff = BindFFDiff( I(:,1), : );
+
 % Move all figs to ~/McHydro/figs
 if plotflag; movefile('*.fig', '~/McHydro/figs'); end;
 cd ~/McHydro/
@@ -119,6 +123,7 @@ end
 
 % Plot it
 % All on one
+
 figure()
 hold all
 for ii = 1:num_be

@@ -1,4 +1,5 @@
-% Wrapper for diffcoeffcalc
+% Wrapper for diffcoeffcalc 
+% [DiffMat] = diffCoeffWrap(bindVec, ffoVec, timestrMult, plotflag)
 
 % inputs for diffcoeffcalc. Allow user to just put in
 % desired parameters to analyze. Must be in the directory with in
@@ -23,6 +24,8 @@ end
 % Vector lengths
 num_be = length( bindVec );
 num_ffo = length( ffoVec );
+
+fprintf('num_be = %d num_ff = %d\n',num_be,num_ffo);
 
 % Add paths
 addpath('~/McHydro/src')
