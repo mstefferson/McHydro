@@ -4,15 +4,14 @@
 
 % Directory stuff
 RunDirPath = '~/RunDir/McHydro';
-FilesInDir = 12;
-AvailWorkers = 12;
+FilesInDir = 4;
+AvailWorkers = 4;
 
-%trial stuff indicator
-n_trials    = 36;
-trialind     = 5; 
-runstrtid    = 13;
+%trial indicator
+trialind  = 1; 
 
-%bind_energy_vec = [ -4 4 Inf];
-%ffrac_obst_vec= [ 0.1:0.2:0.9];         %filling fraction of obstacles
-bind_energy_vec = [0];
+%parameters to that are looped as be, ffob, trials
+n_trials    = 1;
+bind_energy_vec = [ 0 ] ;
 ffrac_obst_vec= [ 0 ];         %filling fraction of obstacles
+

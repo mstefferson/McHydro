@@ -59,7 +59,7 @@ if nt > 1
    
    %NumDirsTr = nt / Workers;
    NumDirs = nffo * nbe * NumDirsTr;
-   RunIndVec = 1:FilesInDir +runstrtid;
+   RunIndVec = 1:FilesInDir;
    %WorkersVec = 1:Workers;
    
    for i = 1:nbe
@@ -101,7 +101,7 @@ else
    
    NumParamsPerDir = FilesInDir;
    ntrialtemp  = 1;
-   runIndTemp  = runstrtind;
+   runIndTemp  = 1;
    
    if ( mod( nbe, NumParamsPerDir )  <= mod( nffo, NumParamsPerDir ) )
       
