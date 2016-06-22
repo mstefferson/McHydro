@@ -55,7 +55,7 @@ const.NrecTot    = const.ntimesteps / const.rec_interval - const.Nreclost; % Num
 const.NchunkTot  = const.ntimesteps / const.rec_chunk - const.Nchunklost; % Number of recorded points
 
 % Number of particles on the grid
-const.num_tracer    = params.ffrac_tracer .* const.n_gridpoints ^ 2;
+const.num_tracer    = round(params.ffrac_tracer .* const.n_gridpoints ^ 2);
 
 % Save it
 save('Params', 'const','params','trialmaster','modelopt');
