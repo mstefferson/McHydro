@@ -86,7 +86,7 @@ try
           '_nrec', num2str(const.NrecTot),...
           '_t', num2str(trialmaster.tind),'.',num2str(RunID) ];
       filename=['data_',filestring,'.mat'];
-      fprintf('%s',filename);
+      fprintf('%s\n',filename);
       
       %run the model!
       [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
@@ -108,7 +108,7 @@ try
         '_nrec', num2str(const.NrecTot),...
         '_t', num2str(trialmaster.tind),'.',num2str(RunID) ];
     filename=['data_',filestring,'.mat'];
-    fprintf('%s',filename);
+    fprintf('%s\n',filename);
     
     %run the model!
     [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
