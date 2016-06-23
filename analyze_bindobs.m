@@ -6,6 +6,7 @@
 function analyze_bindobs(NumFiles2Analyze)
 try
   addpath('./src');
+  rng('shuffle');
 
   if nargin == 0; NumFiles2Analyze = 1; end;
 

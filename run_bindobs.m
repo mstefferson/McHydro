@@ -10,6 +10,7 @@
 %close all;
 try
   addpath('./src');
+  rng('shuffle');
   StartTime = datestr(now);
   currentdir=pwd;
   fprintf('In dir %s\n',currentdir);
