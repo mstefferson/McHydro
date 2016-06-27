@@ -1,7 +1,7 @@
 % Just copy master params to init params
 
 % run parameters
-copyfile('./src/paramsTmpl.m','initparams.m')
+copyfile('./src/paramsTmpl.m','initParams.m')
 
 % set-up run dir parameters
 copyfile('./src/setupParamsTmpl.m','./initSetupParams.m')

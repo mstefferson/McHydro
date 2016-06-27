@@ -3,7 +3,7 @@
 # Just copy master params to init params
 
 # run parameters
-cp ./src/paramsTmpl.m ./initparams.m
+cp ./src/paramsTmpl.m ./initParams.m
 
 # set-up run dir parameters
 cp ./src/setupParamsTmpl.m ./initSetupParams.m

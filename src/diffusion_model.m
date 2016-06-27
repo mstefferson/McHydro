@@ -130,7 +130,6 @@ if n.TrRec
   fileObj.tracer_state_rec = zeros( n.tracer, 2 );
 end
 
-
 %% loop over time points
 for m=1:n.timesteps;
   
@@ -151,23 +150,25 @@ for m=1:n.timesteps;
     sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
   
   % Temporarily move all tracers to their attempt. Used for drawing?
-  tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
-
+%  if animate == 1
+%    tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
+ % end
   % Find old and new occupancy, i.e, wheh tracer and obs on same site
   occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
   occ_new=ismember(sites_new, obst.allpts);
   
   % Accept moves based on binding energetics
   if bindFlag
-  % Accept or not due to binding. taccept in (1, numAttempts);  accept in (1, numTracer)
-  % Generate random vector, if it's less than exp( \DeltaBE ) accept
-  rvec2=rand(length(occ_old),1);
-   % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
-  deltaOcc = occ_new - occ_old + 2;
-  ProbAcceptBind = expBE( deltaOcc )';
-  list.taccept=find( rvec2 <= ProbAcceptBind );
+    % Accept or not due to binding. taccept in (1, numAttempts);  accept in (1, numTracer)
+    % Generate random vector, if it's less than exp( \DeltaBE ) accept
+    rvec2=rand(length(occ_old),1);
+     % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
+    deltaOcc = occ_new - occ_old + 2;
+    ProbAcceptBind = expBE( deltaOcc )';
+    list.taccept=find( rvec2 <= ProbAcceptBind );
   else 
-  list.taccept = find( occ_new == 0 );
+    % accept unbinding, obs-obs movement, free movement 
+    list.taccept = find( occ_new - occ_old  < 1 ); 
   end
   list.accept=list.attempt(list.taccept);
 
@@ -181,7 +182,7 @@ for m=1:n.timesteps;
   
   % Track reject changes
   list.reject=setdiff(list.attempt,list.accept);
-   
+ 
   % Animations
   if animate
     for kTracer=1:n.tracer
