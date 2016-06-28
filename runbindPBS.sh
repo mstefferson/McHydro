@@ -48,7 +48,7 @@
 #BS -l nodes=1:ppn=12
 
 ### Tell PBS how much memory you expect to use. Use units of 'b','kb', 'mb' or 'gb'.
-#PBS -l mem=256GB
+#PBS -l mem=24GB
 
 ### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
 ### NOTE if the simulation runs longer than this it will be killed
