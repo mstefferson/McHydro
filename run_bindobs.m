@@ -34,7 +34,7 @@ try
       if exist('initparams.m','file') == 0;
           cpmatparams
       end;
-      initparams
+      initParams
   end
   load Params.mat;
 

@@ -7,7 +7,7 @@ function [] = changeparams_bindobs( beVec, ffoVec, numtrl, trlind, runind)
 if exist('Params.mat','file') == 0 ; 
   fprintf('No params yet, running initparams \n');
   if exist('initparams.m','file') == 0; cpmatparams; end;
-  initparams; 
+  initParams; 
 else
   load('Params.mat');
 end;

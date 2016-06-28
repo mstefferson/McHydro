@@ -10,7 +10,7 @@ eo/
 figs/
 
 # Input parameters
-initparams.m
+initParams.m
 initAnalyzeParams.m
 initSetupParams.m
 
