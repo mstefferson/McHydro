@@ -1,9 +1,9 @@
+% [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult,plotflag);
 % Wrapper for diffCoeffCalc that analyzes all the files in the msdfiles folder.
 % All these files need the same grid and trials. The parameters from the files
 % should form a grid ( # bind energy) X ( # ffo )
-clear
-clc
-close all
+
+function [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult,plotflag);
 
 DiffSaveId = 'Diff1';
 
@@ -14,7 +14,7 @@ addpath('~/McHydro/msdfiles')
 
 fprintf('Startng diffCoeffAll. Analyzing all files in ./msdfiles \n');
 % diffcoeffCal inputs
-timestrMult = 10;
+timestrMult = 1;
 plotflag    = 0;
 
 % Output directory
@@ -122,19 +122,35 @@ for ii = 1:num_be
 end
 
 % Plot it
-% All on one
-
+% D vs ff
 figure()
 hold all
 for ii = 1:num_be
   errorbar( ffoVec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
 end
-xlabel('\nu obstacles'); ylabel('D')
+xlabel('\nu obstacles'); ylabel('D');
+title('D vs ffo');
 
 legcell = cell( num_be, 1 );
 
 for i = 1:num_be
   legcell{i} = ['be = ' num2str( beVec(i) ) ];
+end
+legend( legcell,'location', 'best' );
+
+% D vs be
+figure()
+hold all
+for ii = 1:num_ffo
+  errorbar( beVec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
+end
+xlabel('be'); ylabel('D');
+title('D vs be');
+
+legcell = cell( num_ffo, 1 );
+
+for i = 1:num_ffo
+  legcell{i} = ['ff = ' num2str( ffoVec(i) ) ];
 end
 legend( legcell,'location', 'best' );
 
