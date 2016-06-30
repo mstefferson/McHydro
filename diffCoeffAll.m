@@ -3,7 +3,7 @@
 % All these files need the same grid and trials. The parameters from the files
 % should form a grid ( # bind energy) X ( # ffo )
 
-function [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult,plotflag);
+function [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult,plotflag)
 
 DiffSaveId = 'Diff1';
 
@@ -14,8 +14,6 @@ addpath('~/McHydro/msdfiles')
 
 fprintf('Startng diffCoeffAll. Analyzing all files in ./msdfiles \n');
 % diffcoeffCal inputs
-timestrMult = 1;
-plotflag    = 0;
 
 % Output directory
 if ~exist('figs','dir'); mkdir('figs'); end;
