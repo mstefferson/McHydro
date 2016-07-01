@@ -54,7 +54,11 @@ for i=1:n_obj %loop until get desired number of objects
     x_temp = mod(obj.center(i,1)+obj.lattice(:,1)'-1,ngridpoints)+1;
     y_temp = mod(obj.center(i,2)+obj.lattice(:,2)'-1,ngridpoints)+1;
     %convert to index positions
-    index_temp=sub2ind([ngridpoints ngridpoints], x_temp, y_temp);
+    try
+      index_temp=sub2ind([ngridpoints ngridpoints], x_temp, y_temp);
+    catch
+      keyboard
+    end
     %draw rectangle for current object, check periodic boundaries
     if animate
         obj=update_rectangle(obj,i,len_obj,ngridpoints,grey,obj_curv);

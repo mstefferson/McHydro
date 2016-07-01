@@ -10,10 +10,11 @@ trialmaster.runstrtind = 1; % run indicator
 trialmaster.nt         = 1; % number of trials
 
 %key parameters and constants
-params.slide_barr_height=0;    %barrier height to sliding, in kT
-params.bind_energy_vec = [0];
-params.ffrac_obst_vec= [ 0.1 ];         %filling fraction of obstacles
-params.ffrac_tracer=0.1;       %filling fraction of tracers
+params.bind_energy_vec = [0]; % binding_energy
+params.ffrac_obst_vec= [ 0.1 ]; %filling fraction of obstacles
+params.ffrac_tracer =0.1; %filling fraction of tracers
+params.tr_unbnd_hop_energy = 0; %barrier height to sliding while unbound, in kT
+params.tr_bnd_hop_energy = Inf; %barrier height to sliding while bound, in kT
 
 %grid stuff
 const.n_trials      = trialmaster.nt;

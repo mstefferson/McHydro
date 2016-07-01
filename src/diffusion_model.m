@@ -16,16 +16,24 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
 
 % initialize everythin 
 % Parameters from pvec
-if (length(paramvec)<4)
+if (length(paramvec)<5)
   error('diffusion_model: parameter vector too short');
-elseif (length(paramvec)==4)
-  ffrac_obst=paramvec(1);
-  ffrac_tracer=paramvec(2);
-  slide_barr=paramvec(3) ;
-  bind_energy=paramvec(4);
-elseif (length(paramvec)>4)
+elseif (length(paramvec)==5)
+  ffrac_tracer = paramvec(1);
+  tr_hop_unb = paramvec(2);
+  tr_hop_bnd = paramvec(3);
+  ffrac_obst = paramvec(4);
+  bind_energy = paramvec(5);
+elseif (length(paramvec)>5)
   error('diffusion_model: parameter vector too long');
 end
+
+% Paramvec as a struct
+paramslist.fft = ffrac_tracer; %filling frac tracer
+paramslist.tr_hop_unb = tr_hop_unb; %unbound hop energy 
+paramslist.tr_hop_bnd = tr_hop_bnd ; % bound hop energy
+paramslist.ffo = ffrac_obst; %filling frac obs
+paramslist.be = bind_energy; % bind energy
 
 % Colors
 obst_color=[0 0 0]; %black
@@ -33,12 +41,6 @@ obst_curv=0.2; %curvature for animations
 tracer_color=[0 1 1]; %cyan
 tracer_curv=1; %curvature for animations
 red=[1 0 0];
-
-% Paramvec as a struct
-paramslist.ffo   = paramvec(1);
-paramslist.fft   = paramvec(2);
-paramslist.slide = paramvec(3);
-paramslist.be    = paramvec(4);
 
 % binding flag stuff
 % Take exponential of binding energy out of time loop, then pick a value
@@ -86,20 +88,26 @@ lattice.moves=[1 0;
   0 -1];
 lattice.size=[n.gridpoints,n.gridpoints];
 
+% obstacle fields
 obst=place_objects(n.obst,n.len_obst,n.gridpoints,modelopt,modelopt.obst_excl,...
   0,obst_color,obst_curv);
 obst.color=obst_color;
 obst.curvature=obst_curv;
 obst.ffrac=ffrac_obst;
 
+% tracer fields
 tracer=place_objects(n.tracer,n.len_tracer,n.gridpoints,modelopt,...
   modelopt.tracer_excl,1,tracer_color,tracer_curv,obst);
 tracer.color=tracer_color;
 tracer.curvature=tracer_curv;
 tracer.ffrac=ffrac_tracer;
-tracer.pmove=exp(-slide_barr);
+tracer.pmove_unb=exp(-tr_hop_unb);
+tracer.pmove_bnd=exp(-tr_hop_bnd);
 tracer.state=sum(ismember(tracer.allpts, obst.allpts),2);
+tracer.movevec = zeros(n.tracer,1);
 
+keyboard
+%%%%% I NEED TO UNDERSTAND STATE AND ALL POINTS %%%%%
 parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 % Set up things for recording
@@ -135,7 +143,12 @@ for m=1:n.timesteps;
   
   % Pick particles to attempt move based on probability
   rvec=rand(n.tracer,1);
-  list.attempt=find(rvec<tracer.pmove);
+
+  % Find current occupancy
+  tracer.movevec(tracer.state) = pmove_bnd;
+  tracer.movevec(~tracer.state) = pmove_und;
+    
+  list.attempt=find(rvec<tracer.movevec);
   % Pick direction of move
   list.tracerdir=randi(length(lattice.moves),length(list.attempt),1);
   
@@ -150,9 +163,6 @@ for m=1:n.timesteps;
     sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
   
   % Temporarily move all tracers to their attempt. Used for drawing?
-%  if animate == 1
-%    tracer.center(list.attempt,:)=center_new; %temporary update rule for drawing
- % end
   % Find old and new occupancy, i.e, wheh tracer and obs on same site
   occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
   occ_new=ismember(sites_new, obst.allpts);
