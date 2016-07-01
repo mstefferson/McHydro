@@ -55,6 +55,15 @@ const.twait      = (const.Nreclost + 1) * const.rec_interval; % fix wait time. A
 const.NrecTot    = const.ntimesteps / const.rec_interval - const.Nreclost; % Number of recorded points
 const.NchunkTot  = const.ntimesteps / const.rec_chunk - const.Nchunklost; % Number of recorded points
 
+% Fix size issues
+if mod(const.size_obst,2) == 0
+  const.size_obst = const.size_obst - 1;
+end
+
+if mod(const.size_tracer,2) == 0
+  const.size_obst = const.size_tracer - 1;
+end
+
 % Number of particles on the grid
 const.num_tracer    = round(params.ffrac_tracer .* const.n_gridpoints ^ 2);
 
