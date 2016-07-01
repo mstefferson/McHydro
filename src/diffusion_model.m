@@ -28,6 +28,7 @@ elseif (length(paramvec)>5)
   error('diffusion_model: parameter vector too long');
 end
 
+%%%%% SEVERAL VARIABLES EXIST IN SEVERAL PLACES. CLEANME  %%%%%
 % Paramvec as a struct
 paramslist.fft = ffrac_tracer; %filling frac tracer
 paramslist.tr_hop_unb = tr_hop_unb; %unbound hop energy 
@@ -41,7 +42,6 @@ obst_curv=0.2; %curvature for animations
 tracer_color=[0 1 1]; %cyan
 tracer_curv=1; %curvature for animations
 red=[1 0 0];
-
 
 % binding flag stuff
 % Take exponential of binding energy out of time loop, then pick a value
@@ -88,7 +88,6 @@ lattice.moves=[1 0;
   -1 0;
   0 1;
   0 -1];
-lattice.size=[n.gridpoints,n.gridpoints];
 
 % obstacle fields
 obst=place_objects(n.obst,n.len_obst,n.gridpoints,modelopt,modelopt.obst_excl,...
@@ -106,9 +105,8 @@ tracer.ffrac=ffrac_tracer;
 tracer.pmove_unb=exp(-tr_hop_unb);
 tracer.pmove_bnd=exp(-tr_hop_bnd);
 tracer.state=ismember(tracer.allpts, obst.allpts);
-tracer.movevec = zeros(n.tracer,1);
+tracer.probmov = zeros(n.tracer,1);
 
-%%%%% I NEED TO UNDERSTAND STATE AND ALL POINTS %%%%%
 parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 % Set up things for recording
@@ -142,21 +140,11 @@ end
 %% loop over time points
 for m=1:n.timesteps;
   
-  % Pick particles to attempt move based on probability
-  rvec=rand(n.tracer,1);
-
-  % Find current occupancy
-  tracer.movevec( tracer.state   ) = tracer.pmove_bnd;
-  tracer.movevec( ~tracer.state  ) = tracer.pmove_unb;
-    
-  list.attempt=find(rvec<tracer.movevec);
-  list.attempt = 1:n.tracer;
-  
-  % Pick direction of move
-  list.tracerdir=randi(length(lattice.moves),length(list.attempt),1);
+  % Try and move everything
+  list.tracerdir=randi(length(lattice.moves),n.tracer,1);
   
   % Attempt new tracer positions
-  center_old=tracer.center(list.attempt,:);
+  center_old=tracer.center;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
   
   % Enforcing periodic boundary conditions
@@ -165,43 +153,41 @@ for m=1:n.timesteps;
   sites_new = ...
     sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
   
-  % Temporarily move all tracers to their attempt. Used for drawing?
-  % Find old and new occupancy, i.e, wheh tracer and obs on same site
-  occ_old=ismember(tracer.allpts(list.attempt,:), obst.allpts);
+  % Find old and new occupancy, i.e, when tracer and obs on same site
+  occ_old=tracer.state;
   occ_new=ismember(sites_new, obst.allpts);
-  
-  deltaOcc = occ_new - occ_old   
-
-  % Find current occupancy
-  tracer.movevec( tracer.state   ) = tracer.pmove_bnd;
-  tracer.movevec( ~tracer.state  ) = tracer.pmove_unb;
-
-  % tracer going from empty to obs or v.v. do it
-  tracer.movevec( ~deltaOcc ) = tracer.pmove_unb;
+  sum_occ = occ_old + occ_new;
+ 
+  % Make a vector and try and move see what we can move based on hop prob
+  rvec=rand(n.tracer,1);
+  tracer.probmov( sum_occ == 2  ) = tracer.pmove_bnd;
+  tracer.probmov( sum_occ == 1  ) = 1;
+  tracer.probmov( sum_occ == 0  ) = tracer.pmove_unb;
+  list.attempt=find(rvec<tracer.probmov);
 
   % Accept moves based on binding energetics
   if bindFlag
-    % Accept or not due to binding. taccept in (1, numAttempts);  accept in (1, numTracer)
+    % Accept or not due to binding. 
+    % taccept in (1, numAttempts);  accept in (1, numTracer)
     % Generate random vector, if it's less than exp( \DeltaBE ) accept
-    rvec2=rand(length(occ_old),1);
+    rvec2=rand(length(list.attempt),1);
      % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
-    deltaOcc = occ_new - occ_old + 2;
+    deltaOcc = occ_new(list.attempt) - occ_old(list.attempt) + 2;
     ProbAcceptBind = expBE( deltaOcc )';
     list.taccept=find( rvec2 <= ProbAcceptBind );
   else 
     % accept unbinding, obs-obs movement, free movement 
-    list.taccept = find( occ_new - occ_old  < 1 ); 
+    list.taccept = occ_new(list.attempt) - occ_old(list.attempt) < 1; 
   end
   list.accept=list.attempt(list.taccept);
 
   % Move all accepted changes
-  keyboard
   tracer.center(list.accept,:) = center_new(list.accept,:); %temporary update rule for drawing
   tracer.cen_nomod(list.accept,:) = tracer.cen_nomod(list.accept,:)+...
-    lattice.moves(list.tracerdir(list.taccept),:); %center, no periodic wrapping
+    lattice.moves(list.tracerdir(list.accept),:); %center, no periodic wrapping
 
-  tracer.allpts(list.accept,:)=sites_new(list.taccept,:); %update other sites
-  tracer.state(list.accept)=occ_new(list.taccept);
+  tracer.allpts(list.accept,:)=sites_new(list.accept,:); %update other sites
+  tracer.state(list.accept)=occ_new(list.accept);
   
   % Track reject changes
   list.reject=setdiff(list.attempt,list.accept);
