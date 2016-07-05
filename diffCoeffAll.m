@@ -3,9 +3,28 @@
 % All these files need the same grid and trials. The parameters from the files
 % should form a grid ( # bind energy) X ( # ffo )
 
-function [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult,plotflag)
+function [DiffMat, DiffMatSig] = diffCoeffAll( timestrMult, plotflag, verbose, savename )
 
-DiffSaveId = 'Diff1';
+if nargin == 0
+  timestrMult = 1;
+  plotflag = 0;
+  verbose = 0;
+  saveflag = 0;
+elseif nargin == 1
+  plotflag = 0;
+  verbose = 0;
+  saveflag = 0;
+elseif nargin == 2
+  verbose = 0;
+  saveflag = 0;
+elseif nargin == 3
+  saveflag = 0;
+else
+  saveflag = 1;
+end
+
+% Flag for infinite binding
+isInfFlag = 0;
 
 cd ~/McHydro/
 % Add paths
@@ -39,7 +58,7 @@ numTrials = totFiles / numUnqParams;
 
 
 if floor(numTrials) ~= numTrials; 
-  error('Varying trial number for parameter config');
+  error('Varyin.1g trial number for parameter config');
 end;
 
 fprintf('%d total files. %d parameter configs. %d trials/config\n',...
@@ -71,15 +90,23 @@ cd ./msdfiles
     
     if isinf( bindEn )
       timestart = 0 ;
+      isInfFlag = 1;
     else
       timestart = timestrMult * max( exp( bindEn ) , exp(-bindEn) );
     end
+
+    % If tstart is too large, make it equal to half the max run time
+    % (arbitrary).
+    tmax = dtime(end);
+    if timestart > tmax / 2; timestart = tmax / 2; end;
     
     % Run diffcoeffcalc
     [Dout] = diffCoeffCalc( filename, timestart, plotflag );
 
     % Display it
-    disp(Dout);
+    if verbose
+      disp(Dout);
+    end
 
     % Store it in mat
     BindFFDiff(ii,1) = bindEn;
@@ -126,6 +153,8 @@ hold all
 for ii = 1:num_be
   errorbar( ffoVec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
 end
+Ax = gca;
+Ax.YLim = [0 1.1];
 xlabel('\nu obstacles'); ylabel('D');
 title('D vs ffo');
 
@@ -136,33 +165,42 @@ for i = 1:num_be
 end
 legend( legcell,'location', 'best' );
 
-% D vs be
-figure()
-hold all
-for ii = 1:num_ffo
-  errorbar( beVec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
+
+% Only plot vs BE is inf is not in the data set
+if isInfFlag == 0
+  % D vs be
+  figure()
+  hold all
+  for ii = 1:num_ffo
+    errorbar( beVec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
+  end
+  Ax = gca;
+  Ax.YLim = [0 1.1];
+  xlabel('be'); ylabel('D');
+  title('D vs be');
+
+  legcell = cell( num_ffo, 1 );
+
+  for i = 1:num_ffo
+    legcell{i} = ['ff = ' num2str( ffoVec(i) ) ];
+  end
+  legend( legcell,'location', 'best' );
+
+  %Color bar
+  figure()
+  imagesc( ffoVec, beVec, DiffMat );
+  colorbar;
+  title('Diffusion Coeff')
+  xlabel('\nu obstacles'); ylabel('binding energy')
 end
-xlabel('be'); ylabel('D');
-title('D vs be');
 
-legcell = cell( num_ffo, 1 );
-
-for i = 1:num_ffo
-  legcell{i} = ['ff = ' num2str( ffoVec(i) ) ];
-end
-legend( legcell,'location', 'best' );
-
-%Color bar
-figure()
-imagesc( ffoVec, beVec, DiffMat );
-colorbar;
-title('Diffusion Coeff')
-xlabel('\nu obstacles'); ylabel('binding energy')
 % Save the Diffusion Coeff
-DiffSaveName = [ DiffSaveId 'be' num2str(num_be)...
-  'ffo' num2str(num_ffo) '.mat' ];
-save( DiffSaveName, 'DiffMat', 'beVec','ffoVec');
-movefile(DiffSaveName, '~/McHydro/diffcalc');
+if saveflag
+  DiffSaveName = [ savename 'be' num2str(num_be)...
+    'ffo' num2str(num_ffo) '.mat' ];
+  save( DiffSaveName, 'DiffMat', 'beVec','ffoVec');
+  movefile(DiffSaveName, '~/McHydro/diffcalc');
+end
 
 fprintf('Finished run\n');
 
