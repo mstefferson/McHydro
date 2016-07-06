@@ -1,5 +1,5 @@
 %% Grab multiple files to load
-function [Dstruct] = diffCoeffCalc( filename, timestart, plotflag )
+function [Dstruct] = diffCoeffCalc( filename, timestart, plotflag, verbose )
 
 
 if nargin == 1
@@ -14,7 +14,9 @@ load(filename);
 
 % Find all the files
 fileId = filename( 1: strfind( filename, '_t' ) + 2);
-fprintf('Analyzing all files begining with \n%s\n', fileId );
+if verbose
+  fprintf('Analyzing all files begining with \n%s\n', fileId );
+end
 SameParamFiles = filelist( fileId, pwd);
 NumFiles = length(SameParamFiles);
 

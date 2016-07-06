@@ -10,15 +10,19 @@
 % alphaFit: Confindence inverval of fit
 
 function [DiffMat] = diffCoeffWrap( ...
-  bindVec, ffoVec, timestrMult, plotflag)
+  bindVec, ffoVec, timestrMult, plotflag, verbose)
 
 if nargin == 2
   timestrMult = 1; 
-  plotflag = 1;
-
+  plotflag = 0;
+  verbose = 0;
 end
 if nargin == 3 
-  plotflag = 1;
+  plotflag = 0;
+  verbose = 0;
+end
+if nargin == 4 
+  verbose = 0;
 end
 
 % Vector lengths
@@ -58,7 +62,7 @@ for ii = 1:num_be
       load(filename);
       
       % Run diffcoeffcalc
-      [Dout] = diffCoeffCalc( filename, timestart, plotflag );
+      [Dout] = diffCoeffCalc( filename, timestart, plotflag, verbose );
 
       % Display it
       disp(Dout);

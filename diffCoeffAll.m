@@ -1,9 +1,10 @@
-% [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult,plotflag);
+% [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult, plotflag, verbose,savename );
 % Wrapper for diffCoeffCalc that analyzes all the files in the msdfiles folder.
 % All these files need the same grid and trials. The parameters from the files
 % should form a grid ( # bind energy) X ( # ffo )
 
-function [DiffMat, DiffMatSig] = diffCoeffAll( timestrMult, plotflag, verbose, savename )
+function [DiffMat, DiffMatSig] = ...
+  diffCoeffAll( timestrMult, plotflag, verbose, savename )
 
 if nargin == 0
   timestrMult = 1;
@@ -88,6 +89,10 @@ cd ./msdfiles
       error('I cannot find any parameters');
     end
     
+    if verbose
+      fprintf('ff = %.2g be = %.2g\n', ffo, bindEn);
+    end
+    
     if isinf( bindEn )
       timestart = 0 ;
       isInfFlag = 1;
@@ -101,7 +106,7 @@ cd ./msdfiles
     if timestart > tmax / 2; timestart = tmax / 2; end;
     
     % Run diffcoeffcalc
-    [Dout] = diffCoeffCalc( filename, timestart, plotflag );
+    [Dout] = diffCoeffCalc( filename, timestart, plotflag, verbose );
 
     % Display it
     if verbose
