@@ -84,6 +84,10 @@ if animate; figure; end;
 n.obst=round(ffrac_obst*(n.gridpoints/n.len_obst)^modelopt.dimension); %square lattice
 n.tracer=round(ffrac_tracer*(n.gridpoints/n.len_tracer)^modelopt.dimension);
 
+% Store actual filling fractions
+paramslist.ffo_act = n.obst * (n.len_obst/n.gridpoints)^modelopt.dimension;
+paramslist.fft_act = n.tracer * (n.len_tracer/n.gridpoints)^modelopt.dimension;
+
 % Square lattice definition - assume 2D for now
 lattice.moves=[1 0;
   -1 0;

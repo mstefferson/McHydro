@@ -92,7 +92,7 @@ cd ./msdfiles
     if verbose
       fprintf('ff = %.2g be = %.2g\n', ffo, bindEn);
     end
-    
+
     if isinf( bindEn )
       timestart = 0 ;
       isInfFlag = 1;
