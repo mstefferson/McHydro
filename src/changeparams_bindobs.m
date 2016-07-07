@@ -2,7 +2,7 @@
 %allows for inputs
 % called by SetUpRunMaster
 
-function [] = changeparams_bindobs( beVec, ffoVec, numtrl, trlind, runind)
+function [] = changeparams_bindobs( beVec, ffoVec, soVec, numtrl, trlind, runind)
 
 if exist('Params.mat','file') == 0 ; 
   fprintf('No params yet, running initparams \n');
@@ -13,7 +13,7 @@ else
 end;
 
 %trial master
-if nargin > 2
+if nargin > 3
   const.n_trials         = numtrl;
   trialmaster.tind       = trlind;
   trialmaster.runstrtind = runind;
@@ -23,6 +23,7 @@ end
 %parameters in the inputs
 params.bind_energy_vec = beVec;
 params.ffrac_obst_vec= ffoVec;         %filling fraction of obstacles
+params.size_obst = soVec;
 
 save('Params', 'const','params','trialmaster','modelopt')
 

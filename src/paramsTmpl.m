@@ -12,7 +12,8 @@ trialmaster.nt         = 1; % number of trials
 %key parameters and constants
 params.bind_energy_vec = [0]; % binding_energy
 params.ffrac_obst_vec= [ 0.1 ]; %filling fraction of obstacles
-params.ffrac_tracer =0.1; %filling fraction of tracers
+params.size_obst = [1]; % size of obst. prgm forces it ot be odd
+params.ffrac_tracer = 0.1; %filling fraction of tracers
 params.tr_unbnd_hop_energy = 0; %barrier height to sliding while unbound, in kT
 params.tr_bnd_hop_energy = Inf; %barrier height to sliding while bound, in kT
 
@@ -25,7 +26,6 @@ const.rec_chunk     = 1e2;   % time elapsed before writing to file
 const.twait         = 1;    % time waited before recording
 const.TrRecFlag     = 1;     % Flag to record tracers or not
 const.ObsRecFlag    = 0;     % Flag to record obstacles or not
-const.size_obst     = 1;      %obstacle linear dimension, MUST BE odd integer
 const.size_tracer   = 1;     %tracer linear dimension, MUST BE odd integer
 
 %msd stuff

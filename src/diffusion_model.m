@@ -16,25 +16,26 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
 
 % initialize everythin 
 % Parameters from pvec
-if (length(paramvec)<5)
+if (length(paramvec)<6)
   error('diffusion_model: parameter vector too short');
-elseif (length(paramvec)==5)
+elseif (length(paramvec)==6)
   ffrac_tracer = paramvec(1);
   tr_hop_unb = paramvec(2);
   tr_hop_bnd = paramvec(3);
   ffrac_obst = paramvec(4);
   bind_energy = paramvec(5);
-elseif (length(paramvec)>5)
+  size_obst = paramvec(6);
+elseif (length(paramvec)>6)
   error('diffusion_model: parameter vector too long');
 end
 
-%%%%% SEVERAL VARIABLES EXIST IN SEVERAL PLACES. CLEANME  %%%%%
 % Paramvec as a struct
 paramslist.fft = ffrac_tracer; %filling frac tracer
 paramslist.tr_hop_unb = tr_hop_unb; %unbound hop energy 
 paramslist.tr_hop_bnd = tr_hop_bnd ; % bound hop energy
 paramslist.ffo = ffrac_obst; %filling frac obs
 paramslist.be = bind_energy; % bind energy
+paramslist.so = size_obst;
 
 % Colors
 obst_color=[0 0 0]; %black
@@ -56,7 +57,7 @@ end
 
 % Assign internal variables
 n.gridpoints=const.n_gridpoints;
-n.len_obst=const.size_obst;
+n.len_obst=size_obst;
 n.len_tracer=const.size_tracer;
 n.timesteps=const.ntimesteps;
 
