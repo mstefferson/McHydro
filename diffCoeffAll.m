@@ -128,7 +128,7 @@ cd ./msdfiles
     if verbose
       fprintf('ff = %.2g be = %.2g so=%d\n', ffo, bindEn, sizeobs);
     end
-    
+
     if isinf( bindEn )
       timestart = 0 ;
       isInfFlag = 1;
