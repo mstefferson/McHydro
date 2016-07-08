@@ -61,14 +61,14 @@ params.size_obst( ~mod(params.size_obst,2) ) = ...
 params.size_obst = unique(params.size_obst);
 params.size_obst = params.size_obst( params.size_obst <= ...
   round( max(params.ffrac_obst_vec) ^ (1/modelopt.dimension) * const.n_gridpoints ) );
-if length(params.size_obst) == 0; params.size_obst = 1; end;
+if isempty(params.size_obst); params.size_obst = 1; end;
 
 const.size_tracer( ~mod(const.size_tracer,2) ) = ...
   const.size_tracer(~mod(const.size_tracer,2) ) - 1; 
 const.size_tracer = unique(const.size_tracer);
 const.size_tracer = const.size_tracer( const.size_tracer <= ...
   round( max(params.ffrac_tracer) ^ (1/modelopt.dimension) * const.n_gridpoints ) );
-if length(const.size_tracer) == 0; const.size_tracer = 1; end;
+if isempty(const.size_tracer); const.size_tracer = 1; end;
 
 % Number of particles on the grid
 const.num_tracer = round(params.ffrac_tracer .* ...

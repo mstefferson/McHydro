@@ -25,10 +25,10 @@ if n_trials > 1
   PossDirs = divisors( TrialsPerWorker );
   PossFilesInDir = TrialsPerWorker ./ PossDirs .* AvailWorkers ;
   
-  [minPoss, indPoss] = min( abs( PossFilesInDir - FilesInDir ) );
+  [~, indPoss] = min( abs( PossFilesInDir - FilesInDir ) );
   
   FilesInDir = PossFilesInDir( indPoss );
-  NumDirsTr = n_trials ./ FilesInDir; %Number of trial per dir
+  NumDirsTr = round(n_trials ./ FilesInDir); %Number of trial per dir
 else
   FilesInDir = round( FilesInDir/AvailWorkers ) * AvailWorkers;
   if FilesInDir == 0; FilesInDir = 1; end;
@@ -40,7 +40,6 @@ nffo     = length( ffrac_obst_vec );
 nso      = length( size_obj_vec ) ;
 nt       = n_trials;
 nparams  = nbe * nffo * nso;
-nruns    = nparams * nt;
 
 % random number for identifier
 % Pick a random seed
@@ -50,12 +49,6 @@ randnum = floor( 1000 * rand() );
 fprintf('Let us make some dirs\n')
 % One parameter per dir is nt is a multiple of the workers
 if nt > 1
-  
-  %NumDirsTr = nt / Workers;
-  NumDirs = nparams * NumDirsTr;
-  %RunIndVec = 1:FilesInDir;
-  %WorkersVec = 1:Workers;
-  
   for i = 1:nbe
     for j = 1:nffo
       for k = 1:nso
@@ -67,9 +60,7 @@ if nt > 1
           dirpath = [RunDirPath dirstr];
           mkdir( dirpath );
           
-          %runIndTemp = (l-1) * FilesInDir + RunIndVec;
-          runIndTemp = (l-1) * FilesInDir + 1;
-          ntrialtemp = length(runIndTemp);
+          runIndTemp = (l-1) * FilesInDir + runstartind;
           beTemp     = bind_energy_vec(i);
           ffTemp     = ffrac_obst_vec(j);
           soTemp     = size_obj_vec(k);
@@ -86,7 +77,7 @@ if nt > 1
           fprintf('%s \n',sostring);
           
           % change parameters and move everything
-          changeparams_bindobs( beTemp, ffTemp, soTemp,ntrialtemp,...
+          changeparams_bindobs( beTemp, ffTemp, soTemp,FilesInDir,...
             trialind, runIndTemp );
           
           moveandcopy(dirpath)
@@ -103,7 +94,7 @@ else
   ntrialtemp  = 1;
   runIndTemp  = 1;
   
-  [minmod, minind] = min( ...
+  [~, minind] = min( ...
     [ mod(nbe,NumParamsPerDir) mod(nffo, NumParamsPerDir) ...
     mod(nso, NumParamsPerDir) ] );
   
