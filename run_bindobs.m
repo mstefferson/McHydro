@@ -78,7 +78,7 @@ try
     
     if nparams > 1
       fprintf('Using parfor to run diffusion model\n');
-      for j=1:nparams
+      parfor j=1:nparams
         RunID       = param_RunID(j);
         bind_energy = param_bind(j);
         ffrac_obst  = param_ffo(j);
