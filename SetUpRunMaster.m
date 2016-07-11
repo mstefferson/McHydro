@@ -28,7 +28,7 @@ if n_trials > 1
   [~, indPoss] = min( abs( PossFilesInDir - FilesInDir ) );
   
   FilesInDir = PossFilesInDir( indPoss );
-  NumDirsTr = round(n_trials ./ FilesInDir); %Number of trial per dir
+  NumTrDir = round(n_trials ./ FilesInDir); %Number of trial per dir
 else
   FilesInDir = round( FilesInDir/AvailWorkers ) * AvailWorkers;
   if FilesInDir == 0; FilesInDir = 1; end;
@@ -52,32 +52,35 @@ if nt > 1
   for i = 1:nbe
     for j = 1:nffo
       for k = 1:nso
-        for l = 1:NumDirsTr
+        for l = 1:NumTrDir
           
           dirstr = sprintf('/RunMe%d_%d_%d/', ...
-            randnum, trialind, l + (k-1)*NumDirsTr +...
-            (j-1) * NumDirsTr * nso + (i-1) * NumDirsTr * nso * nffo);
+            randnum, trialind, l + (k-1)*NumTrDir +...
+            (j-1) * NumTrDir * nso + (i-1) * NumTrDir * nso * nffo);
           dirpath = [RunDirPath dirstr];
           mkdir( dirpath );
           
-          runIndTemp = (l-1) * FilesInDir + runstartind;
+          runIndTemp = (l-1) * NumTrDir+ runstartind;
           beTemp     = bind_energy_vec(i);
           ffTemp     = ffrac_obst_vec(j);
           soTemp     = size_obj_vec(k);
           
           % Print parameters to stdout
-          fprintf('\n%s:\n',dirstr)
+          ntstring = [ 'Num trials: ' num2str(NumTrDir) ];
           runstring = [ 'RunInds: ' int2str(runIndTemp) ];
           bestring = [ 'BE: ' num2str(beTemp) ];
           ffstring = [ 'FF: ' num2str(ffTemp) ];
           sostring = [ 'SO: ' num2str(soTemp) ];
+          
+          fprintf('\n%s:\n',dirstr);    
+          fprintf('%s \n',ntstring);
           fprintf('%s \n',runstring);
           fprintf('%s \n',bestring);
           fprintf('%s \n',ffstring);
           fprintf('%s \n',sostring);
           
           % change parameters and move everything
-          changeparams_bindobs( beTemp, ffTemp, soTemp,FilesInDir,...
+          changeparams_bindobs( beTemp, ffTemp, soTemp,NumTrDir,...
             trialind, runIndTemp );
           
           moveandcopy(dirpath)
@@ -173,6 +176,7 @@ else
         
         % Print parameters to stdout
         fprintf('\n%s:\n',dirstr)
+        ntstring = [ 'Num trials: ' num2str(1) ];
         runstring = [ 'RunInds: ' int2str(runIndTemp) ];
         bestring = [ 'BE: ' num2str(beTemp) ];
         ffstring = [ 'FF: ' num2str(ffTemp) ];
@@ -182,7 +186,7 @@ else
         fprintf('%s \n',ffstring);
         fprintf('%s \n',sostring);
         % change parameters and move everything
-        changeparams_bindobs( beTemp, ffTemp, soTemp, ntrialtemp,...
+        changeparams_bindobs( beTemp, ffTemp, soTemp, 1,...
           trialind, runIndTemp );
         moveandcopy(dirpath)
       end
