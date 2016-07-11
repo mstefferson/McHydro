@@ -66,7 +66,7 @@ if nt > 1
           soTemp     = size_obj_vec(k);
           
           % Print parameters to stdout
-          ntstring = [ 'Num trials: ' num2str(beTemp) ];
+          ntstring = [ 'Num trials: ' num2str(NumTrDir) ];
           runstring = [ 'RunInds: ' int2str(runIndTemp) ];
           bestring = [ 'BE: ' num2str(beTemp) ];
           ffstring = [ 'FF: ' num2str(ffTemp) ];
@@ -176,6 +176,7 @@ else
         
         % Print parameters to stdout
         fprintf('\n%s:\n',dirstr)
+        ntstring = [ 'Num trials: ' num2str(1) ];
         runstring = [ 'RunInds: ' int2str(runIndTemp) ];
         bestring = [ 'BE: ' num2str(beTemp) ];
         ffstring = [ 'FF: ' num2str(ffTemp) ];
@@ -185,7 +186,7 @@ else
         fprintf('%s \n',ffstring);
         fprintf('%s \n',sostring);
         % change parameters and move everything
-        changeparams_bindobs( beTemp, ffTemp, soTemp, ntrialtemp,...
+        changeparams_bindobs( beTemp, ffTemp, soTemp, 1,...
           trialind, runIndTemp );
         moveandcopy(dirpath)
       end
