@@ -64,7 +64,7 @@ if NumFilesTot
          sprintf('file: %s\n',filename);
          PathStart = [CurrentDir '/runfiles/' filename ];
          PathEnd =  [dirpath '/runfiles/' filename];
-         fprintf(' Moving %s to %s\n', PathStart, PathEnd );
+         %fprintf(' Moving %s to %s\n', PathStart, PathEnd );
          movefile( PathStart, PathEnd);
          copyfile('./*.m', [dirpath] );
          copyfile('./*.sh', [dirpath] );

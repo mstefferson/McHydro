@@ -35,8 +35,8 @@
 ### in the following lines to enable:
 ###
 ### To send email when the job is completed:
-#PBS -m ae
-#PBS -M mist7261@colorado.edu
+### PBS -m ae
+### PBS -M mist7261@colorado.edu
 
 ### Optionally set the destination for your program's output
 ### Specify localhost and an NFS filesystem to prevent file copy errors.
