@@ -67,7 +67,7 @@ if nt > 1
           
           % Print parameters to stdout
           ntstring = [ 'Num trials: ' num2str(NumTrDir) ];
-          runstring = [ 'RunInds: ' int2str(runIndTemp) ];
+          runstring = [ 'RunInds Start: ' int2str(runIndTemp) ];
           bestring = [ 'BE: ' num2str(beTemp) ];
           ffstring = [ 'FF: ' num2str(ffTemp) ];
           sostring = [ 'SO: ' num2str(soTemp) ];
@@ -94,12 +94,15 @@ if nt > 1
 else
   
   NumParamsPerDir = FilesInDir;
-  ntrialtemp  = 1;
-  runIndTemp  = 1;
+  runIndTemp  = runstartind;
   
   [~, minind] = min( ...
     [ mod(nbe,NumParamsPerDir) mod(nffo, NumParamsPerDir) ...
     mod(nso, NumParamsPerDir) ] );
+  
+  if length( find( [nbe nffo nso] == 1 ) ) > 1
+   [ ~, minind ] = max( [nbe nffo nso] );
+  end
   
   % Pick BE to be the vector variable
   if minind == 1
@@ -162,7 +165,7 @@ else
               ffrac_obst_vec( 1 + (j-1) * NumParamsPerDir: end );
           end
           soTemp = size_obj_vec(k);
-        else
+        elseif soSelect
           beTemp = bind_energy_vec(i);
           ffTemp = ffrac_obst_vec(j);
           if k ~= NumDirSO
@@ -170,17 +173,20 @@ else
               size_obj_vec(1 + (k-1) * NumParamsPerDir: k * NumParamsPerDir);
           else
             soTemp = ...
-              size_obj_vec(1 + (k-1) * NumParamsPerDir: k * NumParamsPerDir);
+              size_obj_vec(1 + (k-1) * NumParamsPerDir: end);
           end
+        else
+          fprintf('Nothing selected!\n');
         end % end beSelect
         
         % Print parameters to stdout
         fprintf('\n%s:\n',dirstr)
         ntstring = [ 'Num trials: ' num2str(1) ];
-        runstring = [ 'RunInds: ' int2str(runIndTemp) ];
+        runstring = [ 'RunInds Start: ' int2str(runIndTemp) ];
         bestring = [ 'BE: ' num2str(beTemp) ];
         ffstring = [ 'FF: ' num2str(ffTemp) ];
         sostring = [ 'SO: ' num2str(soTemp) ];
+        fprintf('%s \n',ntstring);
         fprintf('%s \n',runstring);
         fprintf('%s \n',bestring);
         fprintf('%s \n',ffstring);
@@ -191,9 +197,7 @@ else
         moveandcopy(dirpath)
       end
     end
-  end
-  
-  
+  end  
 end % nt > workers
 
 end % main function
