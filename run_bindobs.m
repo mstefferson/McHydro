@@ -1,13 +1,10 @@
-%   MDB 9/28/15 specialized to immobile obstacles, noninteracting tracers
-%   so that moves can be done in parallel
-%   MDB 9/28/15 set up to loop over parameters with parfor
-%  LEH vary binding energies, with each file having a different filling
-%  fraction
-% MWS made edits to wrapper function to avoid having to copy and paster things
+% run_bindobs.m
+% Description: executeable that calls main body of model diffusion_model 
+% Program calls loads parameter file or calls initial parameter file if one
+% doesn't exist yet, sets up parallelization, and moves outputs
+%
+% Authors: LEH, MDB, MWS
 
-%tic;
-% clear all;
-%close all;
 try
   addpath('./src');
   rng('shuffle');
@@ -96,7 +93,7 @@ try
           '_oe',num2str(modelopt.obst_excl),'_ng',...
           num2str(const.n_gridpoints),'_nt',num2str(const.ntimesteps),...
           '_nrec', num2str(const.NrecTot),...
-          '_t', num2str(trialmaster.tind),'.',num2str(RunID) ];
+          '_t', num2str(trialmaster.tind,'%.2d'),'.',num2str(RunID,'%.2d') ];
         filename=['data_',filestring,'.mat'];
         fprintf('%s\n',filename);
         
