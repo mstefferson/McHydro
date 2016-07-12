@@ -9,7 +9,7 @@ AvailWorkers = 4;
 
 %trial indicator
 trialind  = 1; 
-runstartind  = 3; 
+runstartind  = 1; 
 
 %parameters to that are looped as be, ffob, trials
 n_trials    = 1;
