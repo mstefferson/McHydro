@@ -171,20 +171,24 @@ for m=1:n.timesteps;
   list.attempt=find(rvec<tracer.probmov);
 
   % Accept moves based on binding energetics
-  if bindFlag
-    % Accept or not due to binding. 
-    % taccept in (1, numAttempts);  accept in (1, numTracer)
-    % Generate random vector, if it's less than exp( \DeltaBE ) accept
-    rvec2=rand(length(list.attempt),1);
-     % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
-    deltaOcc = occ_new(list.attempt) - occ_old(list.attempt) + 2;
-    ProbAcceptBind = expBE( deltaOcc )';
-    list.taccept=find( rvec2 <= ProbAcceptBind );
-  else 
-    % accept unbinding, obs-obs movement, free movement 
-    list.taccept = occ_new(list.attempt) - occ_old(list.attempt) < 1; 
+  if ~isempty( list.attempt )
+    if bindFlag
+      % Accept or not due to binding. 
+      % taccept in (1, numAttempts);  accept in (1, numTracer)
+      % Generate random vector, if it's less than exp( \DeltaBE ) accept
+      rvec2=rand(length(list.attempt),1);
+       % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
+      deltaOcc = occ_new(list.attempt) - occ_old(list.attempt) + 2;
+      ProbAcceptBind = expBE( deltaOcc )';
+      list.taccept=find( rvec2 <= ProbAcceptBind );
+    else 
+      % accept unbinding, obs-obs movement, free movement 
+      list.taccept = occ_new(list.attempt) - occ_old(list.attempt) < 1; 
+    end
+    list.accept=list.attempt(list.taccept);
+  else
+    list.accept = [];
   end
-  list.accept=list.attempt(list.taccept);
 
   % Move all accepted changes
   tracer.center(list.accept,:) = center_new(list.accept,:); %temporary update rule for drawing
