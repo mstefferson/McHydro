@@ -16,15 +16,12 @@ number_delta_t  = number_timepnts - 1;
 dtime= ( 1 : number_delta_t)' ;
 
 if quadFlag
-   msd_local=zeros(number_delta_t,5); %Store [mean, std, n]
+   msd=zeros(number_delta_t,5); %Store [mean, std, n]
 else
-   msd_local=zeros(number_delta_t,3); %Store [mean, std, n]
+   msd=zeros(number_delta_t,3); %Store [mean, std, n]
 end
 
-%msd_distrib=distributed(msd_local);
-msd_distrib=msd_local;
 parfor dt = 1:number_delta_t
-
     if number_timepnts-dt >= maxpts_msd
         index_start = randperm(number_timepnts-dt, maxpts_msd);
         index_end = index_start+dt;
@@ -32,26 +29,21 @@ parfor dt = 1:number_delta_t
     else
         delta_coords=(x(:,:,1+dt:end)-x(:,:,1 : end-dt ));
     end
-  
-    % calculate displacement ^ 2 
+    % calculate displacement ^ 2
    squared_dis = sum(delta_coords.^2,2); % dx^2+dy^2+...
-   
    % calculate displacement ^ 4 if flag
    if quadFlag
-      quartic_dis = sum(delta_coords.^4,2); % dx^4+dy^4+...
-   
-      msd_distrib(dt,:) = [mean(squared_dis(:)); ... % average
+      quartic_dis = sum(delta_coords.^4,2); % dx^4+dy^4+..
+      msd(dt,:) = [mean(squared_dis(:)); ... % average
       std(squared_dis(:)); ...; % std
       length(squared_dis(:)); ... % n (how many points used to compute mean)
       mean(quartic_dis(:)); ... %average
       std(quartic_dis(:))]'; %std
    else
-      msd_distrib(dt,:) = [mean(squared_dis(:)); ... % average
+      msd(dt,:) = [mean(squared_dis(:)); ... % average
       std(squared_dis(:)); ...; % std
       length(squared_dis(:)) ]'
    end
-   
 end
-%msd=gather(msd_distrib);
-msd = msd_distrib;
+
 end
