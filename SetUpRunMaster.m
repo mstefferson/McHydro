@@ -28,7 +28,6 @@ if n_trials > 1
   [~, indPoss] = min( abs( PossFilesInDir - FilesInDir ) ); %#ok<*NODEF>
   
   numTrialsPerDir  = PossFilesInDir( indPoss );
-  n_trials = FilesInDir;
   numDir4Trs = round(n_trials ./ FilesInDir); %Number of directories for trials
 
 else
@@ -40,7 +39,6 @@ end
 nbe      = length( bind_energy_vec );
 nffo     = length( ffrac_obst_vec );
 nso      = length( size_obj_vec ) ;
-nt       = n_trials;
 
 % random number for identifier
 % Pick a random seed
@@ -49,7 +47,7 @@ randnum = floor( 1000 * rand() );
 
 fprintf('Let us make some dirs\n')
 % One parameter per dir is nt is a multiple of the workers
-if nt > 1
+if n_trials > 1
   for i = 1:nbe
     for j = 1:nffo
       for k = 1:nso
@@ -61,7 +59,7 @@ if nt > 1
           dirpath = [RunDirPath dirstr];
           mkdir( dirpath );
           
-          runIndTemp = (l-1) * numDir4Trs+ runstartind;
+          runIndTemp = (l-1) * numTrialsPerDir + runstartind;
           beTemp     = bind_energy_vec(i);
           ffTemp     = ffrac_obst_vec(j);
           soTemp     = size_obj_vec(k);
@@ -81,10 +79,10 @@ if nt > 1
           fprintf('%s \n',sostring);
           
           % change parameters and move everything
-          changeparams_bindobs( beTemp, ffTemp, soTemp,numTrialsPerDir,...
-            trialind, runIndTemp );
+           changeparams_bindobs( beTemp, ffTemp, soTemp,numTrialsPerDir,...
+             trialind, runIndTemp );
           
-          moveandcopy(dirpath)
+           moveandcopy(dirpath)
           
         end
       end
