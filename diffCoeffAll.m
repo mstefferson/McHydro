@@ -25,13 +25,8 @@ try
     saveflag = 1;
   end
   
-  % Flag for infinite binding
-  isInfFlag = 0;
-  
-  cd ~/McHydro/
   % Add paths
   addpath('~/McHydro/src')
-  addpath('~/McHydro/msdfiles')
   
   fprintf('Startng diffCoeffAll. Analyzing all files in ./msdfiles \n');
   % diffcoeffCal inputs
@@ -41,7 +36,7 @@ try
   if ~exist('diffcalc','dir'); mkdir('diffcalc'); end;
   
   % Grab all the files in the msd folder
-  msdLall = filelist( '.mat','./msdfiles');
+  msdLall = filelist( '.mat','./');
   totFiles  = length(msdLall);
   
   % Find the number of parameter configurations
@@ -105,8 +100,6 @@ try
   % m(:,1) : ff; m(:,2) = so; m(:,3) = D m(:,4) = sig D
   p1p2Diff = zeros( numUnqParams ,  4);
   
-  % cd into directory with msdfiles--- that's where diffcoeffCalc needs to be run
-  cd ./msdfiles
   
   for ii = 1:numUnqParams
     % Grab file and load it
@@ -140,6 +133,7 @@ try
     
     if isinf( bindEn )
       timestart = 0 ;
+%       timestart = const.n_gridpoints .^ 2;
     else
       timestart = timestrMult * max( exp( bindEn ) , exp(-bindEn) );
     end
@@ -150,7 +144,7 @@ try
     if timestart > tmax / 2; timestart = tmax / 2; end;
     
     % Run diffcoeffcalc
-    [Dout] = diffCoeffCalc( filename, timestart, plotflag, verbose );
+    [Dout] = diffCoeffCalc( filename, timestart, plotflag, verbose, saveflag );
     
     % Display it
     if verbose
@@ -204,8 +198,7 @@ try
   end
   
   % Move all figs to ~/McHydro/figs
-  if plotflag; movefile('*.fig', '~/McHydro/figs'); end;
-  cd ~/McHydro/
+  if plotflag && saveflag; movefile('*.fig', '~/McHydro/figs'); end;
   
   % Plot it
   % D vs param1
@@ -271,7 +264,7 @@ try
   
 catch err
   fprintf('%s',err.getReport('extended') );
-  cd ~/McHydro
+  keyboard
 end
 
 
