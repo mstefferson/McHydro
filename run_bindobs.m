@@ -75,6 +75,8 @@ try
     
     if nparams > 1
       fprintf('Using parfor to run diffusion model\n');
+      parobj = gcp;
+      fprintf('I have hired %d workers\n',parobj.NumWorkers);
       parfor j=1:nparams
         RunID       = param_RunID(j);
         bind_energy = param_bind(j);
@@ -129,8 +131,11 @@ try
       fprintf('Finished %s \n', filename);
       movefile(filename,'./runfiles');
     end %if nparams > 1
-    RunTime = toc(RunTimeID);
-    fprintf('Run time %.2g min\n', RunTime / 60);
+    runTime = toc(RunTimeID);
+    runHr = floor( runTime / 3600); runTime = runTime - runHr*3600;
+    runMin = floor( runTime / 60);  runTime = runTime - runMin*60;
+    runSec = floor(runTime);
+    fprintf('RunTime: %.2d:%.2d:%.2d (hr:min:sec)\n', runHr, runMin,runSec);
     EndTime = datestr(now);
     fprintf('Completed run: %s\n',EndTime);
     fclose('all');
