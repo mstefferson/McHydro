@@ -142,6 +142,10 @@ if n.TrRec
   fileObj.tracer_state_rec = zeros( n.tracer, 2 );
 end
 
+% Pre-Allocate some commonly used matrices
+onesNt2 = ones( n.tracer, 2 ); % matrix of ones ( Ntracer x 2 ) used for mod
+NgsNt2 = n.gridpoints .* ones( n.tracer, 2 ); % matix of Ng ( Ntracer x 2 ) used for mod
+
 %% loop over time points
 for m=1:n.timesteps;
   
@@ -153,8 +157,7 @@ for m=1:n.timesteps;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
   
   % Enforcing periodic boundary conditions
-  center_new = mod( center_temp-ones(size(center_temp)),...
-    ones(size(center_temp))*n.gridpoints )+ones(size(center_temp));
+  center_new = mod( center_temp - onesNt2 , NgsNt2 ) + onesNt2; 
   sites_new = ...
     sub2ind([n.gridpoints n.gridpoints], center_new(:,1), center_new(:,2));
   
