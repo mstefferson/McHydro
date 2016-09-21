@@ -3,8 +3,8 @@
 % All these files need the same grid and trials. The parameters from the files
 % should form a grid ( # bind energy) X ( # ffo )
 
-function [DiffMat, DiffMatSig] = ...
-  diffCoeffAll( timestrMult, plotflag, verbose, savename )
+function [DiffMat, DiffMatSig, p1vec, p2vec] = ...
+  diffCoeffAll( timestrMult, plotflag, verbose, savename, initFitGuess )
 
 try
   if nargin == 0
@@ -12,18 +12,28 @@ try
     plotflag = 0;
     verbose = 0;
     saveflag = 0;
+    guessFlag = 0;
   elseif nargin == 1
     plotflag = 0;
     verbose = 0;
     saveflag = 0;
+    guessFlag = 0;
   elseif nargin == 2
     verbose = 0;
     saveflag = 0;
+    guessFlag = 0;
   elseif nargin == 3
     saveflag = 0;
+    guessFlag = 0;
+  elseif nargin == 4
+    guessFlag = 0;
+    saveflag = 1;
   else
     saveflag = 1;
+    guessFlag = 1;
   end
+
+  if isempty(savename); saveflag = 0; end;
   
   % Add paths
   addpath('~/McHydro/src')
@@ -65,21 +75,24 @@ try
   numFFo = numUnqParams / numSameFFo  ;
   numSo = numUnqParams / numSameSo ;
   
-  if numBind == 1
-    Param1 = 'ff obstacles';
-    Param1s = 'ffo';
-    Param2 = 'size obstacles';
-    Param2s = 'so';
+  if numSo == 1
+    Param1 = 'binding energy';
+    Param1s = 'be';
+    Param2 = 'ff obstacles';
+    Param2s = 'ffo';
+    combo = 1;
   elseif numFFo == 1
     Param1 = 'binding energy';
     Param1s = 'be';
     Param2 = 'size obstacles';
     Param2s = 'so';
-  elseif numSo == 1
-    Param1 = 'binding energy';
-    Param1s = 'be';
-    Param2 = 'ff obstacles';
-    Param2s = 'ffo';
+    combo = 2;
+  elseif numBind == 1
+    Param1 = 'ff obstacles';
+    Param1s = 'ffo';
+    Param2 = 'size obstacles';
+    Param2s = 'so';
+    combo = 3;
   else
     error('Too many varying parameters')
   end
@@ -95,11 +108,10 @@ try
     totFiles, numUnqParams, numTrials);
   
   % Allocate memory for everything
-  % m(:,1) : be; m(:,2) = ff; m(:,3) = D m(:,4) = sig D
-  % m(:,1) : be; m(:,2) = so; m(:,3) = D m(:,4) = sig D
-  % m(:,1) : ff; m(:,2) = so; m(:,3) = D m(:,4) = sig D
+  % m(:,1) : p1; m(:,2) = p2; m(:,3) = D m(:,4) = sig D
   p1p2Diff = zeros( numUnqParams ,  4);
-  
+
+  if guessFlag; fitGuess = initFitGuess; end;
   
   for ii = 1:numUnqParams
     % Grab file and load it
@@ -130,12 +142,11 @@ try
     if verbose
       fprintf('ff = %.2g be = %.2g so=%d\n', ffo, bindEn, sizeobs);
     end
-    
+
     if isinf( bindEn )
       timestart = 0 ;
-%       timestart = const.n_gridpoints .^ 2;
     else
-      timestart = timestrMult * max( exp( bindEn ) , exp(-bindEn) );
+      timestart = timestrMult * 1;
     end
     
     % If tstart is too large, make it equal to half the max run time
@@ -144,26 +155,31 @@ try
     if timestart > tmax / 2; timestart = tmax / 2; end;
     
     % Run diffcoeffcalc
-    [Dout] = diffCoeffCalc( filename, timestart, plotflag, verbose, saveflag );
-    
-    % Display it
-    if verbose
-      disp(Dout);
+    if guessFlag
+      [Dout,coeffsFit] = diffCoeffCalc( filename, timestart, plotflag, ...
+        verbose, saveflag, fitGuess );
+        fitGuess = coeffsFit.UwaWfSc;
+    else
+      [Dout,~] = diffCoeffCalc( filename, timestart, plotflag, verbose, saveflag );
     end
+
+    % Display it
+    if verbose; disp(Dout); end
     
     % Store it in mat
-    if numSo == 1
+    if combo == 1
       p1p2Diff(ii,1) = bindEn;
       p1p2Diff(ii,2) = ffo;
-    elseif numBind == 1
-      p1p2Diff(ii,1) = ffo;
-      p1p2Diff(ii,2) = sizeobs;
-    else
+    elseif combo == 2
       p1p2Diff(ii,1) = bindEn;
       p1p2Diff(ii,2) = sizeobs;
+    else
+      p1p2Diff(ii,1) = ffo;
+      p1p2Diff(ii,2) = sizeobs;
     end
-    p1p2Diff(ii,3) = Dout.Dfit;
-    p1p2Diff(ii,4) = Dout.DsigFit;
+    
+     p1p2Diff(ii,3) = Dout.DfitUwaWfSc;
+     p1p2Diff(ii,4) = Dout.DsigUwaWfSc;
   end
   % Rearrang things into a more friendly matrix
   % Find the number of p1
@@ -199,17 +215,18 @@ try
   
   % Move all figs to ~/McHydro/figs
   if plotflag && saveflag; movefile('*.fig', '~/McHydro/figs'); end;
-  
   % Plot it
   % D vs param1
   if isfinite(p1vec) ~= 0
+
     figure()
-    hold all
+    hold all 
     for ii = 1:num_p2
       errorbar( p1vec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
     end
     Ax = gca;
     Ax.YLim = [0 1.1];
+    Ax.XLim = [ min(p1vec) max(p1vec) ];
     xlabel(Param1); ylabel('D');
     titlestr = ['D vs ' Param1s];
     title(titlestr);
@@ -231,10 +248,10 @@ try
     end
     Ax = gca;
     Ax.YLim = [0 1.1];
+    Ax.XLim = [ min(p2vec) max(p2vec) ];
     xlabel(Param2); ylabel('D');
     titlestr = ['D vs ' Param2s];
-    title(titlestr);
-    
+    title(titlestr); 
     legcell = cell( num_p1, 1 );
     
     for i = 1:num_p1
@@ -258,8 +275,7 @@ try
       'ffo' num2str(num_ffo) '.mat' ];
     save( DiffSaveName, 'DiffMat', 'beVec','ffoVec');
     movefile(DiffSaveName, '~/McHydro/diffcalc');
-  end
-  
+  end  
   fprintf('Finished run\n');
   
 catch err

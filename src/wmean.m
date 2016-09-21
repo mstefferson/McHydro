@@ -1,5 +1,6 @@
- function [wAve, wSig] = wmean(x,w)
+ function [wAve, wSig] = wmean(x,sig)
 
+ w = 1 ./ sig.^2;
  if length(x) ~= length(w)
    error( 'vectors must be the same length' );
  end
