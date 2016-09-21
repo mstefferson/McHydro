@@ -1,39 +1,56 @@
-% [DiffMat, DiffMatSig] = diffCoeffAll(timestrMult, plotflag, verbose,savename );
+% [DiffMat, DiffMatSig, p1vec, p2vec] = ...
+%  diffCoeffAll( timestrMult, plotDFlag, plotFit, plotLog, ...
+%    verbose, savename, initFitGuess )
 % Wrapper for diffCoeffCalc that analyzes all the files in the msdfiles folder.
 % All these files need the same grid and trials. The parameters from the files
 % should form a grid ( # bind energy) X ( # ffo )
 
 function [DiffMat, DiffMatSig, p1vec, p2vec] = ...
-  diffCoeffAll( timestrMult, plotflag, verbose, savename, initFitGuess )
+  diffCoeffAll( timestrMult, plotDFlag, plotFit, plotLog, ...
+  verbose, savename, initFitGuess )
 
 try
   if nargin == 0
     timestrMult = 1;
-    plotflag = 0;
+    plotDFlag = 0;
+    plotFit = 0;
+    plotLog = 0;
     verbose = 0;
     saveflag = 0;
     guessFlag = 0;
   elseif nargin == 1
-    plotflag = 0;
+    plotDFlag = 0;
+    plotFit = 0;
+    plotLog = 0;
     verbose = 0;
     saveflag = 0;
     guessFlag = 0;
   elseif nargin == 2
+    plotFit = 0;
+    plotLog = 0;
     verbose = 0;
     saveflag = 0;
     guessFlag = 0;
   elseif nargin == 3
+    plotLog = 0;
+    verbose = 0;
     saveflag = 0;
     guessFlag = 0;
   elseif nargin == 4
+    verbose = 0;
+    saveflag = 0;
     guessFlag = 0;
-    saveflag = 1;
-  else
-    saveflag = 1;
+  elseif nargin == 5
+    saveflag = 0;
+    guessFlag = 0;
+  elseif nargin == 6
+    if isempty(savename); saveflag = 0; else saveflag = 1; end;
+    guessFlag = 0;
+  elseif nargin == 7
+    if isempty(savename); saveflag = 0; else saveflag = 1; end;
     guessFlag = 1;
   end
-
-  if isempty(savename); saveflag = 0; end;
+  
   
   % Add paths
   addpath('~/McHydro/src')
@@ -110,7 +127,7 @@ try
   % Allocate memory for everything
   % m(:,1) : p1; m(:,2) = p2; m(:,3) = D m(:,4) = sig D
   p1p2Diff = zeros( numUnqParams ,  4);
-
+  
   if guessFlag; fitGuess = initFitGuess; end;
   
   for ii = 1:numUnqParams
@@ -142,7 +159,7 @@ try
     if verbose
       fprintf('ff = %.2g be = %.2g so=%d\n', ffo, bindEn, sizeobs);
     end
-
+    
     if isinf( bindEn )
       timestart = 0 ;
     else
@@ -156,13 +173,13 @@ try
     
     % Run diffcoeffcalc
     if guessFlag
-      [Dout,coeffsFit] = diffCoeffCalc( filename, timestart, plotflag, ...
+      [Dout,coeffsFit] = diffCoeffCalc( filename, timestart, plotFit, plotLog, ...
         verbose, saveflag, fitGuess );
-        fitGuess = coeffsFit.UwaWfSc;
+      fitGuess = coeffsFit.UwaWfSc;
     else
-      [Dout,~] = diffCoeffCalc( filename, timestart, plotflag, verbose, saveflag );
+      [Dout,~] = diffCoeffCalc( filename, timestart, plotDFlag, verbose, saveflag );
     end
-
+    
     % Display it
     if verbose; disp(Dout); end
     
@@ -178,8 +195,8 @@ try
       p1p2Diff(ii,2) = sizeobs;
     end
     
-     p1p2Diff(ii,3) = Dout.DfitUwaWfSc;
-     p1p2Diff(ii,4) = Dout.DsigUwaWfSc;
+    p1p2Diff(ii,3) = Dout.DfitUwaWfSc;
+    p1p2Diff(ii,4) = Dout.DsigUwaWfSc;
   end
   % Rearrang things into a more friendly matrix
   % Find the number of p1
@@ -213,70 +230,74 @@ try
     end
   end
   
-  % Move all figs to ~/McHydro/figs
-  if plotflag && saveflag; movefile('*.fig', '~/McHydro/figs'); end;
+  
   % Plot it
-  % D vs param1
-  if isfinite(p1vec) ~= 0
-
-    figure()
-    hold all 
-    for ii = 1:num_p2
-      errorbar( p1vec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
+  if plotDFlag
+    % D vs param1
+    if isfinite(p1vec) ~= 0
+      
+      figure()
+      hold all
+      for ii = 1:num_p2
+        errorbar( p1vec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
+      end
+      Ax = gca;
+      Ax.YLim = [0 1.1];
+      Ax.XLim = [ min(p1vec) max(p1vec) ];
+      xlabel(Param1); ylabel('D');
+      titlestr = ['D vs ' Param1s];
+      title(titlestr);
+      
+      legcell = cell( num_p2, 1 );
+      
+      for i = 1:num_p2
+        legcell{i} = [ Param2s ' = ' num2str( p2vec(i) ) ];
+      end
+      legend( legcell,'location', 'best' );
     end
-    Ax = gca;
-    Ax.YLim = [0 1.1];
-    Ax.XLim = [ min(p1vec) max(p1vec) ];
-    xlabel(Param1); ylabel('D');
-    titlestr = ['D vs ' Param1s];
-    title(titlestr);
     
-    legcell = cell( num_p2, 1 );
-    
-    for i = 1:num_p2
-      legcell{i} = [ Param2s ' = ' num2str( p2vec(i) ) ];
+    % D vs param2
+    if isfinite(p2vec) ~= 0
+      figure()
+      hold all
+      for ii = 1:num_p1
+        errorbar( p2vec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
+      end
+      Ax = gca;
+      Ax.YLim = [0 1.1];
+      Ax.XLim = [ min(p2vec) max(p2vec) ];
+      xlabel(Param2); ylabel('D');
+      titlestr = ['D vs ' Param2s];
+      title(titlestr);
+      legcell = cell( num_p1, 1 );
+      
+      for i = 1:num_p1
+        legcell{i} = [ Param1s ' = ' num2str( p1vec(i) ) ];
+      end
+      legend( legcell,'location', 'best' );
     end
-    legend( legcell,'location', 'best' );
+    
+    if [isfinite(p1vec); isfinite(p2vec)] ~= 0
+      %Color bar
+      figure()
+      imagesc( p2vec, p1vec, DiffMat);
+      colorbar;
+      title('Diffusion Coeff')
+      xlabel(Param2); ylabel(Param1)
+    end
+    
+    % Save the Diffusion Coeff
+    if saveflag
+      DiffSaveName = [ savename 'be' num2str(num_be)...
+        'ffo' num2str(num_ffo) '.mat' ];
+      save( DiffSaveName, 'DiffMat', 'beVec','ffoVec');
+      movefile(DiffSaveName, '~/McHydro/diffcalc');
+    end
+    fprintf('Finished run\n');
   end
   
-  % D vs param2
-  if isfinite(p2vec) ~= 0
-    figure()
-    hold all
-    for ii = 1:num_p1
-      errorbar( p2vec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
-    end
-    Ax = gca;
-    Ax.YLim = [0 1.1];
-    Ax.XLim = [ min(p2vec) max(p2vec) ];
-    xlabel(Param2); ylabel('D');
-    titlestr = ['D vs ' Param2s];
-    title(titlestr); 
-    legcell = cell( num_p1, 1 );
-    
-    for i = 1:num_p1
-      legcell{i} = [ Param1s ' = ' num2str( p1vec(i) ) ];
-    end
-    legend( legcell,'location', 'best' );
-  end
-  
-  if [isfinite(p1vec); isfinite(p2vec)] ~= 0
-    %Color bar
-    figure()
-    imagesc( p2vec, p1vec, DiffMat);
-    colorbar;
-    title('Diffusion Coeff')
-    xlabel(Param2); ylabel(Param1)
-  end
-  
-  % Save the Diffusion Coeff
-  if saveflag
-    DiffSaveName = [ savename 'be' num2str(num_be)...
-      'ffo' num2str(num_ffo) '.mat' ];
-    save( DiffSaveName, 'DiffMat', 'beVec','ffoVec');
-    movefile(DiffSaveName, '~/McHydro/diffcalc');
-  end  
-  fprintf('Finished run\n');
+  % Move all figs to ~/McHydro/figs
+  if plotDFlag && saveflag; movefile('*.fig', '~/McHydro/figs'); end;
   
 catch err
   fprintf('%s',err.getReport('extended') );

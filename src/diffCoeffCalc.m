@@ -1,28 +1,39 @@
-%% Grab multiple files to load
-function [Dstruct, coeffsFit, coeffsSig] = diffCoeffCalc( filename, timestart, plotflag, ...
-  verbose, saveFlag, initGuess )
+% [Dstruct, coeffsFit, coeffsSig] = diffCoeffCalc( filename, timestart, fitPlotFlag, ...
+%  logPlotflag, verbose, saveFlag, initGuess )
+%  Measures diffusion coefficients over trials for fixed parameters
+
+
+function [Dstruct, coeffsFit, coeffsSig] = diffCoeffCalc( filename, timestart, fitPlotFlag, ...
+  logPlotflag, verbose, saveFlag, initGuess )
 
 if nargin == 1
   timestart = 1;
-  plotflag  = 1;
+  fitPlotFlag  = 0;
+  logPlotflag  = 0;
   verbose = 0;
   saveFlag = 0;
   guessFlag = 0;
 elseif nargin == 2
-  plotflag  = 1;
+  fitPlotFlag  = 0;
+  logPlotflag  = 0;
   verbose = 0;
   saveFlag = 0;
   guessFlag = 0;
 elseif nargin == 3
+  logPlotflag  = 0;
   verbose = 0;
   saveFlag = 0;
   guessFlag = 0;
 elseif nargin == 4
+  verbose = 0;
   saveFlag = 0;
   guessFlag = 0;
 elseif nargin == 5
+  saveFlag = 0;
   guessFlag = 0;
 elseif  nargin == 6
+  guessFlag = 0;
+else
   guessFlag = 1;
 end
 
@@ -42,9 +53,11 @@ NumFiles = length(SameParamFiles);
 if exist('paramlist','var')
   ffoM = paramlist.ffo;
   bindenM = paramlist.be;
+  soM = paramlist.so;
 elseif exist('paramvec','var' )
   ffoM = paramvec(1);
   bindenM = paramvec(4);
+  so = [];
 else
   error('I cannot find any parameters');
 end
@@ -69,11 +82,10 @@ errorMsc = zeros( recLength * NumFiles, 1 );
 masterIndstr = 1; % Storing index
 
 % Store data that isn't fitted for plotting
-if plotflag == 1
+if fitPlotFlag == 1
   tIndNf     = 1: (tstartInd - 1);
   dtimeNfM   = zeros( (tstartInd - 1 ) * NumFiles, 1 );
   msdNfM     = zeros( (tstartInd - 1 ) * NumFiles, 1 );
-  dtimeAveNf =  dtime( tIndNf  ) ;
   msdAveNf   = zeros( (tstartInd - 1 ), 1 );
   NfPtsTot   = zeros( (tstartInd - 1 ), 1 );
   NfIndstr   = 1; % Storing index
@@ -106,7 +118,6 @@ if guessFlag; fitguess = initGuess; end;
 for ii=1:NumFiles
   
   load(SameParamFiles{ii})
-  
   totTpnts = length( dtime );
   if totTpnts ~= totTpntsOld; error('Record lengths changing'); end;
   
@@ -114,20 +125,22 @@ for ii=1:NumFiles
   if exist('paramlist','var')
     ffoTemp = paramlist.ffo;
     bindTemp = paramlist.be;
+    soTemp = paramlist.so;
   elseif exist('paramvec','var')
     ffoTemp = paramvec(1);
     bindTemp = paramvec(4);
+    soTemp = [];
   else
     error('I cannot find any parameters');
   end
   
-  if ( abs(ffoTemp - ffoM) > 1e-15 ) || ( bindTemp ~= bindenM );
+  if ( abs(ffoTemp - ffoM) > 1e-15 ) || ...
+      ( bindTemp ~= bindenM ) || (soTemp ~= soM);
     if ~isinf(bindTemp) && ~isinf(bindenM)
       keyboard
       error('Parameters have changed');
     end
   end
-  
   % Measure D for run
   % Temporary vectors
   t_temp      = dtime(tInd);
@@ -141,7 +154,7 @@ for ii=1:NumFiles
     error('msd is infinite')
   end
   % Record points not in fit if plotting
-  if plotflag
+  if fitPlotFlag
     NfIndend = NfIndstr + tstartInd - 2;
     dtimeNfM(NfIndstr:NfIndend) = dtime( tIndNf ) ;
     msdNfM(NfIndstr:NfIndend)    = msd( tIndNf , 2 );
@@ -149,7 +162,7 @@ for ii=1:NumFiles
     NfPtsTot   = NfPtsTot + msd(tIndNf,3);
   end
   
-  %% Store it for weighted average
+  % Store it for weighted average
   % Error not scaled by root N
   if guessFlag == 1
     [coeffsW, coeffsigW] = nlDiffFit( t_temp, msd_temp, error_temp, fitguess );
@@ -195,16 +208,12 @@ for ii=1:NumFiles
   if plotIndFile
     fprintf('Weighted = %f \n', fitCoeffV(ii,2) )
     fprintf('W. delta = %f \n', fitCoeffV(ii,2) - 1 );
-    %     disp(fitCoeffV(ii,:));
     fprintf('Weighted/ sqrt N = %f \n', fitCoeffSeV(ii,2) )
     fprintf('WS. delta = %f \n', fitCoeffSeV(ii,2) - 1 );
-    %     disp(fitCoeffSeV(ii,:));
     fprintf('UnWeighted = %f \n', fitCoeffUwV(ii,2) )
     fprintf('UW. delta = %f \n',  fitCoeffUwV(ii,2) - 1 );
-    %     disp(fitCoeffUwV(ii,:));
     
     ind = 1:10:length(t_temp);
-    %     errorbar( t_temp(ind), msd_temp(ind), error_temp(ind) );
     plot( t_temp(ind), msd_temp(ind) )
     hold on;
     plot(...
@@ -232,7 +241,6 @@ for ii=1:NumFiles
     keyboard
   end
   
-  
   % Store all the msd data for master plot. -2 because we skip t = 1
   masterIndend = masterIndstr + recLength - 1;
   
@@ -253,11 +261,12 @@ for ii=1:NumFiles
   totTpntsOld = totTpnts;
 end
 
-fprintf('Finished loop over trials\n');
+fprintf('Finished trials loop  be= %f ffo= %f so= %f numtrials = %d\n',...
+  bindenM , ffoM, soM, NumFiles);
 
 % Calculate average;
 msdAveF = msdAveF ./ FpntsTot;
-if plotflag
+if fitPlotFlag
   msdAveNf   = msdAveNf ./ NfPtsTot;
 end
 % Cut off zeros if there are any. There should be though...
@@ -288,7 +297,6 @@ else
   [coeffAllWf, coeffSigAllWf] = nlDiffFit( dtimeM, msdM, errorM );
 end
 
-
 % Weighted by sig^2/sqrt(N)
 [coeffWaWfSc(1), coeffSigWaWfSc(1)] = wmean( fitCoeffSeV(:,1), fitSigSeV(:,1) );
 [coeffWaWfSc(2), coeffSigWaWfSc(2)] = wmean( fitCoeffSeV(:,2), fitSigSeV(:,2) );
@@ -315,8 +323,6 @@ if guessFlag == 1
 else
   [coeffAllUwf, coeffSigAllUwf] = nlDiffFit( dtimeM, msdM, 1 );
 end
-
-
 
 % Put it in a struct
 % All point in a weighted fit
@@ -349,8 +355,6 @@ Dstruct.DsigUwaUwf = coeffSigUwaUwf(2);
 Dstruct.tstart = timestart;
 
 % Coefficients
-
-% Store ie
 coeffsFit.AllWf = coeffAllWf;
 coeffsSig.AllWf = coeffSigAllWf;
 
@@ -378,8 +382,6 @@ coeffsSig.WaUwf = coeffSigWaUwf;
 coeffsFit.UwaUwf = coeffUwaUwf;
 coeffsSig.UwaUwf = coeffSigUwaUwf;
 
-% D = 0
-
 plotFits = 0;
 if plotFits
   figure()
@@ -404,8 +406,8 @@ if plotFits
     + coeffsFit.AllUwf(3) .* log(dtimeAveF),'r-.');
   plot( dtimeAveF, coeffsFit.WaUwf(1) + coeffsFit.WaUwf(2) .*  dtimeAveF ...
     + coeffsFit.WaUwf(3) .* log(dtimeAveF), 'b-.' );
-  %    plot(dtimeAveF, coeffsFit.UwaUwf(1) + coeffsFit.UwaUwf(2) .* dtimeAveF  ...
-  %     + coeffsFit.UwaUwf(3) .* log(dtimeAveF), '-.' );
+  plot(dtimeAveF, coeffsFit.UwaUwf(1) + coeffsFit.UwaUwf(2) .* dtimeAveF  ...
+    + coeffsFit.UwaUwf(3) .* log(dtimeAveF), '-.' );
   
   plot(dtimeAveF, msdAveF,'o')
   legend('All Wf', 'Wa Wf','UWa Wf',...
@@ -417,152 +419,16 @@ if plotFits
   Ax = gca;
   Ax.XLim = [0 max(dtimeAveF) ];
   Ax.YLim = [0 max(msdAveF) ];
-  %   keyboard
 end
 
 % Plot it
-if plotflag
-  
-  
-  % Get some parameters for axis
-  tMax = dtimeAveF(end);
-  
-  % Parameters
-  ParamList1 = sprintf('ffo: %.1g BE = %.1g', ffoM, bindenM);
-  ParamList2 = sprintf( ' ntrials: %d \n ng: %d \n ntime: %d',...
-    const.rec_chunk, const.maxpts_msd,const.num_tracer);
-  ParamList2 = sprintf( '%s \n nrecint:%d  \n randtimeptns: %d \n ntracer: %d\n',...
-    ParamList2, const.rec_chunk, const.maxpts_msd,const.num_tracer);
-  
-  TitleStr1 = 'msd';
-  TitleStr2 = ParamList1;
-  
-  Dstr1 =  sprintf('W: D = %.4f +/- %.2e', ...
-    Dstruct.DaveW, Dstruct.DsigAllWfW);
-  Dstr2 = sprintf('UW: D = %.4f +/- %.2e',...
-    Dstruct.DaveUw, Dstruct.DsigAllWfUw);
-  Dstr3 =  sprintf('Fit: D = %.4f +/- %.2e',...
-    Dstruct.DfitAllWf, Dstruct.DsigAllWfFit);
-  Dstr = sprintf('%s\n%s\n%s\n', Dstr1, Dstr2, Dstr3);
-  
-  %% Fig 1: scatter plot with fit and average vals with fit
-  figure()
-  
-  
-  % All
-  subplot( 2,2,1);
-  scatter( dtimeNfM , msdNfM )
-  hold on
-  scatter( dtimeM , msdM )
-  plot( [ dtimeAveNf; dtimeAveF] , Shift + DfitAllWf .* [ dtimeAveNf; dtimeAveF] )
-  axis square
-  axis( [0 tMax 0 tMax] )
-  xlabel('time'); ylabel('r^2')
-  title( [TitleStr1 '(all)' ] )
-  legend('Data NF', 'Data F', 'Fit line','location','best')
-  
-  % Ave
-  subplot( 2,2,2 )
-  scatter( dtimeAveNf , msdAveNf )
-  hold on
-  scatter( dtimeAveF , msdAveF )
-  plot( [ dtimeAveNf; dtimeAveF] , Shift + DfitAllWf .* [ dtimeAveNf; dtimeAveF] )
-  axis square
-  axis( [0 tMax 0 tMax] )
-  xlabel('time'); ylabel('r^2')
-  title( [TitleStr2] )
-  legend('Data NF', 'Data F', 'Fit line','location','best')
-  
-  %Params
-  subplot( 2, 2, 3)
-  axis square
-  text( 0.1, 0.5, Dstr )
-  
-  subplot( 2, 2, 4)
-  axis square
-  text( 0.1, 0.5, ParamList2 )
-  
-  % Save it
-  if saveFlag
-    savestr = sprintf('msdbe%.1foff%.1f.fig', bindenM, ffoM);
-    savefig( savestr );
-  end
-  
-  %% Fig 2: log plots to show anomalous
-  
-  figure()
-  
-  
-  % All points r^2 vs t
-  Ha = subplot(2,2,1);
-  loglog(  [ dtimeAveNf ; dtimeAveF ] , [ msdAveNf ; msdAveF ] );
-  axis square
-  
-  xlabel('t'); ylabel('r^2'); title( 'All' );
-  
-  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
-  base10Ystr = 0;  base10Yend = ceil( log10( msdAveF(end) ) );
-  
-  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
-  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
-  Ha.XLim =  10 .^ [base10Xstr base10Xend];
-  Ha.YLim =  10 .^ [base10Ystr base10Yend];
-  Ha.YGrid = 'on'; Ha.XGrid = 'on';
-  
-  % All points r^2 / t vs t
-  Ha = subplot(2,2,2);
-  loglog(  [ dtimeAveNf ; dtimeAveF ], ...
-    [ msdAveNf ; msdAveF ] ./  [ dtimeAveNf ; dtimeAveF ] )
-  axis square
-  xlabel('t'); ylabel('r^2'); title( [ 'All: ' TitleStr2 ]  );
-  
-  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
-  base10Ystr = -1; base10Yend = 1;
-  
-  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
-  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
-  Ha.XLim =  10 .^ [base10Xstr base10Xend];
-  Ha.YLim =  10 .^ [base10Ystr base10Yend];
-  Ha.YGrid = 'on'; Ha.XGrid = 'on';
-  
-  % Just fit r^2 vs t
-  Ha = subplot(2,2,3);
-  loglog(  dtimeAveF  , msdAveF )
-  axis square
-  
-  xlabel('t'); ylabel('r^2');   title( 'Fit' );
-  
-  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
-  base10Ystr = 0;  base10Yend = ceil( log10( msdAveF(end) ) );
-  
-  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
-  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
-  Ha.XLim =  10 .^ [base10Xstr base10Xend];
-  Ha.YLim =  10 .^ [base10Ystr base10Yend];
-  Ha.YGrid = 'on'; Ha.XGrid = 'on';
-  
-  % Just fit r^2 / t v t
-  Ha = subplot(2,2,4);
-  loglog(  dtimeAveF  , msdAveF ./dtimeAveF )
-  axis square
-  
-  xlabel('t'); ylabel('r^2'); title( [ 'F: ' TitleStr2 ]  );
-  
-  base10Xstr = 0;  base10Xend = ceil( log10( dtimeAveF(end) ) );
-  base10Ystr = -1; base10Yend = 1;
-  
-  Ha.XTick = 10 .^( base10Xstr:base10Xend) ;
-  Ha.YTick = 10 .^( base10Ystr:base10Yend) ;
-  Ha.XLim =  10 .^ [base10Xstr base10Xend];
-  Ha.YLim =  10 .^ [base10Ystr base10Yend];
-  Ha.YGrid = 'on'; Ha.XGrid = 'on';
-  
-  % Save it
-  if saveFlag
-    savestr = sprintf('logbe%.1foff%.1f.fig', bindenM, ffoM);
-    savefig( savestr );
-  end
-  
-end % if Plotflag
-
-
+if fitPlotFlag || logPlotflag
+  ParamList1 = sprintf('ffo: %.2g BE = %.2g', ffoM, bindenM);
+end
+if fitPlotFlag
+  dataFitPlot(dtimeAveF, coeffsFit.UwaWfSc, msdAveF, ...
+    bindenM, ffoM, ParamList1, saveFlag)
+end
+if logPlotflag
+  logMsdPlot(dtimeAveF, msdAveF, bindenM, ffoM, ParamList1, saveFlag)
+end
