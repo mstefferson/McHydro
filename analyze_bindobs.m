@@ -1,6 +1,5 @@
+% function analyze_bindobs(NumFiles2Analyze)
 % MWS edited original analyze program written by MB and LH to be more general
-%clear all;
-%close all;
 
 % Get all the files you want to analyze
 function analyze_bindobs(NumFiles2Analyze)

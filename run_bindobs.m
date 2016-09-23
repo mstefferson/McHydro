@@ -1,10 +1,11 @@
-% run_bindobs.m
+% run_bindobs()
 % Description: executeable that calls main body of model diffusion_model
 % Program calls loads parameter file or calls initial parameter file if one
 % doesn't exist yet, sets up parallelization, and moves outputs
 %
 % Authors: LEH, MDB, MWS
 
+function run_bindobs()
 try
   addpath('./src');
   rng('shuffle');
@@ -12,6 +13,13 @@ try
   currentdir=pwd;
   fprintf('In dir %s\n',currentdir);
   fprintf('In run_bindobs, %s\n', StartTime);
+  
+  % Allocate params
+  params = struct();
+  trialmaster = struct();
+  const = struct();
+  modelopt = struct();
+  
   
   % Check run status
   if exist('StatusRunning.txt','file') ~= 0;
@@ -145,5 +153,3 @@ try
 catch err
   fprintf('%s',err.getReport('extended') );
 end % try catch
-
-
