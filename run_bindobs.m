@@ -20,7 +20,6 @@ try
   const = struct();
   modelopt = struct();
   
-  
   % Check run status
   if exist('StatusRunning.txt','file') ~= 0;
     %     error('Code is already running in directory');
@@ -83,8 +82,31 @@ try
   
   if nparams > 1
     fprintf('Using parfor to run diffusion model\n');
-    parobj = gcp;
+    % Set-up a parpool that's cluster safe
+    % No pool yet
+    if isempty(gcp('nocreate') )
+      fprintf('Creating pool\n')
+      % Initiate a parcluster
+      c = parcluster();
+      % Create temporary directory to parpool data to go
+      clustdir = tempname();
+      mkdir(clustdir)
+      c.JobStorageLocation = clustdir;
+      % Pause for parpool (preventing race conditions) just in case
+      tpause = 1 + 60*rand();
+      fprintf( 'Pausing for %f \n', tpause );
+      pause( tpause );
+      parobj = parpool(c);
+    else % Already pool
+      fprintf('Pool exists\n')
+      parobj = gcp;
+      clustdir = parobj.Cluster.JobStorageLocation;
+      mkdir(clustdir);
+    end
+    
     fprintf('I have hired %d workers\n',parobj.NumWorkers);
+    fprintf('Temp cluster dir: %s\n', clustdir);
+    
     parfor j=1:nparams
       RunID       = param_RunID(j);
       bind_energy = param_bind(j);
@@ -108,9 +130,19 @@ try
       fprintf('%s\n',filename);
       
       %run the model!
-      [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
+      [~,~] = diffusion_model(pvec,const,modelopt,filename);
       movefile(filename,'./runfiles');
     end
+    % Clean up tmp
+    delete( [clustdir '/*.mat' ] );
+    delete( [clustdir '/*.txt' ] );
+    if ~isempty( ls(clustdir) )
+      tempDir = ls(clustdir);
+      tempDir = tempDir( ~isspace( tempDir ) );
+      delete( [clustdir '/' tempDir '/*' ] );
+      rmdir( [clustdir '/' tempDir ] );
+    end
+    rmdir(clustdir);
   else
     fprintf('Running diffusion model once\n');
     RunID       = param_RunID(1);
@@ -136,7 +168,7 @@ try
     fprintf('%s\n',filename);
     
     %run the model!
-    [tracer,obst] = diffusion_model(pvec,const,modelopt,filename);
+    [~,~] = diffusion_model(pvec,const,modelopt,filename);
     fprintf('Finished %s \n', filename);
     movefile(filename,'./runfiles');
   end %if nparams > 1
