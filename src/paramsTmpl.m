@@ -38,7 +38,7 @@ modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slo
 modelopt.movie=0;           %1 to record movie
 modelopt.obst_excl=1;       %1 if obstacles sterically exclude each other, 0 if not
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
-modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude
+modelopt.obst_trace_excl=1;  %1 if obstacles and tracers mutually exclude
 modelopt.dimension=2;    %system dimension, currently must be 2
 
 % Fix time stuff and add some calculated things
