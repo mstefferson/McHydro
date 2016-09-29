@@ -5,7 +5,15 @@
 function analyze_bindobs(NumFiles2Analyze)
 try
   addpath('./src');
-  rng('shuffle');
+
+   % Scramble and shift the seed
+  s = rng('shuffle');
+  if exist( 'seed.mat','file'); 
+    load('seed.mat');
+  else
+    seedShift = 0;
+  end
+  rng( s.Seed + seedShift );
   
   if nargin == 0; NumFiles2Analyze = 1; end;
   

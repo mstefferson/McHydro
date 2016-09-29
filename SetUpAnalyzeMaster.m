@@ -32,25 +32,21 @@ if NumFilesTot
      fprintf('%s\n',filename);
    end
    
-   %Initialize the setup params
-   %if exist('initsetupParams.m', 'file');
-   %initsetupParams
-   %else
-   %cpmatparams
-   %initsetupParams
-   %end
-   
    % random number for identifier
    % Pick a random seed
-   rng shuffle
+   rng('shuffle');
    randnum = floor( 1000 * rand() );
    
    %% Not finished %%%
    for i = 1:NumDirs
-      dirstr = sprintf('/AnalyzeMe%d_%d_%d', randnum, trial, i );
+      dirstr = sprintf('/AnalyzeMe%d_%.2d_%.2d', randnum, trial, i );
       dirpath = [RunDirPath dirstr];
       mkdir( dirpath );
       mkdir( [dirpath '/runfiles'] )
+
+      % save seed
+      seedShift = i;
+      save('seed.mat','seedShift')
       
       FileStart = (i-1) * FilesInDir + 1;
       FileEnd = (i) * FilesInDir;
@@ -66,6 +62,7 @@ if NumFilesTot
          PathEnd =  [dirpath '/runfiles/' filename];
          %fprintf(' Moving %s to %s\n', PathStart, PathEnd );
          movefile( PathStart, PathEnd);
+         movefile( 'seed.mat', dirpath );
          copyfile('./*.m', [dirpath] );
          copyfile('./*.sh', [dirpath] );
          copyfile('./src', [dirpath '/src/'] );

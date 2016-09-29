@@ -41,7 +41,7 @@ nffo     = length( ffrac_obst_vec );
 nso      = length( size_obj_vec ) ;
 
 % random number for identifier
-% Scramble and shift the seed
+% Scramble the seed
 s = rng('shuffle');
 randnum = floor( 1000 * rand() );
 
