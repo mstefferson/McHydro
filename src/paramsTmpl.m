@@ -8,6 +8,7 @@
 trialmaster.tind       = 1; % trial indicator
 trialmaster.runstrtind = 1; % run indicator
 trialmaster.nt         = 1; % number of trials
+trialmaster.seedShift  = 1; % seed shifter resolve cluster issues
 
 %key parameters and constants
 params.bind_energy_vec = [0]; % binding_energy

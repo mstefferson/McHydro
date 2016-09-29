@@ -41,11 +41,13 @@ nffo     = length( ffrac_obst_vec );
 nso      = length( size_obj_vec ) ;
 
 % random number for identifier
-% Pick a random seed
-rng shuffle
+% Scramble and shift the seed
+s = rng('shuffle');
 randnum = floor( 1000 * rand() );
 
 fprintf('Let us make some dirs\n')
+
+counter = 1;
 % One parameter per dir is nt is a multiple of the workers
 if n_trials > 1
   for i = 1:nbe
@@ -53,7 +55,7 @@ if n_trials > 1
       for k = 1:nso
         for l = 1:numDir4Trs
           
-          dirstr = sprintf('/RunMe%d_%d_%d/', ...
+          dirstr = sprintf('/RunMe%d_%.2d_%.2d/', ...
             randnum, trialind, l + (k-1)*numDir4Trs +...
             (j-1) * numDir4Trs * nso + (i-1) * numDir4Trs * nso * nffo);
           dirpath = [RunDirPath dirstr];
@@ -80,9 +82,10 @@ if n_trials > 1
           
           % change parameters and move everything
            changeparams_bindobs( beTemp, ffTemp, soTemp,numTrialsPerDir,...
-             trialind, runIndTemp );
+             trialind, runIndTemp, counter );
           
            moveandcopy(dirpath)
+           counter = counter + 1;
           
         end
       end

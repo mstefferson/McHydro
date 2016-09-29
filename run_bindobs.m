@@ -8,12 +8,11 @@
 function run_bindobs()
 try
   addpath('./src');
-  rng('shuffle');
   StartTime = datestr(now);
   currentdir=pwd;
   fprintf('In dir %s\n',currentdir);
   fprintf('In run_bindobs, %s\n', StartTime);
-  
+
   % Allocate params
   params = struct();
   trialmaster = struct();
@@ -42,6 +41,10 @@ try
   end
   load Params.mat;
   
+  % Scramble and shift the seed
+  s = rng('shuffle');
+  rng( s.Seed + trialmaster.seedShift );
+
   %display everything
   fprintf('parameters read in\n');
   disp(trialmaster); disp(params); disp(const); disp(modelopt);

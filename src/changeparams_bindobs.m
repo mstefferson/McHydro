@@ -2,7 +2,8 @@
 %allows for inputs
 % called by SetUpRunMaster
 
-function [] = changeparams_bindobs( beVec, ffoVec, soVec, numtrl, trlind, runind)
+function [] = changeparams_bindobs( beVec, ffoVec, soVec, numtrl, trlind, ...
+runind, seedShift)
 
 if exist('Params.mat','file') == 0 ; 
   fprintf('No params yet, running initparams \n');
@@ -13,12 +14,11 @@ else
 end;
 
 %trial master
-if nargin > 3
-  const.n_trials         = numtrl;
-  trialmaster.tind       = trlind;
-  trialmaster.runstrtind = runind;
-  trialmaster.nt         = const.n_trials; 
-end
+const.n_trials         = numtrl;
+trialmaster.tind       = trlind;
+trialmaster.runstrtind = runind;
+trialmaster.nt         = const.n_trials; 
+trialmaster.seedShift  = seedShift;
 
 %parameters in the inputs
 params.bind_energy_vec = beVec;
