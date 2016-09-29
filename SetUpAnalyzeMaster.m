@@ -22,35 +22,24 @@ NumFilesTot = size(Files2Analyze,1);
 if NumFilesTot
    % Number of Dirs
    NumDirs = ceil( NumFilesTot / FilesInDir );
-   
+   % Say what's up
    fprintf('Analyzing %d files in %d dirs\n', NumFilesTot, NumDirs);
-   % Print the filenames
 
-   fprintf('Printing all files\n');
-   for i = 1:NumFilesTot
-     filename = Files2Analyze{i};
-     fprintf('%s\n',filename);
-   end
-   
-   %Initialize the setup params
-   %if exist('initsetupParams.m', 'file');
-   %initsetupParams
-   %else
-   %cpmatparams
-   %initsetupParams
-   %end
-   
    % random number for identifier
    % Pick a random seed
-   rng shuffle
+   rng('shuffle');
    randnum = floor( 1000 * rand() );
    
-   %% Not finished %%%
+   % Loop over dirs
    for i = 1:NumDirs
-      dirstr = sprintf('/AnalyzeMe%d_%d_%d', randnum, trial, i );
+      dirstr = sprintf('/AnalyzeMe%d_%.2d_%.2d', randnum, trial, i );
       dirpath = [RunDirPath dirstr];
       mkdir( dirpath );
       mkdir( [dirpath '/runfiles'] )
+
+      % save seed
+      seedShift = i;
+      save('seed.mat','seedShift')
       
       FileStart = (i-1) * FilesInDir + 1;
       FileEnd = (i) * FilesInDir;
@@ -59,18 +48,17 @@ if NumFilesTot
       
       fprintf('Moving %d files to %s\n', TotFilesInDir, dirstr);
       for j = 1:TotFilesInDir
-         % Need to use strcat. I don't know why vector notation isn't working
+         % Get filename to move
          filename = Files2Analyze{ FileStart + (j-1) };
          sprintf('file: %s\n',filename);
          PathStart = [CurrentDir '/runfiles/' filename ];
          PathEnd =  [dirpath '/runfiles/' filename];
-         %fprintf(' Moving %s to %s\n', PathStart, PathEnd );
          movefile( PathStart, PathEnd);
+      end
+         movefile( 'seed.mat', dirpath );
          copyfile('./*.m', [dirpath] );
          copyfile('./*.sh', [dirpath] );
          copyfile('./src', [dirpath '/src/'] );
-      end
-      
    end % loop of dirs
 else
    fprintf('Nothing to analyze\n');
