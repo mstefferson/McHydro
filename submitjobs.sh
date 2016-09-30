@@ -2,7 +2,7 @@
 #!/bin/bash
 
 # On mac, give path to matlab
-RunDirPath=~/RunDir/McHydro
+RunDirPath=/scratch/Users/mist7261/McHydro
 HomeDir=`pwd`
 # Pick out all the dirs that begin with 'RunMe'
 DirStrName='RunMe'
@@ -15,7 +15,6 @@ echo Time is `date`
 echo Directory is `pwd`
 
 module load matlab_R2015b
-cd /Users/mist7261/McHydro
 
 echo "Starting run"
 echo "In dir `pwd` "
@@ -23,7 +22,9 @@ echo "Making all directories"
 
 # Run matlab program
 matlab -nodesktop -nosplash \
-  -r  "try, SetUpRunMaster, catch, exit(1), end, exit(0);" 
+  -r  "try, SetUpRunMaster, catch, exit(1), end, exit(0);"\
+  2>&1 | tee makedir.out
+ 
 
 echo  "Made Dirs. Matlab exit code: $?" 
 cd $RunDirPath
@@ -41,7 +42,7 @@ for i in `ls | grep ^${DirStrName}`; do
   # cd in and submit
   cd ${newname} 
   echo "In dir `pwd` "
-  qsub runbindPBS.sh
+  qsub runbindPBSpando.sh
   cd ../
 done
 echo "Submitted all jobs"

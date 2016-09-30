@@ -1,8 +1,7 @@
 # Bash executable
 #!/bin/bash
 
-# On mac, give path to matlab
-RunDirPath=~/RunDir/McHydro
+RunDirPath=/scratch/Users/mist7261/McHydro
 HomeDir=`pwd`
 DirStrName='Ran'
 

@@ -6,7 +6,7 @@
 # under the name AnalyzeMe*. Once the job it submitted, it moves them to
 # Analyzed*. An Analyzed folder can in a running or finished state.
 
-RunDirPath=~/RunDir/McHydro
+RunDirPath=/scratch/Users/mist7261/McHydro
 HomeDir=`pwd`
 # Pick out all the dirs that begin with 'AnalyzeMe'
 DirStrName='AnalyzeMe'

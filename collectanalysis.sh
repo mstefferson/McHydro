@@ -3,10 +3,8 @@
 
 # collectanalysis.sh:
 # Collects analysis jobs form run directory. 
-#
-# Note: Currently doesn't check if they are done!
 
-RunDirPath=~/RunDir/McHydro
+RunDirPath=/scratch/Users/mist7261/McHydro
 HomeDir=`pwd`
 DirStrName='Analyzed'
 
