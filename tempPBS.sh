@@ -1,6 +1,4 @@
-# Sample PBS job script
-# squb -v nfiles=blah analyzebindPBS.sh
-# runs nfiles=100 if left blank
+# Script to run run_bindobs. 
 #
 # Copy this script, customize it and then submit it with the ``qsub''
 # command. For example:
@@ -24,21 +22,11 @@
 # Note: group all PBS directives at the beginning of your script.
 # Any directives placed after the first shell command will be ignored.
 
-### Set the job name
-#PBS -N analobs
-
-### Run in the queue named "short"
-#PBS -q short
-
 ### Use the bourne shell
 #PBS -S /bin/bash
 
 ### Remove only the three initial "#" characters before #PBS
 ### in the following lines to enable:
-###
-### To send email when the job is completed:
-### PBS -m ae
-### PBS -M mist7261@colorado.edu
 
 ### Optionally set the destination for your program's output
 ### Specify localhost and an NFS filesystem to prevent file copy errors.
@@ -47,7 +35,7 @@
 
 ### Specify the number of cpus for your job.  This example will allocate 4 cores
 ### using 2 processors on each of 2 nodes.
-#PBS -l nodes=1:ppn=12
+###PBS -l nodes=1:ppn=12
 
 ### Tell PBS how much memory you expect to use. Use units of 'b','kb', 'mb' or 'gb'.
 #PBS -l mem=24GB
@@ -60,6 +48,17 @@
 ### from your home directory.
 cd $PBS_O_WORKDIR
 echo Working directory is $PBS_O_WORKDIR
+echo Job name is $PBS_JOBNAME
+
+### To send email when the job is completed:
+if [ -z ${mailme+x} ]; then 
+  mailme=0; 
+fi
+echo "mail me is $mailme"
+if [ ${mailme} -eq 1 ]
+#PBS -m ae
+#PBS -M mist7261@colorado.edu
+fi
 
 # Calculate the number of processors allocated to this run.
 NPROCS=`wc -l < $PBS_NODEFILE`
@@ -79,23 +78,8 @@ echo Using ${NPROCS} processors across ${NNODES} nodes
 
 ### Or, just run your serial program
 ## $HOME/my-program
-module load matlab_R2015b
-#  cd /Users/mist7261/McHydro
+echo $PBS_O_MAIL
 
-# if no input, analyze 100 files
-if [ -z ${nfiles+x} ]; then 
-  nfiles=100; 
-fi
-
-# Run matlab program
-echo "Starting analysis. Trying to analyze $nfiles"
-echo "In dir `pwd` "
-
-matlab -nodesktop -nosplash \
-  -r  "try, analyze_bindobs( $nfiles ), catch, exit(1), end, exit(0);" \
-  2>&1 | tee analbind.out
-echo "Finished. Matlab exit code: $?" 
-echo Time is `date`
 
 # PBS environment variables available in every batch job:
 #

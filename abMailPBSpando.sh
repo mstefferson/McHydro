@@ -1,4 +1,6 @@
-# Script to run run_bindobs. 
+# Sample PBS job script
+# squb -v nfiles=blah analyzebindPBS.sh
+# runs nfiles=100 if left blank
 #
 # Copy this script, customize it and then submit it with the ``qsub''
 # command. For example:
@@ -13,20 +15,9 @@
 #
 # For example, if you want the batch job to inherit all your environment
 # variables, use the ``V'' switch when you submit the job script:
-#
-# qsub -V myjob-pbs.sh
-#
-# or uncomment the following line by removing the initial ``###''
-### #PBS -V
 
 # Note: group all PBS directives at the beginning of your script.
 # Any directives placed after the first shell command will be ignored.
-
-### Set the job name
-#PBS -N bindobs
-
-### Run in the queue named "short"
-#PBS -q short
 
 ### Use the bourne shell
 #PBS -S /bin/bash
@@ -35,8 +26,8 @@
 ### in the following lines to enable:
 ###
 ### To send email when the job is completed:
-### PBS -m ae
-### PBS -M mist7261@colorado.edu
+#PBS -m ae
+#PBS -M mist7261@colorado.edu
 
 ### Optionally set the destination for your program's output
 ### Specify localhost and an NFS filesystem to prevent file copy errors.
@@ -70,19 +61,24 @@ echo Running on host `hostname`
 echo Time is `date`
 echo Directory is `pwd`
 echo Using ${NPROCS} processors across ${NNODES} nodes
+echo "Job name: ${PBS_JOBNAME}. Job ID: ${PBS_JOBID}"
+echo "Sending email when done"
 
-### OpenMPI will automatically launch processes on all allocated nodes.
-## MPIRUN=`which mpirun`
-## ${MPIRUN} my-openmpi-program
-
-### Or, just run your serial program
-## $HOME/my-program
+# load matlab
 module load matlab_R2015b
 
+# if no input, analyze 100 files
+if [ -z ${nfiles+x} ]; then 
+  nfiles=100; 
+fi
+
 # Run matlab program
+echo "Starting analysis. Trying to analyze $nfiles"
+echo "In dir `pwd` "
+
 matlab -nodesktop -nosplash \
-  -r  "try, run_bindobs, catch, exit(1), end, exit(0);" \
-  2>&1 | tee runbind.out
+  -r  "try, analyze_bindobs( $nfiles ), catch, exit(1), end, exit(0);" \
+  2>&1 | tee analbindsaxton.out
 echo "Finished. Matlab exit code: $?" 
 echo Time is `date`
 
