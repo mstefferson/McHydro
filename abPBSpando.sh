@@ -74,7 +74,7 @@ echo "In dir `pwd` "
 
 matlab -nodesktop -nosplash \
   -r  "try, analyze_bindobs( $nfiles ), catch, exit(1), end, exit(0);" \
-  2>&1 | tee analbindsaxton.out
+  2>&1 | tee ${PBS_JOBNAME}.out
 echo "Finished. Matlab exit code: $?" 
 echo Time is `date`
 

@@ -68,7 +68,7 @@ module load matlab_R2015b
 # Run matlab program
 matlab -nodesktop -nosplash \
   -r  "try, run_bindobs, catch, exit(1), end, exit(0);" \
-  2>&1 | tee runbind12procv2.out
+  2>&1 | tee ${PBS_JOBNAME}.out
 echo "Finished. Matlab exit code: $?" 
 echo Time is `date`
 

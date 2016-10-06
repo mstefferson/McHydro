@@ -28,8 +28,8 @@
 ### in the following lines to enable:
 ###
 ### To send email when the job is completed:
-###PBS -m ae
-###PBS -M mist7261@colorado.edu
+#PBS -m ae
+#PBS -M mist7261@colorado.edu
 
 ### Optionally set the destination for your program's output
 ### Specify localhost and an NFS filesystem to prevent file copy errors.
@@ -72,7 +72,7 @@ module load matlab_R2015b
 # Run matlab program
 matlab -nodesktop -nosplash \
   -r  "try, run_bindobs, catch, exit(1), end, exit(0);" \
-  2>&1 | tee runbind12procv2.out
+  2>&1 | tee ${PBS_JOBNAME}.out
 echo "Finished. Matlab exit code: $?" 
 echo Time is `date`
 
