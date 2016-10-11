@@ -3,7 +3,7 @@
 % Parameter file for set-up run master
 
 % Directory stuff
-RunDirPath = '~/RunDir/McHydro';
+RunDirPath = '/scratch/Users/mist7261/McHydro';
 FilesInDir = 4;
 AvailWorkers = 4;
 
