@@ -5,10 +5,10 @@
 function analyze_bindobs(NumFiles2Analyze)
 try
   addpath('./src');
-
-   % Scramble and shift the seed
+  
+  % Scramble and shift the seed
   s = rng('shuffle');
-  if exist( 'seed.mat','file'); 
+  if exist( 'seed.mat','file');
     load('seed.mat');
   else
     seedShift = 0;
@@ -63,7 +63,7 @@ try
       clustdir = parobj.Cluster.JobStorageLocation;
       mkdir(clustdir);
     end
-        
+    
     fprintf('I have hired %d workers\n',parobj.NumWorkers);
     fprintf('Temp cluster dir: %s\n', clustdir);
     
@@ -83,24 +83,34 @@ try
       
       % Put all variables in a struct
       S = load( ['./runfiles/analyzing/' filename] );
-      
-      %test calling msd function
-      if isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 1
-        [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, S.const.maxpts_msd, S.const.calcQuad);
-      elseif isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 0
-        [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, S.const.maxpts_msd, 0);
-      elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 1
-        [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, S.const.calcQuad);
-      elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 0
-        [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, 0);
+      if S.const.trPosRecNoModFlag == 1
+        %test calling msd function
+        if isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 1
+          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, S.const.maxpts_msd, S.const.calcQuad);
+        elseif isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 0
+          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, S.const.maxpts_msd, 0);
+        elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 1
+          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, S.const.calcQuad);
+        elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 0
+          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, 0);
+        end
+      else
+        fprintf('Nothing to analyze\n');
       end
-      
       %dtime doesn't take the record time into account, do fix it
       dtime = dtime * S.const.rec_interval;
       
+      % Save it
       msdfilename=['msd_',filename(6:end)];
-      msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
-        S.obst, S.paramlist, S.tracer);
+
+      if S.const.trackOcc
+        S.occupancy = S.occupancy'; % transpose it so it fits format of msd
+        msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
+          S.obst, S.paramlist, S.tracer, S.occupancy);
+      else
+        msdsave(msdfilename, msd, dtime, S.const, S.modelopt, ...
+          S.obst, S.paramlist, S.tracer);
+      end
       movefile(msdfilename, './msdfiles');
       delete( ['./runfiles/analyzing/' filename] );
       

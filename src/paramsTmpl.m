@@ -5,10 +5,10 @@
 % initparams_bindobs should not be tracked.
 
 %trial master
-trialmaster.tind       = 1; % trial indicator
+trialmaster.tind = 1; % trial indicator
 trialmaster.runstrtind = 1; % run indicator
-trialmaster.nt         = 1; % number of trials
-trialmaster.seedShift  = 1; % seed shifter resolve cluster issues
+trialmaster.nt = 1; % number of trials
+trialmaster.seedShift = 1; % seed shifter resolve cluster issues
 
 %key parameters and constants
 params.bind_energy_vec = [0]; % binding_energy
@@ -19,19 +19,23 @@ params.tr_unbnd_hop_energy = 0; %barrier height to sliding while unbound, in kT
 params.tr_bnd_hop_energy = Inf; %barrier height to sliding while bound, in kT
 
 %grid stuff
-const.n_trials      = trialmaster.nt;
-const.n_gridpoints  = 100;    % number of grid points, same in x and y
-const.ntimesteps    = 1e3;   % number of timesteps Note 1e5 gives errors on my laptop.
-const.rec_interval  = 1e1;    % time elapsed before recording
-const.rec_chunk     = 1e2;   % time elapsed before writing to file
-const.twait         = 1;    % time waited before recording
-const.TrRecFlag     = 1;     % Flag to record tracers or not
-const.ObsRecFlag    = 0;     % Flag to record obstacles or not
-const.size_tracer   = 1;     %tracer linear dimension, MUST BE odd integer
+const.n_trials = trialmaster.nt;
+const.n_gridpoints = 100; % number of grid points, same in x and y
+const.ntimesteps = 1e3; % number of timesteps Note 1e5 gives errors on my laptop.
+const.rec_interval = 1e1; % time elapsed before recording
+const.rec_chunk = 1e2; % time elapsed before writing to file
+const.twait = 1; % time waited before recording
+const.trPosRecModFlag = 0; % Flag to record tracers or not. modulated
+const.trPosRecNoModFlag = 1; % Flag to record tracer state. not modulated
+const.trStateRecFlag = 0; % Flag to record tracer state
+const.trackOcc = 1; % Flag to track occupancy
+const.obsPosRecModFlag = 0; % Flag to record tracers or not. modulated
+const.obsPosRecNoModFlag = 0; % Flag to record tracer state. not modulated
+const.size_tracer = 1; %tracer linear dimension, MUST BE odd integer
 
 %msd stuff
-const.calcQuad      = 0;         % Flag for calculating quad
-const.maxpts_msd    = 100;         % Flag for calculating quad
+const.calcQuad = 0; % Flag for calculating quad
+const.maxpts_msd = 100; % Flag for calculating quad
 
 %model stuff
 modelopt.animate=0;          %1 to show animation, 0 for no animation
