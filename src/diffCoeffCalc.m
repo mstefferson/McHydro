@@ -131,12 +131,22 @@ for ii=1:NumFiles
   
   % Non-linear fit r2 = a + b t + c ln(t)
   % Error scaled by root N
+  % Make sure error isn't zero. Can happen at high attraction
+
+    err0 = find( error_temp == 0 );
+    if ~isempty( err0 )
+     error_temp(err0) = error_temp(err0 + 11);
+    end
+
+  try
   if guessFlag == 1
     [coeffsWsc, coeffsigWsc] = nlDiffFit( t_temp, msd_temp, error_temp,fitguess );
   else
     [coeffsWsc, coeffsigWsc] = nlDiffFit( t_temp, msd_temp, error_temp );
   end
-  
+  catch errMsg
+    keyboard
+  end
   fitCoeffSeV(ii,1) = coeffsWsc(1);
   fitCoeffSeV(ii,2) = coeffsWsc(2);
   fitCoeffSeV(ii,3) = coeffsWsc(3);
@@ -147,11 +157,15 @@ for ii=1:NumFiles
   % Store all the msd data for master plot. -2 because we skip t = 1
   masterIndend = masterIndstr + recLength - 1;
   
-  % Average list. Sum everything up then divide by total points
-  msdAveF   = msdAveF + msd_temp .* nPts_temp;
-  FpntsTot = FpntsTot + nPts_temp;
-  masterIndstr = masterIndend + 1;
-  totTpntsOld = totTpnts;
+  try
+    % Average list. Sum everything up then divide by total points
+    msdAveF   = msdAveF + msd_temp .* nPts_temp;
+    FpntsTot = FpntsTot + nPts_temp;
+    masterIndstr = masterIndend + 1;
+    totTpntsOld = totTpnts;
+  catch
+    keyboard
+  end
   % Update fit guess
   if guessFlag; fitguess = coeffsWsc; end;
 end
@@ -164,7 +178,7 @@ end
 % Calculate average;
 msdAveF = msdAveF ./ FpntsTot;
 
-% Aveage coeffs. 
+% Aveage coeffs.
 coeffUwaWfSc = mean( fitCoeffSeV, 1 );
 coeffSigUwaWfSc = std( fitCoeffSeV, 1 );
 

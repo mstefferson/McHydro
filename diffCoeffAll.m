@@ -6,7 +6,7 @@
 % should form a grid ( # bind energy) X ( # ffo )
 
 function [DiffMat, DiffMatSig, p1vec, p2vec] = ...
-  diffCoeffAll( timestrMult, plotDFlag, plotFit, plotLog, ...
+diffCoeffAll( timestrMult, plotDFlag, plotFit, plotLog, ...
   verbose, savename, initFitGuess )
 
 try
@@ -50,7 +50,6 @@ try
     if isempty(savename); saveflag = 0; else saveflag = 1; end;
     guessFlag = 1;
   end
-  
   
   % Add paths
   addpath('~/McHydro/src')
@@ -234,48 +233,52 @@ try
   % Plot it
   if plotDFlag
     % D vs param1
-    if isfinite(p1vec) ~= 0
-      
-      figure()
-      hold all
-      for ii = 1:num_p2
-        errorbar( p1vec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
+    if length(p1vec) > 1
+      if isfinite(p1vec) ~= 0
+        
+        figure()
+        hold all
+        for ii = 1:num_p2
+          errorbar( p1vec, DiffMat(:,ii ), DiffMatSig(:,ii ) )
+        end
+        Ax = gca;
+        Ax.YLim = [0 1.1];
+        Ax.XLim = [ min(p1vec) max(p1vec) ];
+        xlabel(Param1); ylabel('D');
+        titlestr = ['D vs ' Param1s];
+        title(titlestr);
+        
+        legcell = cell( num_p2, 1 );
+        
+        for i = 1:num_p2
+          legcell{i} = [ Param2s ' = ' num2str( p2vec(i) ) ];
+        end
+        legend( legcell,'location', 'best' );
       end
-      Ax = gca;
-      Ax.YLim = [0 1.1];
-      Ax.XLim = [ min(p1vec) max(p1vec) ];
-      xlabel(Param1); ylabel('D');
-      titlestr = ['D vs ' Param1s];
-      title(titlestr);
-      
-      legcell = cell( num_p2, 1 );
-      
-      for i = 1:num_p2
-        legcell{i} = [ Param2s ' = ' num2str( p2vec(i) ) ];
-      end
-      legend( legcell,'location', 'best' );
-    end
+    end % end plot p1
     
     % D vs param2
-    if isfinite(p2vec) ~= 0
-      figure()
-      hold all
-      for ii = 1:num_p1
-        errorbar( p2vec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
+    if length(p2vec) > 1
+      if isfinite(p2vec) ~= 0
+        figure()
+        hold all
+        for ii = 1:num_p1
+          errorbar( p2vec, DiffMat(ii,: ), DiffMatSig(ii,: ) )
+        end
+        Ax = gca;
+        Ax.YLim = [0 1.1];
+        Ax.XLim = [ min(p2vec) max(p2vec) ];
+        xlabel(Param2); ylabel('D');
+        titlestr = ['D vs ' Param2s];
+        title(titlestr);
+        legcell = cell( num_p1, 1 );
+        
+        for i = 1:num_p1
+          legcell{i} = [ Param1s ' = ' num2str( p1vec(i) ) ];
+        end
+        legend( legcell,'location', 'best' );
       end
-      Ax = gca;
-      Ax.YLim = [0 1.1];
-      Ax.XLim = [ min(p2vec) max(p2vec) ];
-      xlabel(Param2); ylabel('D');
-      titlestr = ['D vs ' Param2s];
-      title(titlestr);
-      legcell = cell( num_p1, 1 );
-      
-      for i = 1:num_p1
-        legcell{i} = [ Param1s ' = ' num2str( p1vec(i) ) ];
-      end
-      legend( legcell,'location', 'best' );
-    end
+    end %end plot p2
     
     if [isfinite(p1vec); isfinite(p2vec)] ~= 0
       %Color bar
@@ -288,9 +291,9 @@ try
     
     % Save the Diffusion Coeff
     if saveflag
-      DiffSaveName = [ savename 'be' num2str(num_be)...
-        'ffo' num2str(num_ffo) '.mat' ];
-      save( DiffSaveName, 'DiffMat', 'beVec','ffoVec');
+      DiffSaveName = [ savename 'be' num2str(numBind)...
+        'ffo' num2str(numFFo) 'so' num2str(numSo) '.mat' ];
+      save( DiffSaveName, 'DiffMat', 'p1vec','p2vec');
       movefile(DiffSaveName, '~/McHydro/diffcalc');
     end
     fprintf('Finished run\n');
@@ -301,7 +304,5 @@ try
   
 catch err
   fprintf('%s',err.getReport('extended') );
-  keyboard
+   keyboard
 end
-
-
