@@ -7,7 +7,7 @@
 % analyze
 % filename: save the data to this mname
 
-function detDdirs( path2dirs, dirs2analyze, filename )
+function masterD = getDdirs( path2dirs, dirs2analyze, filename )
 
 currentDir = pwd;
 addpath( currentDir );
@@ -30,7 +30,7 @@ for ii = 1:length(dirs2analyze);
   
   % fix size
   [rM, cM] = size( diffTemp );
-  [rT, cT] = size( pVary );
+  [rT, ~] = size( pVary );
   
   if rT > rM;
     pVary = pVary';
@@ -49,9 +49,11 @@ end
 % Return home
 cd('~/McHydro');
 % sort D struct and resave
-[~, sortInd] = sort( masterD(:).pConst );
-masterD(:).pVary = masterD( sortInd ).pVary;
-masterD(:).pConst = masterD( sortInd ).pConst;
-masterD(:).D = masterD( sortInd ).D;
-masterD(:).sig = masterD( sortInd ).sig;
+
+v = zeros( length( masterD ), 1);
+for ii = 1:length( v)
+  v(ii) = masterD(ii).pConst;
+end
+[~, sortInd] = sort( v );
+masterD(:) = masterD( sortInd );
 save(filename, 'masterD');
