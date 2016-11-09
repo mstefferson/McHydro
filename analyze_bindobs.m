@@ -86,13 +86,13 @@ try
       if S.const.trPosRecNoModFlag == 1
         %test calling msd function
         if isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 1
-          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, S.const.maxpts_msd, S.const.calcQuad);
+          [msd,dtime]=computeMSD2(S.tracer_cen_rec_nomod, S.const.maxpts_msd, S.const.calcQuad);
         elseif isfield(S.const,'maxpts_msd') == 1 && isfield(S.const,'calcQuad') == 0
-          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, S.const.maxpts_msd, 0);
+          [msd,dtime]=computeMSD2(S.tracer_cen_rec_nomod, S.const.maxpts_msd, 0);
         elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 1
-          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, S.const.calcQuad);
+          [msd,dtime]=computeMSD2(S.tracer_cen_rec_nomod, 100, S.const.calcQuad);
         elseif isfield(S.const,'maxpts_msd') == 0 && isfield(S.const,'calcQuad') == 0
-          [msd,dtime]=computeMSD(S.tracer_cen_rec_nomod, 100, 0);
+          [msd,dtime]=computeMSD2(S.tracer_cen_rec_nomod, 100, 0);
         end
       else
         fprintf('Nothing to analyze\n');

@@ -16,34 +16,33 @@ number_delta_t  = number_timepnts - 1;
 dtime= ( 1 : number_delta_t)' ;
 
 if quadFlag
-   msd=zeros(number_delta_t,5); %Store [mean, std, n]
+  msd=zeros(number_delta_t,5); %Store [mean, std, n]
 else
-   msd=zeros(number_delta_t,3); %Store [mean, std, n]
+  msd=zeros(number_delta_t,3); %Store [mean, std, n]
 end
-% keyboard
+
 parfor dt = 1:number_delta_t
-    if number_timepnts-dt >= maxpts_msd
-        index_start = randperm(number_timepnts-dt, maxpts_msd);
-        index_end = index_start+dt;
-        delta_coords=(x(:,:,index_start)-x(:,:,index_end));
-    else
-        delta_coords=(x(:,:,1+dt:end)-x(:,:,1 : end-dt ));
-    end
-    % calculate displacement ^ 2
-   squared_dis = sum(delta_coords.^2,2); % dx^2+dy^2+...
-   % calculate displacement ^ 4 if flag
-   if quadFlag
-      quartic_dis = sum(delta_coords.^4,2); % dx^4+dy^4+..
-      msd(dt,:) = [mean(squared_dis(:)); ... % average
+  % Make sure we have no otherlapping time windows
+  NwMax = ceil( number_timepnts / dt ) - 1;
+  nStartPoss = 1:dt:NwMax*dt;
+  randInd = randperm( NwMax, min(NwMax,maxpts_msd) );
+  index_start = nStartPoss( randInd );
+  index_end = index_start + dt;
+  delta_coords = x(:,:, index_end) - x(:,:,index_start);
+  % calculate displacement ^ 2
+  squared_dis = sum(delta_coords.^2,2); % dx^2+dy^2+...
+  % calculate displacement ^ 4 if flag
+  if quadFlag
+    quartic_dis = sum(delta_coords.^4,2); % dx^4+dy^4+..
+    msd(dt,:) = [mean(squared_dis(:)); ... % average
       std(squared_dis(:)); ...; % std
       length(squared_dis(:)); ... % n (how many points used to compute mean)
       mean(quartic_dis(:)); ... %average
       std(quartic_dis(:))]'; %std
-   else
-      msd(dt,:) = [mean(squared_dis(:)); ... % average
+  else
+    msd(dt,:) = [mean(squared_dis(:)); ... % average
       std(squared_dis(:)); ...; % std
       length(squared_dis(:)) ]'
-   end
+  end
 end
 
-end
