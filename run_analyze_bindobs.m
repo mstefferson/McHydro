@@ -163,7 +163,7 @@ try
       '_bind',num2str(bind_energy),...
       '_fo',num2str(ffrac_obst,'%.2f'),'_ft',num2str(params.ffrac_tracer,'%.2f'),...
       '_so',num2str(size_obst),'_st',num2str(const.size_tracer),...
-      '_oe',num2str(jjjjjjjjjmodelopt.obst_excl),'_ng',...
+      '_oe',num2str(modelopt.obst_excl),'_ng',...
       num2str(const.n_gridpoints),'_nt',num2str(const.ntimesteps),...
       '_nrec', num2str(const.NrecTot),...
       '_t', num2str(trialmaster.tind,'%.2d'),'.',num2str(RunID,'%.2d') ];
@@ -177,10 +177,10 @@ try
     movefile(filename,'./runfiles');
   end %if nparams > 1
   runTime = toc(RunTimeID);
+  runTimeSave = runTime;
   runHr = floor( runTime / 3600); runTime = runTime - runHr*3600;
   runMin = floor( runTime / 60);  runTime = runTime - runMin*60;
   runSec = floor(runTime);
-  fprintf('RunTime: %.2d:%.2d:%.2d (hr:min:sec)\n', runHr, runMin,runSec);
   EndTime = datestr(now);
   fprintf('Completed run: %s\n',EndTime);
   fclose('all');
@@ -190,11 +190,19 @@ try
   analyzeTimeID = tic;
   analyze_bindobs(nparams)
   analyzeTime = toc(analyzeTimeID);
+  analyzeTimeSave = analyzeTime;
   analyzeHr = floor( analyzeTime / 3600); analyzeTime = analyzeTime - analyzeHr*3600;
   analyzeMin = floor( analyzeTime / 60);  analyzeTime = analyzeTime - analyzeMin*60;
   analyzeSec = floor(analyzeTime);
-  fprintf('AnalyzeTime: %.2d:%.2d:%.2d (hr:min:sec)\n', analyzeHr, analyzeMin,analyzeSec);
 
+  totTime =  analyzeTimeSave + runTimeSave;
+  totHr = floor( totTime / 3600); totTime = totTime - totHr*3600;
+  totMin = floor( totTime / 60);  totTime = totTime - totMin*60;
+  totSec = floor(totTime);
+  % time times
+  fprintf('RunTime: %.2d:%.2d:%.2d (hr:min:sec)\n', runHr, runMin, runSec);
+  fprintf('AnalyzeTime: %.2d:%.2d:%.2d (hr:min:sec)\n', analyzeHr, analyzeMin, analyzeSec);
+  fprintf('TotalTime: %.2d:%.2d:%.2d (hr:min:sec)\n', totHr, totMin, totSec);
   movefile('StatusRunning.txt','StatusFinished.txt')
  
 catch err

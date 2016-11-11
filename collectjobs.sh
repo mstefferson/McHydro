@@ -22,6 +22,7 @@ for i in `ls | grep ^${DirStrName}`;
   if [ -f StatusFinished.txt ]; then
     echo "Run finished. Collecting outputs"
     mv ./runfiles/* $HomeDir/runfiles
+    mv ./msdfiles/* $HomeDir/msdfiles
     cd ../ 
     rm -rf $i
   else
