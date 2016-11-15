@@ -43,8 +43,10 @@ try
   load Params.mat;
   
   % Scramble and shift the seed
-  s = rng('shuffle');
-  rng( s.Seed + trialmaster.seedShift );
+  % first, paused base on input seed, then scramble
+  rng( trialmaster.seedShift );
+  pause( 10 .* rand() );
+  rng('shuffle');
 
   %display everything
   fprintf('parameters read in\n');
@@ -97,7 +99,7 @@ try
       mkdir(clustdir)
       c.JobStorageLocation = clustdir;
       % Pause for parpool (preventing race conditions) just in case
-      tpause = 1 + 60*rand();
+      tpause = 10*rand();
       fprintf( 'Pausing for %f \n', tpause );
       pause( tpause );
       parobj = parpool(c);

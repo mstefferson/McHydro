@@ -42,8 +42,10 @@ try
   load Params.mat;
   
   % Scramble and shift the seed
-  s = rng('shuffle');
-  rng( s.Seed + trialmaster.seedShift );
+  % first, paused base on input seed, then scramble
+  rng( trialmaster.seedShift );
+  pause( 10 .* rand() );
+  rng('shuffle');
 
   %display everything
   fprintf('parameters read in\n');

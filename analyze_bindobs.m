@@ -7,13 +7,14 @@ try
   addpath('./src');
   
   % Scramble and shift the seed
-  s = rng('shuffle');
   if exist( 'seed.mat','file');
     load('seed.mat');
   else
     seedShift = 0;
   end
-  rng( s.Seed + seedShift );
+  rng( seedShift );
+  pause( 10 .* rand() );
+  rng('shuffle');
   
   if nargin == 0; NumFiles2Analyze = 1; end;
   
