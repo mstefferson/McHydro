@@ -64,6 +64,8 @@ for i in `ls | grep ^${DirStrName}`; do
   # cd in and submit
   cd ${newname} 
   echo "In dir `pwd` "
+  # pause for random number generator
+  sleep 1
   # submit!
   if [ $jobFlag -eq 1 ]
   then
