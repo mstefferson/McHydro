@@ -49,159 +49,165 @@ fprintf('Let us make some dirs\n')
 
 counter = 1;
 % One parameter per dir is nt is a multiple of the workers
-if n_trials > 1
-  for i = 1:nbe
-    for j = 1:nffo
-      for k = 1:nso
-        for l = 1:numDir4Trs
-          
-          dirstr = sprintf('/RunMe%d_%.2d_%.2d/', ...
-            randnum, trialind, l + (k-1)*numDir4Trs +...
-            (j-1) * numDir4Trs * nso + (i-1) * numDir4Trs * nso * nffo);
+try
+  if n_trials > 1
+    for i = 1:nbe
+      for j = 1:nffo
+        for k = 1:nso
+          for l = 1:numDir4Trs
+            
+            dirstr = sprintf('/RunMe%d_%.2d_%.2d/', ...
+              randnum, trialind, l + (k-1)*numDir4Trs +...
+              (j-1) * numDir4Trs * nso + (i-1) * numDir4Trs * nso * nffo);
+            dirpath = [RunDirPath dirstr];
+            mkdir( dirpath );
+            
+            runIndTemp = (l-1) * numTrialsPerDir + runstartind;
+            beTemp     = bind_energy_vec(i);
+            ffTemp     = ffrac_obst_vec(j);
+            soTemp     = size_obj_vec(k);
+            
+            % Print parameters to stdout
+            ntstring = [ 'Num trials: ' num2str(numTrialsPerDir) ];
+            runstring = [ 'RunInds Start: ' int2str(runIndTemp) ];
+            bestring = [ 'BE: ' num2str(beTemp) ];
+            ffstring = [ 'FF: ' num2str(ffTemp) ];
+            sostring = [ 'SO: ' num2str(soTemp) ];
+            
+            fprintf('\n%s:\n',dirstr);    
+            fprintf('%s \n',ntstring);
+            fprintf('%s \n',runstring);
+            fprintf('%s \n',bestring);
+            fprintf('%s \n',ffstring);
+            fprintf('%s \n',sostring);
+            
+            % change parameters and move everything
+             changeparams_bindobs( beTemp, ffTemp, soTemp,numTrialsPerDir,...
+               trialind, runIndTemp, counter );
+            
+             moveandcopy(dirpath)
+             counter = counter + 1;
+            
+          end
+        end
+      end
+    end
+    
+    % nt < workers. nt = 1 because of rounding
+  else
+    
+    NumParamsPerDir = FilesInDir;
+    runIndTemp  = runstartind;
+    
+    [~, minind] = min( ...
+      [ mod(nbe,NumParamsPerDir) mod(nffo, NumParamsPerDir) ...
+      mod(nso, NumParamsPerDir) ] );
+    
+    if length( find( [nbe nffo nso] == 1 ) ) > 1
+     [ ~, minind ] = max( [nbe nffo nso] );
+    end
+    
+    % Pick BE to be the vector variable
+    if minind == 1
+      fprintf( 'Selecting Binding Energy \n' );
+      beSelect = 1;
+      ffSelect = 0;
+      soSelect = 0;
+      NumDirBE  = ceil( nbe / NumParamsPerDir ) ;
+      NumDirFF  = nffo;
+      NumDirSO  = nso;
+    elseif minind == 2
+      fprintf( 'Selecting FF \n' );
+      beSelect = 0;
+      ffSelect = 1;
+      soSelect = 0;
+      NumDirFF  = ceil( nffo / NumParamsPerDir ) ;
+      NumDirBE  = nbe ;
+      NumDirSO  = nso;
+    else
+      fprintf( 'Selecting obs \n' );
+      beSelect = 0;
+      ffSelect = 0;
+      soSelect = 1;
+      NumDirSO  = ceil( nso / NumParamsPerDir ) ;
+      NumDirBE  = nbe ;
+      NumDirFF  = nffo;
+    end % Find SelectVec
+    
+    %Number of dirs total
+    NumDirs =  NumDirBE * NumDirFF * NumDirSO;
+    
+    % For now, throw leftovers in extra dir. This could be a lot,
+    % and needs to be fixed when I have time/
+    
+    for i = 1: NumDirBE
+      for j = 1: NumDirFF
+        for k = 1: NumDirSO
+          dirstr = sprintf('/RunMe%d_%d_%d/', ...
+            randnum, trialind, k + (j-1) * NumDirSO + (i-1) * NumDirSO * NumDirFF );
           dirpath = [RunDirPath dirstr];
           mkdir( dirpath );
           
-          runIndTemp = (l-1) * numTrialsPerDir + runstartind;
-          beTemp     = bind_energy_vec(i);
-          ffTemp     = ffrac_obst_vec(j);
-          soTemp     = size_obj_vec(k);
+          if beSelect
+            if i ~= NumDirBE
+              beTemp = ...
+                bind_energy_vec( 1 + (i-1) * NumParamsPerDir : i * NumParamsPerDir );
+            else
+              beTemp = ...
+                bind_energy_vec( 1 + (i-1) * NumParamsPerDir : end );
+            end
+            ffTemp = ffrac_obst_vec(j);
+            soTemp = size_obj_vec(k);
+          elseif ffSelect
+            beTemp = bind_energy_vec(i);
+            if j ~= NumDirFF
+              ffTemp = ...
+                ffrac_obst_vec( 1 + (j-1) * NumParamsPerDir : j * NumParamsPerDir);
+            else
+              ffTemp = ...
+                ffrac_obst_vec( 1 + (j-1) * NumParamsPerDir: end );
+            end
+            soTemp = size_obj_vec(k);
+          elseif soSelect
+            beTemp = bind_energy_vec(i);
+            ffTemp = ffrac_obst_vec(j);
+            if k ~= NumDirSO
+              soTemp = ...
+                size_obj_vec(1 + (k-1) * NumParamsPerDir: k * NumParamsPerDir);
+            else
+              soTemp = ...
+                size_obj_vec(1 + (k-1) * NumParamsPerDir: end);
+            end
+          else
+            fprintf('Nothing selected!\n');
+          end % end beSelect
           
           % Print parameters to stdout
-          ntstring = [ 'Num trials: ' num2str(numTrialsPerDir) ];
+          fprintf('\n%s:\n',dirstr)
+          ntstring = [ 'Num trials: ' num2str(1) ];
           runstring = [ 'RunInds Start: ' int2str(runIndTemp) ];
           bestring = [ 'BE: ' num2str(beTemp) ];
           ffstring = [ 'FF: ' num2str(ffTemp) ];
           sostring = [ 'SO: ' num2str(soTemp) ];
-          
-          fprintf('\n%s:\n',dirstr);    
           fprintf('%s \n',ntstring);
           fprintf('%s \n',runstring);
           fprintf('%s \n',bestring);
           fprintf('%s \n',ffstring);
           fprintf('%s \n',sostring);
-          
           % change parameters and move everything
-           changeparams_bindobs( beTemp, ffTemp, soTemp,numTrialsPerDir,...
-             trialind, runIndTemp, counter );
-          
-           moveandcopy(dirpath)
-           counter = counter + 1;
-          
+          changeparams_bindobs( beTemp, ffTemp, soTemp, 1,...
+            trialind, runIndTemp, counter );
+          moveandcopy(dirpath)
+          counter = counter + 1;
         end
       end
-    end
-  end
-  
-  % nt < workers. nt = 1 because of rounding
-else
-  
-  NumParamsPerDir = FilesInDir;
-  runIndTemp  = runstartind;
-  
-  [~, minind] = min( ...
-    [ mod(nbe,NumParamsPerDir) mod(nffo, NumParamsPerDir) ...
-    mod(nso, NumParamsPerDir) ] );
-  
-  if length( find( [nbe nffo nso] == 1 ) ) > 1
-   [ ~, minind ] = max( [nbe nffo nso] );
-  end
-  
-  % Pick BE to be the vector variable
-  if minind == 1
-    fprintf( 'Selecting Binding Energy \n' );
-    beSelect = 1;
-    ffSelect = 0;
-    soSelect = 0;
-    NumDirBE  = ceil( nbe / NumParamsPerDir ) ;
-    NumDirFF  = nffo;
-    NumDirSO  = nso;
-  elseif minind == 2
-    fprintf( 'Selecting FF \n' );
-    beSelect = 0;
-    ffSelect = 1;
-    soSelect = 0;
-    NumDirFF  = ceil( nffo / NumParamsPerDir ) ;
-    NumDirBE  = nbe ;
-    NumDirSO  = nso;
-  else
-    fprintf( 'Selecting obs \n' );
-    beSelect = 0;
-    ffSelect = 0;
-    soSelect = 1;
-    NumDirSO  = ceil( nso / NumParamsPerDir ) ;
-    NumDirBE  = nbe ;
-    NumDirFF  = nffo;
-  end % Find SelectVec
-  
-  %Number of dirs total
-  NumDirs =  NumDirBE * NumDirFF * NumDirSO;
-  
-  % For now, throw leftovers in extra dir. This could be a lot,
-  % and needs to be fixed when I have time/
-  
-  for i = 1: NumDirBE
-    for j = 1: NumDirFF
-      for k = 1: NumDirSO
-        dirstr = sprintf('/RunMe%d_%d_%d/', ...
-          randnum, trialind, k + (j-1) * NumDirSO + (i-1) * NumDirSO * NumDirFF );
-        dirpath = [RunDirPath dirstr];
-        mkdir( dirpath );
-        
-        if beSelect
-          if i ~= NumDirBE
-            beTemp = ...
-              bind_energy_vec( 1 + (i-1) * NumParamsPerDir : i * NumParamsPerDir );
-          else
-            beTemp = ...
-              bind_energy_vec( 1 + (i-1) * NumParamsPerDir : end );
-          end
-          ffTemp = ffrac_obst_vec(j);
-          soTemp = size_obj_vec(k);
-        elseif ffSelect
-          beTemp = bind_energy_vec(i);
-          if j ~= NumDirFF
-            ffTemp = ...
-              ffrac_obst_vec( 1 + (j-1) * NumParamsPerDir : j * NumParamsPerDir);
-          else
-            ffTemp = ...
-              ffrac_obst_vec( 1 + (j-1) * NumParamsPerDir: end );
-          end
-          soTemp = size_obj_vec(k);
-        elseif soSelect
-          beTemp = bind_energy_vec(i);
-          ffTemp = ffrac_obst_vec(j);
-          if k ~= NumDirSO
-            soTemp = ...
-              size_obj_vec(1 + (k-1) * NumParamsPerDir: k * NumParamsPerDir);
-          else
-            soTemp = ...
-              size_obj_vec(1 + (k-1) * NumParamsPerDir: end);
-          end
-        else
-          fprintf('Nothing selected!\n');
-        end % end beSelect
-        
-        % Print parameters to stdout
-        fprintf('\n%s:\n',dirstr)
-        ntstring = [ 'Num trials: ' num2str(1) ];
-        runstring = [ 'RunInds Start: ' int2str(runIndTemp) ];
-        bestring = [ 'BE: ' num2str(beTemp) ];
-        ffstring = [ 'FF: ' num2str(ffTemp) ];
-        sostring = [ 'SO: ' num2str(soTemp) ];
-        fprintf('%s \n',ntstring);
-        fprintf('%s \n',runstring);
-        fprintf('%s \n',bestring);
-        fprintf('%s \n',ffstring);
-        fprintf('%s \n',sostring);
-        % change parameters and move everything
-        changeparams_bindobs( beTemp, ffTemp, soTemp, 1,...
-          trialind, runIndTemp );
-        moveandcopy(dirpath)
-      end
-    end
-  end  
+    end  
 end % nt < workers
+catch err
+  fprintf('%s',err.getReport('extended') );
+end
 
+fprintf('SetUpRunMaster has sucessfully run\n');
 end % main function
 
 function moveandcopy(dirpath)
