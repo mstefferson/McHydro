@@ -44,8 +44,15 @@ try
   % Scramble and shift the seed
   % first, paused base on input seed, then scramble
   rng( trialmaster.seedShift );
-  pause( 10 .* rand() );
+  rand1 = rand();
+  tpause = 10 .* rand1;
+  pause( tpause );
+  fprintf('Pausing for %f before shuffling\n', tpause );
   rng('shuffle');
+  rand2 = rand();
+  const.rand1 = rand1;
+  const.rand2 = rand2;
+  fprintf('rand1 = %f rand2 = %f (before after shuffle)\n', rand1, rand2 );
 
   %display everything
   fprintf('parameters read in\n');
@@ -113,6 +120,11 @@ try
     fprintf('Temp cluster dir: %s\n', clustdir);
     
     parfor j=1:nparams
+      % scramble rng in parfor! It's rng is indepedent on ML's current state
+      pause(j);
+      rng('shuffle');
+      fprintf('Parfor j = %d Rand num = %f \n', j, rand() );
+
       RunID       = param_RunID(j);
       bind_energy = param_bind(j);
       ffrac_obst  = param_ffo(j);
