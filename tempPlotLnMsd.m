@@ -1,8 +1,8 @@
 %%
 plotfig = 0;
 plotlog = 1;
-ffo = [0.1:0.1:0.9];
-bind = -10;
+ffo = [0.05:0.05:0.95];
+bind = 0;
 bBar = Inf;
 Id = 1;
 

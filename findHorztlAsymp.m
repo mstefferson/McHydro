@@ -1,10 +1,13 @@
-function [slopeBin, centerVal, numPnts ]= findHorztlAsymp(x,y,erry,nAve)
+function [slopeBin, centerVal, numPnts ]= findHorztlAsymp(x,y,erry, nAve)
 
 % Vector is noisey. Bin it to smooth it out
-binNum = 10;
+binNum = 16;
 % binSize = ceil( length(y) ./ binNum );
 % length of vector
 nV = length(x);
+spaceLog = floor( logspace( 0, log10( length(x) ), binNum + 1 ) );
+spaceLog = unique( spaceLog );
+binNum = length( spaceLog ) - 1;
 % Store slope and center of each bin
 slopeBin = zeros( binNum, 1);
 centerVal = zeros( binNum, 1);
@@ -12,10 +15,22 @@ aveBin = zeros( binNum, 1);
 stdBin = zeros( binNum, 1);
 numPnts = zeros( binNum, 1 );
 
-spaceLog = floor( logspace( 0, log10( length(x) ), binNum + 1 ) );
+% Plots
+figure()
+subplot(2,1,1)
+errorbar(  x, y, erry )
+xlabel( 't' ); ylabel( 'x^2/t' );
+title('Data w/ error bars')
+subplot(2,1,2)
+plot(  x, y)
+xlabel( 't' ); ylabel( 'x^2/t' );
+title('Data')
+hold on
 
 figure()
 plot( log10( x ), log10( y./x ) )
+xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
+title('Log Plot Data and bin lines')
 hold on
 % Do a linear fit of data between points in a bin
 for ii = 1:binNum
@@ -23,16 +38,17 @@ for ii = 1:binNum
   indEnd = spaceLog(ii+1) ;
   yTemp = log10( y( indStart:indEnd ) ./ x( indStart:indEnd ) );
   xTemp =  log10( x( indStart:indEnd ) );
+  wTemp = erry ( indStart:indEnd ) ./ ( y(indStart:indEnd) * log(10) );
   ptsTemp = length(yTemp);
-  p = polyfit( xTemp, yTemp,1 );
-  slopeBin(ii) = p(1);
-  centerVal(ii) = p(1) .* xTemp( round( ptsTemp / 2 ) ) + p(2);
+  pfit = fit( xTemp, yTemp, 'poly1', 'weights',  wTemp);
+%   p = polyfit( xTemp, yTemp,1 );
+  slopeBin(ii) = pfit.p1;
+  centerVal(ii) = pfit.p1 .* xTemp( round( ptsTemp / 2 ) ) + pfit.p2;
   numPnts(ii) = ptsTemp;
   aveBin(ii) = mean( yTemp );
   stdBin(ii) = std( yTemp );
-  plot( xTemp, p(1) .* xTemp  + p(2) );
+  plot( xTemp, pfit.p1 .* xTemp  + pfit.p2 );
 end
-
 
 % Find maximun possible windows
 NwDesired = 100;
@@ -41,65 +57,9 @@ Nw = min( NwDesired, NwMax )';
 
 % Plot with error bars
 figure()
-errorbar( log10(x), log10(y./x), erry ./ ( y .* log(10) .* sqrt(nAve .* Nw ) ) );
-
-figure()
-
-deltaSlope = 0.01;
-vec2ave = [];
-err4ave = [];
-countedBins = [];
-stdY = [];
-deltaY = [];
-for ii = 1:binNum
-  indStart =  spaceLog(ii) ;
-  indEnd = spaceLog(ii+1);
-  deltaY = [ deltaY slopeBin(ii) .* ( log10( x(indEnd) ) - log10( x(indStart) ) )];
-  stdY = [stdY std( log10( y( indStart:indEnd ) ./ x( indStart:indEnd ) )  ) ];
-  
-  if abs( slopeBin(ii) ) <  deltaSlope
-    %     indStart =  spaceLog(ii) ;
-    %     indEnd = spaceLog(ii+1) ;
-    vec2ave = [ vec2ave; log10( y( indStart:indEnd ) ./ x( indStart:indEnd ) ) ];
-    err4ave = [ err4ave; erry( indStart:indEnd ) ./ ...
-      ( sqrt( Nw( indStart:indEnd ) ) .* y( indStart:indEnd ) .* log(10)  )];
-    %     deltaY = [ deltaY slopeBin(ii) .* ( log10( x(indEnd) ) - log10( x(indStart) ) )];
-    %     stdY = [stdY std( vec2ave ) ];
-    countedBins = [ countedBins ii ];
-  end
-end
-
-figure()
-plotyy( 1:binNum, slopeBin, 1:binNum, centerVal );
-
-% keyboard
-horzAsymp = mean( vec2ave  );
-stdAsymp = std( vec2ave );
-nPnts = length( vec2ave );
-
-sumWNew = sum ( 1 ./ err4ave .^2) ;
-horzAsympW =  sum( vec2ave ./ (err4ave .^2) ) ./ ( sumWNew );
-stdAsympW = sum ( (vec2ave - horzAsympW ) .^ 2 ./ (err4ave .^2) ) ./ ...
-  ( ( nPnts - 1 ) ./ (nPnts) .*  sumWNew ) ;
-
-stdAsympW = sqrt( stdAsympW );
-
-slopeOut = slopeBin(1);
-D = 10 ^ horzAsympW;
-Dsig = stdAsympW .* log( 10 ) .* 10 ^ (horzAsympW);
-
-% intercept slope and asymptote
-xInt =  ( horzAsympW - log10( y(1) ./ x(1) ) ) ./ slopeOut + log10( x(1) );
-tAnom = 10 ^ ( xInt );
-inds = find( log10(x) < xInt );
-inds = [ inds; ( inds(end)+1: inds(end)+10 )' ];
-% plot( log10(x), slopeOut .* ( log10(x) - log10(x(1)) ) + log10( y(1) ./ x(1) ) )
-
-figure()
-plot( log10( x ), log10( y./x ) )
-hold on
-plot( log10( x(inds) ), slopeOut .* ( log10( x(inds) ) - log10(x(1)) ) + log10( y(1) ./ x(1) ) )
-plot( log10( x ), horzAsympW .* ones(1,nV) )
+errorbar( log10(x), log10(y./x), erry ./ ( y .* log(10) ) );
+xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
+title('Data w/ error bars')
 
 % New averaging method based on discussion w/ Jeffrey Moore
 
@@ -128,11 +88,10 @@ sumWOld = sumWNew;
 stdOld = stdNew;
 sumstd2numOld = sumstd2numNew; 
 counter = counter - 1;
-numAveBin = 0;
+numAveBin = 1;
+countedBins = binNum;
 
-while continCond
-  numAveBin = numAveBin + 1;
-    
+while continCond 
   indStart =  spaceLog(counter) ;
   indEnd = spaceLog(counter+1);
   vecTemp = log10( y( indStart:indEnd ) ./ x( indStart:indEnd ) );
@@ -156,30 +115,67 @@ while continCond
     continCond = 0;
     aveSteady = aveOld; 
     stdSteady = sqrt( sumstd2numOld ./ ( ( nPnts - 1 ) ./ (nPnts) .*  sumWOld ) );
-  end
-  
-  if counter == 1
+
+    fprintf('Bin is no longer helping!\n')
+  elseif counter == 0
     continCond = 0;
     aveSteady = 0;
     stdSteady = 0;
+    fprintf('I have gone through all the bins.')
+  else
+    countedBins = [countedBins counter];
+    aveOld = aveNew;
+    sumWOld = sumWNew;
+    stdOld = stdNew;
+    sumstd2numOld = sumstd2numNew; 
+    counter = counter - 1;
+    numAveBin = numAveBin + 1;
   end
   % Update
 %   abs(aveOld)
-  abs(aveOld) - stdOld
-  abs(aveNew)
-  abs(aveOld) + stdOld
-  continCond
+%   abs(aveOld) - stdOld
+%   abs(aveNew)
+%   abs(aveOld) + stdOld
+%   continCond
   
-  keyboard
-  aveOld = aveNew;
-  sumWOld = sumWNew;
-  stdOld = stdNew;
-  sumstd2numOld = sumstd2numNew; 
-  counter = counter - 1;
-
 end
 
 fprintf( 'ave = % f std = %f bins = %d\n', aveSteady, stdSteady, numAveBin )
 
-% If one bind, break
-keyboard
+if length( countedBins ) == 1
+  hAsymp = 0;
+else
+  indstart = spaceLog( countedBins(end) );
+  indend = spaceLog( countedBins(1) + 1 ) ;
+  rang2ave = x(  indstart : indend );
+  data2ave = log10( y(  indstart : indend ) ./ x(  indstart : indend ) );
+  err2ave = erry( indstart : indend );
+  w = 1 ./ (err2ave.^2);
+  sumW = sum(w);
+  hAsymp =  sum( w .* data2ave ) ./ sumW;
+  nPts = length( data2ave );
+  sig_h  = sqrt ( sum ( w .* ( data2ave - hAsymp ) .^ 2 ) ./ ...
+    ( (nPts-1) ./ nPts .* sumW ) );
+  % fit it too
+  pfit = fit( rang2ave, data2ave, 'poly1', 'weights',  w);
+  
+  hSlope = pfit.p1 .* ( log10( rang2ave(end) ) + log10( rang2ave(1) ) ) ./ 2 + pfit.p2;
+  hold on
+  plot(pfit) 
+  sig_hSlop = abs( pfit.p1 .* ( log10( rang2ave(end) ) -  log10( rang2ave(1) ) )./ 2 );  
+end
+slopeTail = slopeBin(end);
+slopeStart = slopeBin(1);
+
+tAsymp = ( hAsymp - log10( ( y(1) ./x(1) ) ) ) ./ slopeStart + log10( x(1) ) ; 
+
+
+% Plot it
+figure()
+plot( log10( x ), log10( y./x ) )
+xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
+title('Log Plot Data and bin lines')
+hold on
+plot( log10( x ), ones( length(x) ,1 ) .* hAsymp, ...
+  log10( x ), slopeStart .* ( log10( x ) - log10( x(1) ) ) + log10( y(1) ./x(1) ) )
+

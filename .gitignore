@@ -8,6 +8,7 @@ runfiles/
 results/
 eo/
 figs/
+gridAveMSDdata/
 
 # Input parameters
 initParams.m
@@ -24,4 +25,4 @@ initSetupParams.m
 *.jpg
 
 #include some txt
-!runkey.tx
+!runkey.txt

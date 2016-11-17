@@ -1,98 +1,98 @@
-function averageMSDgrids( ffom, bind, bBar, nameID )
+function averageMSDgrids( ffo, bind, bBar, parentpath, nameID )
 
-for hh = 1:length(bind)
-  
+for hh = 1:length(bind) 
   bindTemp = bind(hh);
-  
-if bBar == 0
- parentpath = '/home/mws/McHydro/msdfiles/pando/saxtonParams/hopbnd0/';
-elseif isinf( bBar )
-  parentpath = '/home/mws/McHydro/msdfiles/pando/saxtonParams/hopbndInf/';
-end
-fullpath = [parentpath 'be' num2str(bindTemp ) '/'];
-if isinf(bind)
-  parentpath = '/home/mws/McHydro/msdfiles/pando/saxtonParams/nobind/';
-  fullpath = [parentpath 'OTE1' '/'];
-end
+  if abs(bindTemp) > 0 && abs(bindTemp) < 1  
+    fullpath = [parentpath 'bind' num2str(bindTemp, '%.1f' ) '/'];     
+  else
+    fullpath = [parentpath 'bind' num2str(bindTemp, '%.2d' ) '/'];
+  end
 
+%   keyboard
 
 % load first out here
-
 for ii = 1:length(ffo)
   ffoTemp = ffo(ii);
   fileId = [ 'msd_unBbar0_Bbar' num2str(bBar) ...
     '_bind' num2str(bindTemp ) '_fo' num2str(ffoTemp, '%.2f') '*'];
   files = dir( [fullpath fileId] );
   numGrids = length(files);
-  
   load( [ fullpath files(ii).name ] );
 
   % Do a weight average
   msdTemp = msd(:,1);
   timeTemp = dtime;
-  stdTemp = msd(:,2) ./ sqrt( msd(:,3) );
-  errorTemp = msd(:,2) ./ sqrt( msd(:,3) );
-  weightTemp =  1 ./ errorTemp;
   nPtsTemp = msd(:,3);
+  stdTemp = msd(:,2);
+  errorTemp = msd(:,2) ./ sqrt( nPtsTemp);
+  weightTemp =  1 ./ ( errorTemp .^ 2 );
+
   
   msdMat = zeros( length(msdTemp), numGrids );
   timeMat = zeros( length(timeTemp), numGrids );
   stdMat = zeros( length(stdTemp), numGrids );
   errorMat = zeros( length(errorTemp), numGrids );
   weightMat = zeros( length(weightTemp), numGrids );
-  nPntsMat = zeros( length(nPtsTemp), numGrids );
+  nPtsMat = zeros( length(nPtsTemp), numGrids );
   
   msdMat(:,1) = msdTemp;
   timeMat(:,1) = timeTemp;
   stdMat(:,1) = stdTemp;
   errorMat(:,1) = errorTemp;
   weightMat(:,1) = weightTemp;
-  nPts(:,1) = nPtsTemp;
-
+  nPtsMat(:,1) = nPtsTemp;
+ 
   for jj = 2:numGrids
     load( [fullpath files(jj).name] );
     msdTemp = msd(:,1);
     timeTemp = dtime;
-    stdTemp = msd(:,2) ./ sqrt( msd(:,3) );
-    errorTemp = msd(:,2) ./ sqrt( msd(:,3) );
-    weightTemp =  1 ./ errorTemp;
+    stdTemp = msd(:,2);
     nPtsTemp = msd(:,3);
+    errorTemp = msd(:,2) ./ sqrt( nPtsTemp );
+    weightTemp =  1 ./ ( errorTemp .^ 2 );
 
-    msdMat(:,ii) = msdTemp;
-    timeMat(:,ii) = timeTemp;
-    stdMat(:,ii) = stdTemp;
-    errorMat(:,ii) = errorTemp;
-    weightMat(:,ii) = weightTemp;
-    nPts(:,ii) = nPtsTemp;
+    msdMat(:,jj) = msdTemp;
+    timeMat(:,jj) = timeTemp;
+    stdMat(:,jj) = stdTemp;
+    errorMat(:,jj) = errorTemp;
+    weightMat(:,jj) = weightTemp;
+    nPtsMat(:,jj) = nPtsTemp;
   end
-  
+
   % unweighted averages
-  msdAveUw = mean( msdMat, 2 ); 
-  errorAveUw = mean( errorMat, 2 ); 
-  stdAveUw = mean( stdMat, 2 ); 
-  nPntsAve = mean( nPntsMat, 2 ); 
-  timeAve = mean( timeAve, 2 ); 
+  msdUw = mean( msdMat, 2 ); 
+  stdUw = std( msdMat, 0, 2 ); 
+  sigUw = stdUw ./ sqrt( numGrids ); 
+  nPtsAve = mean( nPtsMat, 2 ); 
+  timeAve = mean( timeMat, 2 ); 
 
   % weighted averages
   sumW = sum( weightMat, 2 );
-  msdAveW = sum( msdMat .* weightMat, 2 ) ./ sumW;
-  errorAveW = sqrt( sum( ( msdMat - msdAveW ) .^ 2 .* weightMat, 2 ) ...
-   ./ (  ( nPntsMat - 1 ) ./ nPntsMat .* sumW ) );
-
+  msdW = sum( msdMat .* weightMat, 2 ) ./ sumW;
+  stdW = sqrt( sum( ...
+    ( msdMat - repmat( msdW, [1, numGrids] ) ) .^ 2 .* weightMat, 2 ) ...
+   ./ (  ( numGrids - 1 ) ./ numGrids  .* sumW ) );
+  sigW = stdW ./ sqrt( numGrids ); 
+ 
   % Save
   aveGrid.ffo  = ffoTemp;
   aveGrid.be   = bindTemp ;
   aveGrid.bBar = Inf;
-  aveGrid.msdUw  = msdAveUw;
-  aveGrid.stdevMeanUw = errorAveUw;
-  aveGrid.stdevUw = stdAveUw;
-  aveGrid.msdW  = msdAveW;
-  aveGrid.stdevMW  = errorAveW;
   aveGrid.time  = timeAve;
-  aveGrid.nPts = nPtsAve;
   aveGrid.gridConfigs = numGrids;
 
-  savename = [ 'aveGrid_' fileId(1:end-1) nameID '.mat' ];
+  aveGrid.msdW  = msdW;
+  aveGrid.stdW  = stdW;
+  aveGrid.sigW = sigW;
+
+  aveGrid.msdUw  = msdUw;
+  aveGrid.stdUw = stdUw;
+  aveGrid.sigUw = sigUw;
+  
+  aveGrid.nPts = nPtsAve;
+
+  savename = [ 'aveGrid_' fileId(1:end-1) '_ng' num2str(numGrids) '_' ...
+    't' num2str( const.ntimesteps ) '_' nameID '.mat' ];
   save(savename, 'aveGrid');
   movefile(savename, 'gridAveMSDdata/');
 end

@@ -29,7 +29,7 @@ if n_trials > 1
   
   numTrialsPerDir  = PossFilesInDir( indPoss );
   numDir4Trs = round(n_trials ./ FilesInDir); %Number of directories for trials
-
+  
 else
   FilesInDir = round( FilesInDir/AvailWorkers ) * AvailWorkers;
   if FilesInDir == 0; FilesInDir = 1; end;
@@ -74,7 +74,7 @@ try
             ffstring = [ 'FF: ' num2str(ffTemp) ];
             sostring = [ 'SO: ' num2str(soTemp) ];
             
-            fprintf('\n%s:\n',dirstr);    
+            fprintf('\n%s:\n',dirstr);
             fprintf('%s \n',ntstring);
             fprintf('%s \n',runstring);
             fprintf('%s \n',bestring);
@@ -82,20 +82,18 @@ try
             fprintf('%s \n',sostring);
             
             % change parameters and move everything
-             changeparams_bindobs( beTemp, ffTemp, soTemp,numTrialsPerDir,...
-               trialind, runIndTemp, counter );
+            changeparams_bindobs( beTemp, ffTemp, soTemp,numTrialsPerDir,...
+              trialind, runIndTemp, counter );
             
-             moveandcopy(dirpath)
-             counter = counter + 1;
+            moveandcopy(dirpath)
+            counter = counter + 1;
             
           end
         end
       end
     end
-    
     % nt < workers. nt = 1 because of rounding
   else
-    
     NumParamsPerDir = FilesInDir;
     runIndTemp  = runstartind;
     
@@ -104,7 +102,7 @@ try
       mod(nso, NumParamsPerDir) ] );
     
     if length( find( [nbe nffo nso] == 1 ) ) > 1
-     [ ~, minind ] = max( [nbe nffo nso] );
+      [ ~, minind ] = max( [nbe nffo nso] );
     end
     
     % Pick BE to be the vector variable
@@ -136,10 +134,8 @@ try
     
     %Number of dirs total
     NumDirs =  NumDirBE * NumDirFF * NumDirSO;
-    
     % For now, throw leftovers in extra dir. This could be a lot,
     % and needs to be fixed when I have time/
-    
     for i = 1: NumDirBE
       for j = 1: NumDirFF
         for k = 1: NumDirSO
@@ -201,8 +197,8 @@ try
           counter = counter + 1;
         end
       end
-    end  
-end % nt < workers
+    end
+  end % nt < workers
 catch err
   fprintf('%s',err.getReport('extended') );
 end
