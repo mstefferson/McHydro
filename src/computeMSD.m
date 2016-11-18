@@ -11,6 +11,8 @@ function [msd,dtime]=computeMSD(x, maxpts_msd, quadFlag)
 %  msd(:,4)=mean quartic displacement
 %  msd(:,5)=std(quartic displacement)
 
+useStart = 0;
+
 number_timepnts = size(x,3);
 number_delta_t  = number_timepnts - 1;
 dtime= ( 1 : number_delta_t)' ;
@@ -24,10 +26,18 @@ end
 parfor dt = 1:number_delta_t
   % Make sure we have no otherlapping time windows
   NwMax = ceil( number_timepnts / dt ) - 1;
-  nStartPoss = 1:dt:NwMax*dt;
-  randInd = randperm( NwMax, min(NwMax,maxpts_msd) );
-  index_start = nStartPoss( randInd );
-  index_end = index_start + dt;
+  if useStart
+    nStartPoss = 1:dt:NwMax*dt;
+    randInd = randperm( NwMax, min(NwMax,maxpts_msd) );
+    index_start = nStartPoss( randInd );
+    index_end = index_start + dt;
+  else
+    nEndPoss = number_timepnts : -dt : 1 + dt
+    randInd = randperm( NwMax, min(NwMax,maxpts_msd) );
+    index_end = nEndPoss(randInd);
+    index_start = index_end - dt;
+  end
+    
   delta_coords = x(:,:, index_end) - x(:,:,index_start);
   % calculate displacement ^ 2
   squared_dis = sum(delta_coords.^2,2); % dx^2+dy^2+...
