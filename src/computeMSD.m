@@ -1,4 +1,4 @@
-function [msd,dtime]=computeMSD(x, maxpts_msd, quadFlag)
+function [msd,dtime]=computeMSD(x, maxpts_msd, quadFlag, useStart)
 %takes array x (mxdxn array), t (1xn),
 % calculates mean-squared and quartic displacements vs dt
 % m is number of particles
@@ -10,8 +10,6 @@ function [msd,dtime]=computeMSD(x, maxpts_msd, quadFlag)
 %  msd(:,3)=n intervals(dt)
 %  msd(:,4)=mean quartic displacement
 %  msd(:,5)=std(quartic displacement)
-
-useStart = 0;
 
 number_timepnts = size(x,3);
 number_delta_t  = number_timepnts - 1;

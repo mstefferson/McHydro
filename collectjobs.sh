@@ -24,7 +24,7 @@ for i in `ls | grep ^${DirStrName}`;
     mv ./runfiles/* $HomeDir/runfiles
     mv ./msdfiles/* $HomeDir/msdfiles
     cd ../ 
-    rm -rf $i
+    #rm -rf $i
   else
     echo "Still Running. Not collecting"
   cd ../
