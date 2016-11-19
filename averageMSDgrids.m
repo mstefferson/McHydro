@@ -8,8 +8,6 @@ for hh = 1:length(bind)
     fullpath = [parentpath 'bind' num2str(bindTemp, '%.2d' ) '/'];
   end
 
-%   keyboard
-
 % load first out here
 for ii = 1:length(ffo)
   ffoTemp = ffo(ii);
