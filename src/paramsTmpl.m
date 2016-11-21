@@ -36,6 +36,7 @@ const.size_tracer = 1; %tracer linear dimension, MUST BE odd integer
 %msd stuff
 const.calcQuad = 0; % Flag for calculating quad
 const.maxpts_msd = 100; % Flag for calculating quad
+const.useStart = 1; % Using t=1 to start windows instead of t=end
 
 %model stuff
 modelopt.animate=0;          %1 to show animation, 0 for no animation
