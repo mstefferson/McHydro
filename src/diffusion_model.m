@@ -241,7 +241,7 @@ for m=1:n.ntimesteps;
           obst_cen_rec_nomod_temp(1:n.obst,1:2,jrectemp) = obst.cen_nomod;
         end
         
-        if mod( m, const.rec_chunk  ) == 0
+        if mod( m, const.write_interval  ) == 0
           RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
           % tracer write to file
           if n.trPosRecModFlag

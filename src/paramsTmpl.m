@@ -23,7 +23,7 @@ const.n_trials = trialmaster.nt;
 const.n_gridpoints = 100; % number of grid points, same in x and y
 const.ntimesteps = 1e3; % number of timesteps Note 1e5 gives errors on my laptop.
 const.rec_interval = 1e1; % time elapsed before recording
-const.rec_chunk = 1e2; % time elapsed before writing to file
+const.write_interval = 1e2; % time elapsed before writing to file
 const.twait = 1; % time waited before recording
 const.trPosRecModFlag = 0; % Flag to record tracers or not. modulated
 const.trPosRecNoModFlag = 1; % Flag to record tracer state. not modulated
@@ -49,17 +49,17 @@ modelopt.dimension=2;    %system dimension, currently must be 2
 
 % Fix time stuff and add some calculated things
 if const.twait < 1; const.twait = 1; end;
-if const.rec_chunk > const.ntimesteps; const.rec_chunk = const.ntimesteps; end;
-if const.rec_interval > const.rec_chunk; const.rec_interval = const.rec_chunk; end;
+if const.write_interval > const.ntimesteps; const.write_interval = const.ntimesteps; end;
+if const.rec_interval > const.write_interval; const.rec_interval = const.write_interval; end;
 
-const.rec_chunk  = round( const.rec_chunk / const.rec_interval ) * const.rec_interval; % fix rec_chunk
-const.NrecChunk  = const.rec_chunk / const.rec_interval; % Number of recorded points / chunk
-const.ntimesteps = floor( const.ntimesteps / const.rec_chunk ) * const.rec_chunk; % fix ntimesteps
+const.write_interval  = round( const.write_interval / const.rec_interval ) * const.rec_interval; % fix write_interval
+const.NrecChunk  = const.write_interval / const.rec_interval; % Number of recorded points / chunk
+const.ntimesteps = floor( const.ntimesteps / const.write_interval ) * const.write_interval; % fix ntimesteps
 const.Nreclost   = ceil( const.twait / const.rec_interval) - 1; % Number of recorded points we skip due to waiting
-const.Nchunklost = ceil( const.twait / const.rec_chunk) - 1; % Number of chunks we skip due to waiting
+const.Nchunklost = ceil( const.twait / const.write_interval) - 1; % Number of chunks we skip due to waiting
 const.twait      = (const.Nreclost + 1) * const.rec_interval; % fix wait time. Add 1 to start recording at twait
 const.NrecTot    = const.ntimesteps / const.rec_interval - const.Nreclost; % Number of recorded points
-const.NchunkTot  = const.ntimesteps / const.rec_chunk - const.Nchunklost; % Number of recorded points
+const.NchunkTot  = const.ntimesteps / const.write_interval - const.Nchunklost; % Number of times time to file
 
 % Fix size issues
 params.size_obst( ~mod(params.size_obst,2) ) = ...
