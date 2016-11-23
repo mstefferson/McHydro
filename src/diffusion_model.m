@@ -73,7 +73,11 @@ jchunk   = 1;
 % Model options
 animate=modelopt.animate;    %1 to show animation, 0 for no animation
 tpause=modelopt.tpause;      %pause time in animation
-if animate; figure; end;
+
+%define box for plotting
+if animate
+  figure()
+end
 
 % Derived parameters
 n.obst=round(ffrac_obst*(n.n_gridpoints/n.size_obst)^modelopt.dimension); %square lattice
@@ -90,15 +94,18 @@ lattice.moves=[1 0;
   0 -1];
 
 % obstacle fields
-obst=place_objects(n.obst,n.size_obst,n.n_gridpoints,modelopt,modelopt.obst_excl,...
-  0,obst_color,obst_curv);
+%obst=place_objects(n.obst,n.size_obst,n.n_gridpoints,modelopt,modelopt.obst_excl,...
+%0,obst_color,obst_curv);
+obst = place_obstacles( n.obst, n.n_gridpoints );
 obst.color=obst_color;
 obst.curvature=obst_curv;
 obst.ffrac=ffrac_obst;
 
 % tracer fields
-tracer=place_objects(n.tracer,n.size_tracer,n.n_gridpoints,modelopt,...
-  modelopt.tracer_excl,1,tracer_color,tracer_curv,obst);
+% tracer=place_objects(n.tracer,n.size_tracer,n.n_gridpoints,modelopt,...
+%   modelopt.tracer_excl,1,tracer_color,tracer_curv,obst);
+tracer = place_tracers( n.tracer, n.n_gridpoints, obst.allpts,...
+  paramslist.ffo, paramslist.be);
 tracer.color=tracer_color;
 tracer.curvature=tracer_curv;
 tracer.ffrac=ffrac_tracer;
@@ -147,6 +154,28 @@ end
 % Pre-Allocate some commonly used matrices
 onesNt2 = ones( n.tracer, 2 ); % matrix of ones ( Ntracer x 2 ) used for mod
 NgsNt2 = n.n_gridpoints .* ones( n.tracer, 2 ); % matix of Ng ( Ntracer x 2 ) used for mod
+
+% Animate first position
+if animate
+  ax=gca;axis square;ax.XGrid='on';ax.YGrid='on';
+  ax.XLim=[0.5 n.n_gridpoints+0.5];ax.YLim=[0.5 n.n_gridpoints+0.5];
+  ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
+  ax.YTick=ax.XTick;
+  ax.XLabel.String='x position';ax.YLabel.String='y position';
+  ax.FontSize=14;
+  
+ for kObst=1:n.obst
+    obst=update_rectangle(obst,kObst,n.size_obst,n.n_gridpoints,...
+      obst.color,obst.curvature);
+    pause(tpause);
+  end
+  for kTracer=1:n.tracer
+    tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
+      tracer.color,tracer.curvature);
+    pause(tpause);
+  end
+
+end
 
 %% loop over time points
 for m=1:n.ntimesteps;
