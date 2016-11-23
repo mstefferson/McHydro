@@ -21,9 +21,9 @@ params.tr_bnd_hop_energy = Inf; %barrier height to sliding while bound, in kT
 %grid stuff
 const.n_trials = trialmaster.nt;
 const.n_gridpoints = 100; % number of grid points, same in x and y
-const.ntimesteps = 1e3; % number of timesteps Note 1e5 gives errors on my laptop.
-const.rec_interval = 1e1; % time elapsed before recording
-const.write_interval = 1e2; % time elapsed before writing to file
+const.ntimesteps = round( 10 ^ ( 3.0 ) ); % number of timesteps Note 1e5 gives errors on my laptop.
+const.rec_interval = round( 10 ^ ( 1.0 ) ); % time elapsed before recording
+const.write_interval = round( 10 ^ ( 2.0 ) ); % time elapsed before writing to file
 const.twait = 1; % time waited before recording
 const.trPosRecModFlag = 0; % Flag to record tracers or not. modulated
 const.trPosRecNoModFlag = 1; % Flag to record tracer state. not modulated
