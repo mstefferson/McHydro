@@ -1,5 +1,5 @@
 % short
-load('/Users/mike/McHydro/tempConcatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t10000_t05_concatTest.mat')
+load('/home/mws/McHydro/gridAveMSDdata/concatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t10000_t05_concatTest.mat')
 
 shortInd = 1:50:10^3;
 time_short = aveGrid.time(shortInd);
@@ -9,7 +9,7 @@ msdUw_short = aveGrid.msdUw(shortInd);
 sigUw_short = aveGrid.sigUw(shortInd);
 
 % short
-load('/Users/mike/McHydro/tempConcatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t10000_t06_concatTest.mat')
+load('/home/mws/McHydro/gridAveMSDdata/concatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t10000_t06_concatTest.mat')
 
 shortInd = 1:50:10^3;
 time_short2 = aveGrid.time(shortInd);
@@ -17,8 +17,9 @@ msdW_short2 = aveGrid.msdW(shortInd);
 sigW_short2 = aveGrid.sigW(shortInd);
 msdUw_short2 = aveGrid.msdUw(shortInd);
 sigUw_short2 = aveGrid.sigUw(shortInd);
+
 % mid
-load('/Users/mike/McHydro/tempConcatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t100000_t05_concatTest.mat')
+load('/home/mws/McHydro/gridAveMSDdata/concatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t100000_t05_concatTest.mat')
 
 midInd = 1:50:10^3;
 
@@ -29,7 +30,7 @@ msdUw_mid = aveGrid.msdUw( midInd );
 sigUw_mid = aveGrid.sigUw( midInd );
 
 % long
-load('/Users/mike/McHydro/tempConcatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t10000000_t05.mat')
+load('/home/mws/McHydro/gridAveMSDdata/concatTest/aveGrid_msd_unBbar0_Bbar0_bind10_fo0.50_ng96_t10000000_t05.mat')
 
 longInd = 1:10;
 
