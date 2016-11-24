@@ -3,7 +3,7 @@
 function obj = place_tracers( nTracer, ng, obstSite, ffo, be )
 
 % calculate how many tracers should be on obstacles or not
-numTrObst = round( ng ^ 2 .* exp( -be ) * ffo ./ ( (1 - ffo ) + exp( -be ) .* ffo ) );
+numTrObst = round( nTracer * exp( -be ) * ffo ./ ( (1 - ffo ) + exp( -be ) .* ffo ) );
 numTrEmpty = nTracer - numTrObst;
 
 % find empty sites
