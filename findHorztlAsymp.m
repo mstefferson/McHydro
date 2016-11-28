@@ -1,11 +1,13 @@
 function [output]= findHorztlAsymp(x,y,erry)
 
+% add paths
+addpath('./src')
 % Vector is noisey. Bin it to smooth it out
 binNum = 16;
 % binSize = ceil( length(y) ./ binNum );
 % length of vector
 nV = length(x);
-spaceLog = floor( logspace( 0, log10( length(x) ), binNum + 1 ) );
+spaceLog = round( logspace( 0, log10( length(x) ), binNum + 1 ) );
 spaceLog = unique( spaceLog );
 binNum = length( spaceLog ) - 1;
 % Store slope and center of each bin
@@ -15,24 +17,8 @@ centerVal = zeros( binNum, 1);
 aveBin = zeros( binNum, 1);
 stdBin = zeros( binNum, 1);
 numPnts = zeros( binNum, 1 );
+binLength = zeros( binNum, 1 );
 
-% Plots
-figure()
-subplot(2,1,1)
-errorbar(  x, y, erry )
-xlabel( 't' ); ylabel( 'x^2/t' );
-title('Data w/ error bars')
-subplot(2,1,2)
-plot( x, y)
-xlabel( 't' ); ylabel( 'x^2/t' );
-title('Data')
-hold on
-
-figure()
-plot( log10( x ), log10( y./x ) )
-xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
-title('Log Plot Data and bin lines')
-hold on
 % Do a linear fit of data between points in a bin
 for ii = 1:binNum
   indStart =  spaceLog(ii) ;
@@ -47,51 +33,80 @@ for ii = 1:binNum
   yinter(ii) =  pfit.p2;
   centerVal(ii) = pfit.p1 .* xTemp( round( ptsTemp / 2 ) ) + pfit.p2;
   numPnts(ii) = ptsTemp;
+  binLength(ii) = xTemp(end) - xTemp(1);
   aveBin(ii) = mean( yTemp );
   stdBin(ii) = std( yTemp );
-  plot( xTemp, pfit.p1 .* xTemp  + pfit.p2 );
 end
+%Store the slope of the first/last bin
+slopeStart = slopeBin(1);
+slopeEnd = slopeBin(end);
 
 % Find asymptote
-bins2Check = randSelectAboutMin(slopeBin);
-[ hAsymp, sigh, ~] = ...
-  findBins4asymp( bins2Check, spaceLog, x, y, erry );
-D = 10 ^ (hAsymp);
-Dsig = sigh .* D .* log(10) ;
-slopeTail = slopeBin(end);
-slopeStart = slopeBin(1);
-asympInter = ( hAsymp -  yinter(1) )./ slopeStart ; 
-tAsymp = 10 ^ ( asympInter );
+% First check that it got close to steady state to count: an a relative uncertainty of less than 10 %
+[minSlope, ind] = min( slopeBin );
+deltaY = binLength(ind) .* minSlope;
+relUncertainty = abs( 10 ^ ( deltaY / 2 ) - 10 ^ ( -deltaY / 2) );
+threshold = 0.1;
 
-% Plot with error bars
-figure()
-errorbar( log10(x), log10(y./x), erry ./ ( y .* log(10) ) );
-xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
-title('Data w/ error bars')
-hold on
-plot( log10(x), hAsymp .* ones( length(x) , 1) );
-plot( log10(x), ( hAsymp - sigh ) .* ones( length(x) , 1) )
-plot( log10(x), ( hAsymp + sigh ) .* ones( length(x) , 1) )
+%Check if the last few slopes are worse than the middle
+midBin = round( binNum / 2 );
+finalSlopes =  mean( slopeBin( midBin:end ) );
 
-% Plot it
-figure()
-plot( log10( x ), log10( y./x ) )
-xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
-title('Log Plot Data and bin lines')
-hold on
-plot( log10( x ), ones( length(x) ,1 ) .* hAsymp, ...
-  log10( x ), slopeStart .*  log10( x ) + yinter(1) )
+if relUncertainty > threshold
+  steadyState = 0;
+elseif finalSlopes < midBin
+  steadyState = 0;
+else
+  steadyState = 1;
+end
+
+if steadyState 
+  bins2Check = randSelectAboutMin(slopeBin);
+  [ hAsymp, sigh, ~] = ...
+    findBins4asymp( bins2Check, spaceLog, x, y, erry );
+  D = 10 ^ (hAsymp);
+  Dsig = sigh .* D .* log(10) ;
+
+  %Calculate early time slope to find the analmous time. If it's too flat, set anomalous time to zero
+  aveSlope = mean(slopeBin); 
+  stdSlope = std(slopeBin); 
+  if ( ( slopeStart < aveSlope + stdSlope ) && ( slopeStart > aveSlope + stdSlope ) ) || slopeStart > 0 
+    asympInter = x(1);
+    asympInterSig = 0;
+  else
+  asympInter = ( hAsymp -  yinter(1) )./ slopeStart ; 
+  asympInterSig =  sigh ./ slopeStart ; 
+  end
+
+  tAsymp = 10 ^ ( asympInter );
+  tAsympSig = asympInterSig .* log(10) * 10 ^ ( asympInter );
+
+else % not reached steady state
+  D = NaN;
+  Dsig = NaN;
+  hAsymp = -Inf;
+  sigh = NaN;
+  tAsymp = Inf;
+  tAsympSig = NaN;
+end
 
 % Compile output
+output.steadyState = steadyState;
 output.D = D;
 output.Dsig = Dsig;
 output.hAsymp = hAsymp;
 output.hSig = sigh;
-output.slopeLongT = slopeTail;
+output.slopeLongT = slopeEnd;
 output.slopeShortT = slopeStart;
 output.tAsymp = tAsymp;
+output.tAsympSig = tAsympSig;
 output.slopeBin = slopeBin;
 output.centerBin = centerVal;
+output.binLength = binLength;
 
-
+% Plot Binned Data
+plotDataBins( x, y, spaceLog, slopeBin, yinter )
+% Plot asymptote
+plotDataAsympError( x, y, erry, hAsymp, sigh )
+plotDataAsymp( x, y, hAsymp, slopeStart, yinter )
 
