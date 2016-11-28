@@ -5,7 +5,7 @@ xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
 title('Log Plot Data and bin lines')
 hold on
 % Do a linear fit of data between points in a bin
-for ii = 1:length(slopeBin) - 1
+for ii = 1:length(spaceLog) - 1
   indStart =  spaceLog(ii) ;
   indEnd = spaceLog(ii+1) ;
   xTemp =  log10( x( indStart:indEnd ) );

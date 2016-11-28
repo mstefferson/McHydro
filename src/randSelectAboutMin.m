@@ -2,9 +2,8 @@
 % Returns random +/- i intervals about a minimum of a vector followed by
 % increasing distance from min after one side has been reached.
 
-function bins2Check = randSelectAboutMin (v)
+function bins2Check = randSelectAboutMin (v,minInd)
 bins = length(v);
-[~, minInd] = min( abs(v) );
 vecInd = zeros(  1, bins );
 steps = [-1 1];
 for ii = 1:bins;
