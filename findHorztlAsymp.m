@@ -103,6 +103,7 @@ output.tAsympSig = tAsympSig;
 output.slopeBin = slopeBin;
 output.centerBin = centerVal;
 output.binLength = binLength;
+output.yinter = yinter;
 
 % Plot Binned Data
 plotDataBins( x, y, spaceLog, slopeBin, yinter )
