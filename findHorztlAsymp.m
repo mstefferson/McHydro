@@ -1,4 +1,4 @@
-% [output]= findHorztlAsymp(x,y,erry)
+% [output]= findHorztlAsympx,y,erry)
 %   Description: Find the horizontal asymptote, maximum slope, and
 %   intercept (if it can)
 
@@ -23,9 +23,9 @@ binLength = zeros( binNum, 1 );
 for ii = 1:binNum
   indStart =  spaceLog(ii) ;
   indEnd = spaceLog(ii+1) ;
-  yTemp = log10( y( indStart:indEnd ) ./ x( indStart:indEnd ) );
-  xTemp =  log10( x( indStart:indEnd ) );
-  errTemp = erry ( indStart:indEnd ) ./ ( y(indStart:indEnd) * log(10) );
+  yTemp = log( y( indStart:indEnd ) ./ x( indStart:indEnd ) );
+  xTemp =  log( x( indStart:indEnd ) );
+  errTemp = erry ( indStart:indEnd ) ./ ( y(indStart:indEnd) );
   wTemp = 1 ./ ( errTemp .^ 2 );
   ptsTemp = length(yTemp);
   pfit = fit( xTemp, yTemp, 'poly1', 'weights',  wTemp);
@@ -46,9 +46,9 @@ for ii = 1: binNum / binSize
   ind = binSize * (ii - 1) + 1;
   indStart =  spaceLog(ind) ;
   indEnd = spaceLog(ind+binSize) ;
-  yTemp = log10( y( indStart:indEnd ) ./ x( indStart:indEnd ) );
-  xTemp =  log10( x( indStart:indEnd ) );
-  errTemp = erry ( indStart:indEnd ) ./ ( y(indStart:indEnd) * log(10) );
+  yTemp = log( y( indStart:indEnd ) ./ x( indStart:indEnd ) );
+  xTemp =  log( x( indStart:indEnd ) );
+  errTemp = erry ( indStart:indEnd ) ./ ( y(indStart:indEnd) );
   wTemp = 1 ./ ( errTemp .^ 2 );
   pfit = fit( xTemp, yTemp, 'poly1', 'weights',  wTemp);
   slopeBinBulk(ii) = pfit.p1;
@@ -59,7 +59,7 @@ end
   ( minBulk ) * binSize  + 1 : (minBulk+1)  * binSize )  ) );
 minInd =  minBulk * binSize  + minIndBulk;
 % Don't count noisy end points for steady state and max slope
-endInd = round( binNum ./ ( log10( x(end) ) - log10( x(1) ) ) );
+endInd = round( binNum ./ ( log( x(end) ) - log( x(1) ) ) );
 %Store the slope of the first/last bin
 slopeStart = slopeBin(1);
 slopeEnd = slopeBin(end);
@@ -67,14 +67,13 @@ slopeEnd = slopeBin(end);
 % Find asymptote
 % First check that it got close to steady state to count: an a relative uncertainty of less than 10 %
 deltaY = binLength(minInd) .* slopeBin(minInd);
-relUncertaintyCenter = abs( 10 ^ ( deltaY / 2 ) - 10 ^ ( -deltaY / 2) );
+relUncertaintyCenter = abs( exp( deltaY / 2 ) - exp( -deltaY / 2) );
 thresholdMid = 0.1;
 %Check if the last few slopes are worse than the middle
-finalSlopes =  mean( ...
-  slopeBin( end - endInd  : end ) );
+finalSlopes =  mean( slopeBin( end - endInd  : end ) );
 dX = sum( binLength(end-endInd : end) ) ;
 deltaY = finalSlopes * dX;
-relUncertaintyEnd = abs( 10 ^ ( deltaY / 2 ) - 10 ^ ( -deltaY / 2) );
+relUncertaintyEnd = abs( exp( deltaY / 2 ) - exp( -deltaY / 2) );
 thresholdEnd = 0.15;
 % determine steady state
 if relUncertaintyCenter > thresholdMid
@@ -91,8 +90,8 @@ if steadyState
   bins2Check = randSelectAboutMin(slopeBin,minInd);
   [ hAsymp, sigh, ~] = ...
     findBins4asymp( bins2Check, spaceLog, x, y, erry );
-  D = 10 ^ (hAsymp);
-  Dsig = sigh .* D .* log(10) ;
+  D = exp(hAsymp);
+  Dsig = sigh .* D;
   % Calculate early max slope to find the analmous time. If it's too flat,
   % set anomalous time last center val in range
   ind2check = intersect( find( centerValy < hAsymp + sigh  ),  find( centerValy > hAsymp - sigh  ) );
@@ -100,11 +99,11 @@ if steadyState
   % Calculate t asym from intecept
   asympInter = ( hAsymp -  yinter(indMax) ) ./ slopeMin ;
   asympInterSig =  -sigh ./ slopeMin ;
-  tAnom = 10 ^ ( asympInter );
-  tAnomSig = asympInterSig .* log(10) * 10 ^ ( asympInter );
-  if 10 ^ (minLogtInRange) <  tAnom
-    tAnom = 10 ^ (minLogtInRange);
-    tAnomSig = tAnom * ( 10 ^ ( binLength(indRange) / 2 ) - 1  )  ;
+  tAnom = exp( asympInter );
+  tAnomSig = asympInterSig .* exp( asympInter );
+  if exp(minLogtInRange) <  tAnom
+    tAnom = exp(minLogtInRange);
+    tAnomSig = tAnom * ( exp( binLength(indRange) / 2 ) - 1  )  ;
     earlyAnom = 1;
   end
 else % not reached steady state

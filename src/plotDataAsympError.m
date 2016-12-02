@@ -6,8 +6,8 @@ function plotDataAsympError( x, y, erry, slopeMax, yinterAsy, tanom, ...
   earlyAsymp, hAsymp, sigh, be, ffo, bBar, errorFlag )
 % Calculate lenght and logs
 lenX = length(x);
-logx = log10(x);
-logy_x = log10( y ./ x);
+logx = log(x);
+logy_x = log( y ./ x);
 % set-up figure
 figure()
 hold on
@@ -16,11 +16,11 @@ ax.YLim = [ min( logy_x ), max( logy_x )];
 falsehugeSlope = 10000; % for t anom
 % plot data
 if errorFlag
-  errorbar( logx, logy_x, erry ./ ( y .* log(10) ) );
+  errorbar( logx, logy_x, erry ./  y  );
 else
   plot( logx, logy_x );
 end
-xlabel( 'log_{10} (t) ' ); ylabel( 'log_{10} (x^2/t) ' );
+xlabel( 'log (t) ' ); ylabel( 'log (x^2/t) ' );
 titstr = ['Log Plot Data and bin lines be = ' num2str( be ) ...
   ' ffo = ' num2str( ffo, '%.2f' ) ' bBar = ' num2str( bBar ) ];
 title(titstr)
@@ -28,7 +28,7 @@ title(titstr)
 plot( logx, hAsymp .* ones( lenX , 1) );
 plot( logx, ( hAsymp - sigh ) .* ones( lenX, 1) )
 plot( logx, ( hAsymp + sigh ) .* ones( lenX, 1) )
-plot( logx, falsehugeSlope .* logx - falsehugeSlope * log10(tanom) );
+plot( logx, falsehugeSlope .* logx - falsehugeSlope * log(tanom) );
 % plot max slope if it was able to
 if earlyAsymp == 0
   plot( logx, slopeMax .*  logx + yinterAsy )

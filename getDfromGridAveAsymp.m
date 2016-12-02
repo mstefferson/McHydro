@@ -1,16 +1,15 @@
 % masterD = getDfromGridAveAsymp( path2files, fileId, plotAllFlag, saveFigFlag )
 %   Description: Wrapper for findHorztlAsymp. Loops aveGrid* for 
 % everything matching the fileID in path2files. Plot options
-
+% key:
+% masterD( be, ffo, bBar, D, Dsig, tAnom, tAnomSig, steadyState , ...
+% earlyAnom, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
 function masterD = getDfromGridAveAsymp( path2files, fileId, plotAllFlag, saveFigFlag )
 % addpath
 addpath('./src')
 % get files
 files2analyze = dir( [path2files fileId] );
 numFiles = length( files2analyze );
-% key:
-% masterD( be, ffo, bBar, D, Dsig, tAnom, tAnomSig, steadyState , ...
-% earlyAnom, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
 masterD = zeros( numFiles, 13 );
 % keyboard
 for ii = 1:numFiles
