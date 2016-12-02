@@ -42,7 +42,7 @@ for ii=1:length(bins2try)
 %     fprintf('Counting bin %d\n', binTemp );
     vecTotal = [vecTotal; vecTemp];
     wTotal = [wTotal; wTemp];
-    nPnts = length( vecTemp ); 
+    nPnts = length( vecTotal ); 
 
     sumWNew = sumWNew + sumWTemp;
     sumVecNew = sumVecNew + sumVecTemp;
