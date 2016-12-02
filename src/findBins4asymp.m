@@ -1,6 +1,5 @@
 % [ aveSteady, sigSteady, countedBins] = ...
 %  findBins4asymp( bins2try, spaceLog, x, y, erry )
-
 function [ aveSteady, sigSteady, countedBins] = ...
   findBins4asymp( bins2try, spaceLog, x, y, erry )
 % To start set everything to zero

@@ -1,12 +1,11 @@
 % [output]= findHorztlAsympx,y,erry)
 %   Description: Find the horizontal asymptote, maximum slope, and
 %   intercept (if it can)
-
 function [output]= findHorztlAsymp(x,y,erry)
 % add paths
 addpath('./src')
 % Vector is noisey. Bin it to smooth it out
-binNum = 16;
+binNum = ceil( log( x(end) ) - log( x(1) ) );
 spaceLog = round( logspace( 0, log10( length(x) ), binNum + 1 ) );
 spaceLog = unique( spaceLog );
 binNum = length( spaceLog ) - 1;
@@ -40,12 +39,13 @@ for ii = 1:binNum
 end
 % Do a bulk binnning to make sure you don't start analysis in crap
 % skip first bin
-binSize = 4;
-slopeBinBulk = zeros( binNum / binSize, 1 );
-for ii = 1: binNum / binSize
-  ind = binSize * (ii - 1) + 1;
+binBulkSize = floor( binNum / 4 );
+numBinBulk = floor( binNum / binBulkSize );
+slopeBinBulk = zeros( numBinBulk, 1 );
+for ii = 1 : numBinBulk
+  ind = binBulkSize * (ii - 1) + 1;
   indStart =  spaceLog(ind) ;
-  indEnd = spaceLog(ind+binSize) ;
+  indEnd = spaceLog(ind+binBulkSize) ;
   yTemp = log( y( indStart:indEnd ) ./ x( indStart:indEnd ) );
   xTemp =  log( x( indStart:indEnd ) );
   errTemp = erry ( indStart:indEnd ) ./ ( y(indStart:indEnd) );
@@ -53,20 +53,36 @@ for ii = 1: binNum / binSize
   pfit = fit( xTemp, yTemp, 'poly1', 'weights',  wTemp);
   slopeBinBulk(ii) = pfit.p1;
 end
+
 % find mins
-[~, minBulk] = min( abs( slopeBinBulk(2:end) ) );
+% Get spead of data. If it's small, ignore noisey end
+minData = min ( y./x );
+maxData = max ( y./x );
+meanData = mean( y ./ x);
+spread = ( maxData - minData ) ./ meanData;
+if spread < 0.1
+  [~, minBulk] = min( abs( slopeBinBulk(2:end-1) ) );
+else
+  [~, minBulk] = min( abs( slopeBinBulk(2:end) ) );
+end
+
 [~, minIndBulk] = min( abs( slopeBin( ...
-  ( minBulk ) * binSize  + 1 : (minBulk+1)  * binSize )  ) );
-minInd =  minBulk * binSize  + minIndBulk;
-% Don't count noisy end points for steady state and max slope
+  ( minBulk ) * binBulkSize  + 1 : (minBulk+1)  * binBulkSize )  ) );
+indMinSlope =  minBulk * binBulkSize  + minIndBulk;
+% Don't count noisy end points or start for steady state and max slope
+startInd = find( numPnts > 10, 1 ) ;
 endInd = round( binNum ./ ( log( x(end) ) - log( x(1) ) ) );
 %Store the slope of the first/last bin
 slopeStart = slopeBin(1);
 slopeEnd = slopeBin(end);
-[slopeMin, indMax] = min( slopeBin(1 : end - endInd ) );
+[slopeMostNeg, indSlopeMostNeg] = min( slopeBin(startInd : indMinSlope) );
+indSlopeMostNeg =  indSlopeMostNeg + startInd - 1;
+% If max slope later than min slope, try again
+% if indSlopeMostNeg > indMinSlope;
+%   
 % Find asymptote
 % First check that it got close to steady state to count: an a relative uncertainty of less than 10 %
-deltaY = binLength(minInd) .* slopeBin(minInd);
+deltaY = binLength(indMinSlope) .* slopeBin(indMinSlope);
 relUncertaintyCenter = abs( exp( deltaY / 2 ) - exp( -deltaY / 2) );
 thresholdMid = 0.1;
 %Check if the last few slopes are worse than the middle
@@ -87,23 +103,22 @@ end
 earlyAnom = 0;
 if steadyState
   % Don't check the first coupld of bins due to lack of data point
-  bins2Check = randSelectAboutMin(slopeBin,minInd);
+  bins2Check = randSelectAboutMin(slopeBin,indMinSlope);
   [ hAsymp, sigh, ~] = ...
     findBins4asymp( bins2Check, spaceLog, x, y, erry );
   D = exp(hAsymp);
   Dsig = sigh .* D;
   % Calculate early max slope to find the analmous time. If it's too flat,
   % set anomalous time last center val in range
-  ind2check = intersect( find( centerValy < hAsymp + sigh  ),  find( centerValy > hAsymp - sigh  ) );
-  [minLogtInRange, indRange] = min( centerValx(ind2check) );
+  ind2check = min( intersect( find( centerValy < hAsymp + sigh  ),  find( centerValy > hAsymp - sigh  ) ) );
   % Calculate t asym from intecept
-  asympInter = ( hAsymp -  yinter(indMax) ) ./ slopeMin ;
-  asympInterSig =  -sigh ./ slopeMin ;
-  tAnom = exp( asympInter );
+  asympInter = ( hAsymp -  yinter(indSlopeMostNeg) ) ./ slopeMostNeg ;
+  asympInterSig =  -sigh ./ slopeMostNeg ;
+  tAnom = exp( asympInter );% 
   tAnomSig = asympInterSig .* exp( asympInter );
-  if exp(minLogtInRange) <  tAnom
-    tAnom = exp(minLogtInRange);
-    tAnomSig = tAnom * ( exp( binLength(indRange) / 2 ) - 1  )  ;
+  if ind2check <=  startInd 
+    tAnom = exp( centerValx( ind2check) );
+    tAnomSig = 0 ;
     earlyAnom = 1;
   end
 else % not reached steady state
@@ -123,8 +138,8 @@ output.hAsymp = hAsymp;
 output.hSig = sigh;
 output.slopeEnd = slopeEnd;
 output.slopeStart = slopeStart;
-output.slopeMostNeg = slopeMin;
-output.yinterMostNeg = yinter(indMax);
+output.slopeMostNeg = slopeMostNeg;
+output.yinterMostNeg = yinter(indSlopeMostNeg);
 output.tAnom = tAnom;
 output.tAnomSig = tAnomSig;
 output.slopeBin = slopeBin;
