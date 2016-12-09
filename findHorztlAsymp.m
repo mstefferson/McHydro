@@ -5,7 +5,8 @@ function [output]= findHorztlAsymp(x,y,erry)
 % add paths
 addpath('./src')
 % Vector is noisey. Bin it to smooth it out
-binNum = ceil( log( x(end) ) - log( x(1) ) );
+bindFac = 1;
+binNum = ceil( bindFac * ( log( x(end) ) - log( x(1) ) ) );
 spaceLog = round( logspace( 0, log10( length(x) ), binNum + 1 ) );
 spaceLog = unique( spaceLog );
 binNum = length( spaceLog ) - 1;
@@ -53,7 +54,6 @@ for ii = 1 : numBinBulk
   pfit = fit( xTemp, yTemp, 'poly1', 'weights',  wTemp);
   slopeBinBulk(ii) = pfit.p1;
 end
-
 % find mins
 % Get spead of data. If it's small, ignore noisey end
 minData = min ( y./x );
@@ -71,15 +71,24 @@ end
 indMinSlope =  minBulk * binBulkSize  + minIndBulk;
 % Don't count noisy end points or start for steady state and max slope
 startInd = find( numPnts > 10, 1 ) ;
-endInd = round( binNum ./ ( log( x(end) ) - log( x(1) ) ) );
+endInd = 3;
+% endInd = round( endFact .* binNum ./ ( log( x(end) ) - log( x(1) ) ) );
 %Store the slope of the first/last bin
 slopeStart = slopeBin(1);
 slopeEnd = slopeBin(end);
-[slopeMostNeg, indSlopeMostNeg] = min( slopeBin(startInd : indMinSlope) );
+% [slopeMostNeg, indSlopeMostNeg] = min( slopeBin(startInd : indMinSlope) );
+% indSlopeMostNeg =  indSlopeMostNeg + startInd - 1;
+% Start at one and only go to indMinSlope unless it is diverging
+startInd = 1;
+if mean( slopeBin( end - endInd:end ) ) < -0.1
+  [slopeMostNeg, indSlopeMostNeg] = min( slopeBin(startInd : end) );    
+else
+  [slopeMostNeg, indSlopeMostNeg] = min( slopeBin(startInd : indMinSlope) );  
+end
 indSlopeMostNeg =  indSlopeMostNeg + startInd - 1;
 % If max slope later than min slope, try again
 % if indSlopeMostNeg > indMinSlope;
-%   
+% keyboard  
 % Find asymptote
 % First check that it got close to steady state to count: an a relative uncertainty of less than 10 %
 deltaY = binLength(indMinSlope) .* slopeBin(indMinSlope);
@@ -104,7 +113,7 @@ earlyAnom = 0;
 if steadyState
   % Don't check the first coupld of bins due to lack of data point
   bins2Check = randSelectAboutMin(slopeBin,indMinSlope);
-  [ hAsymp, sigh, ~] = ...
+  [ hAsymp, sigh, countedBins] = ...
     findBins4asymp( bins2Check, spaceLog, x, y, erry );
   D = exp(hAsymp);
   Dsig = sigh .* D;
@@ -116,7 +125,7 @@ if steadyState
   asympInterSig =  -sigh ./ slopeMostNeg ;
   tAnom = exp( asympInter );% 
   tAnomSig = asympInterSig .* exp( asympInter );
-  if ind2check <=  startInd 
+  if ind2check <=  indSlopeMostNeg
     tAnom = exp( centerValx( ind2check) );
     tAnomSig = 0 ;
     earlyAnom = 1;
@@ -128,6 +137,7 @@ else % not reached steady state
   sigh = NaN;
   tAnom = Inf;
   tAnomSig = NaN;
+  countedBins = 0;
 end
 % Compile output
 output.steadyState = steadyState;
@@ -147,3 +157,6 @@ output.centerBin = centerValy;
 output.binLength = binLength;
 output.upperBound = min(centerValy);
 output.yinter = yinter;
+output.countedBins= countedBins;
+
+% keyboard
