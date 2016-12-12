@@ -3,7 +3,7 @@ addpath('./src')
 saveMe = 0;
 moveSaveMe = 0;
 winStyle = 'normal';
-plotRng = 1:4;
+plotRng = 3;
 fileExt = 'eps';
 vertFlag = 0; % for Asym
 
