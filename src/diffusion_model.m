@@ -48,7 +48,7 @@ red=[1 0 0];
 % Take exponential of binding energy out of time loop, then pick a value
 % based on occupancy change.
 % expBE(1): unbinding expBE(2): no change expBE(3): binding
-if isinf( paramslist.be );
+if isinf( paramslist.be )
   bindFlag = 0;
 else
   bindFlag = 1;
@@ -58,6 +58,7 @@ end
 % Assign internal variables
 n = const;
 n.size_obst = size_obst;
+n.dim = modelopt.dimension;
 
 % Records
 if n.trPosRecNoModFlag || n.trPosRecModFlag ||  n.obsPosRecNoModFlag ||...
@@ -79,13 +80,10 @@ if animate
   figure()
 end
 
-% Derived parameters
-n.num_obst=round(ffrac_obst*(n.n_gridpoints/n.size_obst)^modelopt.dimension); %square lattice
-n.num_tracer=round(ffrac_tracer*(n.n_gridpoints/n.size_tracer)^modelopt.dimension);
 
 % Store actual filling fractions
-paramslist.ffo_act = n.num_obst * (n.size_obst/n.n_gridpoints)^modelopt.dimension;
-paramslist.fft_act = n.num_tracer * (n.size_tracer/n.n_gridpoints)^modelopt.dimension;
+% paramslist.ffo_act = n.num_obst * (n.size_obst/n.n_gridpoints)^modelopt.dimension;
+% paramslist.fft_act = n.num_tracer * (n.size_tracer/n.n_gridpoints)^modelopt.dimension;
 
 % Square lattice definition - assume 2D for now
 lattice.moves=[1 0;
@@ -94,18 +92,14 @@ lattice.moves=[1 0;
   0 -1];
 
 % obstacle fields
-%obst=place_objects(n.num_obst,n.size_obst,n.n_gridpoints,modelopt,modelopt.obst_excl,...
-%0,obst_color,obst_curv);
-obst = place_obstacles( n.num_obst, n.n_gridpoints );
+obst = place_obstacles( paramslist.ffo, paramslist.so, n.n_gridpoints, modelopt.obst_excl, n.dim );
 obst.color=obst_color;
 obst.curvature=obst_curv;
 obst.ffrac=ffrac_obst;
 
 % tracer fields
-% tracer=place_objects(n.num_tracer,n.size_tracer,n.n_gridpoints,modelopt,...
-%   modelopt.tracer_excl,1,tracer_color,tracer_curv,obst);
-tracer = place_tracers( n.num_tracer, n.n_gridpoints, obst.allpts,...
-  paramslist.ffo, paramslist.be);
+tracer = place_tracers( paramslist.fft, n.n_gridpoints, n.size_tracer, obst.allpts,...
+  paramslist.ffo, paramslist.be, n.dim);
 tracer.color=tracer_color;
 tracer.curvature=tracer_curv;
 tracer.ffrac=ffrac_tracer;
@@ -114,6 +108,11 @@ tracer.pmove_bnd=exp(-tr_hop_bnd);
 tracer.state=ismember(tracer.allpts, obst.allpts);
 tracer.probmov = zeros(n.num_tracer,1);
 
+% Derived parameters and store
+n.num_obst=obst.num; %square lattice
+n.num_tracer=tracer.num;
+paramslist.ffo_act = tracer.ffActual; 
+paramslist.fft_act = obst.ffActual; 
 parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 % Set up things for recording
@@ -178,7 +177,7 @@ if animate
 end
 
 %% loop over time points
-for m=1:n.ntimesteps;
+for m=1:n.ntimesteps
   
   % Try and move everything
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);

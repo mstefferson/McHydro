@@ -1,13 +1,20 @@
 % place tracers based on binding
 
-function obj = place_tracers( nTracer, ng, obstSite, ffo, be )
+function obj = place_tracers( fft, ng, lt, obstSite, ffo, be, dim )
+% keep track of number
+numSites = ng^dim;
+nTracer = round(fft*(ng/lt)^dim);
+obj.num = nTracer;
+obj.ffWant = fft;
+obj.ffActual = nTracer ./ numSites; 
+obj.length = lt;
 
 % calculate how many tracers should be on obstacles or not
 numTrObst = round( nTracer * exp( -be ) * ffo ./ ( (1 - ffo ) + exp( -be ) .* ffo ) );
 numTrEmpty = nTracer - numTrObst;
 
 % find empty sites
-totalSite = 1:ng^2;
+totalSite = 1:numSites;
 emptySite = totalSite( ~ismember( totalSite, obstSite ) );
 
 % put tracers on obstacles and empty sites randomly
