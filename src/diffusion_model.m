@@ -20,8 +20,8 @@ if (length(paramvec)<6)
   error('diffusion_model: parameter vector too short');
 elseif (length(paramvec)==6)
   ffrac_tracer = paramvec(1);
-  tr_hop_unb = paramvec(2);
-  tr_hop_bnd = paramvec(3);
+  tr_diff_unb = paramvec(2);
+  tr_diff_bnd = paramvec(3);
   ffrac_obst = paramvec(4);
   bind_energy = paramvec(5);
   size_obst = paramvec(6);
@@ -31,8 +31,8 @@ end
 
 % Paramvec as a struct
 paramslist.fft = ffrac_tracer; %filling frac tracer
-paramslist.tr_hop_unb = tr_hop_unb; %unbound hop energy
-paramslist.tr_hop_bnd = tr_hop_bnd ; % bound hop energy
+paramslist.tr_diff_unb = tr_diff_unb; %unbound hop energy
+paramslist.tr_diff_bnd = tr_diff_bnd ; % bound hop energy
 paramslist.ffo = ffrac_obst; %filling frac obs
 paramslist.be = bind_energy; % bind energy
 paramslist.so = size_obst;
@@ -93,24 +93,24 @@ lattice.moves=[1 0;
 
 % obstacle fields
 obst = place_obstacles( paramslist.ffo, paramslist.so, n.n_gridpoints, modelopt.obst_excl, n.dim );
-obst.color=obst_color;
-obst.curvature=obst_curv;
-obst.ffrac=ffrac_obst;
+obst.color = obst_color;
+obst.curvature = obst_curv;
+obst.ffrac = ffrac_obst;
 
 % tracer fields
 tracer = place_tracers( paramslist.fft, n.n_gridpoints, n.size_tracer, obst.allpts,...
   paramslist.ffo, paramslist.be, n.dim);
-tracer.color=tracer_color;
-tracer.curvature=tracer_curv;
-tracer.ffrac=ffrac_tracer;
-tracer.pmove_unb=exp(-tr_hop_unb);
-tracer.pmove_bnd=exp(-tr_hop_bnd);
-tracer.state=ismember(tracer.allpts, obst.allpts);
+tracer.color = tracer_color;
+tracer.curvature = tracer_curv;
+tracer.ffrac = ffrac_tracer;
+tracer.pmove_unb = tr_diff_unb;
+tracer.pmove_bnd = tr_diff_bnd;
+tracer.state = ismember(tracer.allpts, obst.allpts);
 tracer.probmov = zeros(n.num_tracer,1);
 
 % Derived parameters and store
-n.num_obst=obst.num; %square lattice
-n.num_tracer=tracer.num;
+n.num_obst = obst.num; %square lattice
+n.num_tracer = tracer.num;
 paramslist.ffo_act = tracer.ffActual; 
 paramslist.fft_act = obst.ffActual; 
 parsave(filename,paramslist,tracer,obst,const,modelopt);

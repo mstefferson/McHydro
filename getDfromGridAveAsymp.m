@@ -10,26 +10,26 @@ addpath('./src')
 % get files
 files2analyze = dir( [path2files fileId] );
 numFiles = length( files2analyze );
-masterD = zeros( numFiles, 13 );
-% keyboard
+masterD = zeros( numFiles, 14 );
 for ii = 1:numFiles
   % load and save parameters
   load( [path2files files2analyze(ii).name ] );
   masterD(ii,1) = aveGrid.be;
   masterD(ii,2) = aveGrid.ffo;
-  masterD(ii,3) = aveGrid.bBar;
+  masterD(ii,3) = aveGrid.bDiff;
+  masterD(ii,4) = aveGrid.so;
   % find the horzontal asymptote
   out = findHorztlAsymp( aveGrid.time, aveGrid.msdW, aveGrid.sigW );
-  masterD(ii,4) = out.D;
-  masterD(ii,5) = out.Dsig;
-  masterD(ii,6) = out.tAnom;
-  masterD(ii,7) = out.tAnomSig;
-  masterD(ii,8) = out.steadyState;
-  masterD(ii,9) = out.earlyAnom;
-  masterD(ii,10) = out.slopeEnd;
-  masterD(ii,11) = out.slopeMostNeg;
-  masterD(ii,12) = out.yinterMostNeg;
-  masterD(ii,13) = min( log10( aveGrid.msdW ./ aveGrid.time) );
+  masterD(ii,5) = out.D;
+  masterD(ii,6) = out.Dsig;
+  masterD(ii,7) = out.tAnom;
+  masterD(ii,8) = out.tAnomSig;
+  masterD(ii,9) = out.steadyState;
+  masterD(ii,10) = out.earlyAnom;
+  masterD(ii,11) = out.slopeEnd;
+  masterD(ii,12) = out.slopeMostNeg;
+  masterD(ii,13) = out.yinterMostNeg;
+  masterD(ii,14) = min( log10( aveGrid.msdW ./ aveGrid.time) );
   % plotting routines
   if plotAllFlag
     plotDataAsympError( aveGrid.time, aveGrid.msdW, aveGrid.sigW, ...

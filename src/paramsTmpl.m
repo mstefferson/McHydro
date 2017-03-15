@@ -15,8 +15,8 @@ params.bind_energy_vec = [0]; % binding_energy
 params.ffrac_obst_vec= [ 0.1 ]; %filling fraction of obstacles
 params.size_obst = [1]; % size of obst. prgm forces it ot be odd
 params.ffrac_tracer = 0.1; %filling fraction of tracers
-params.tr_unbnd_hop_energy = 0; %barrier height to sliding while unbound, in kT
-params.tr_bnd_hop_energy = Inf; %barrier height to sliding while bound, in kT
+params.tr_unbnd_diff = 1; % unbound diffusion
+params.tr_bnd_diff = 0; %bound diffusion
 
 %grid stuff
 const.n_trials = trialmaster.nt;
