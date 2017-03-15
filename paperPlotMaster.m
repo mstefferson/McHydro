@@ -29,10 +29,10 @@ plotDiffTaAlpha(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,...
 % plotDiffTaAll(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,plotRng,...
 %   saveMe,moveSaveMe, winStyle,fileExt)
 %%
-plotVarMSDfixedBe(saveMe,moveSaveMe, winStyle,fileExt)
+%plotVarMSDfixedBe(saveMe,moveSaveMe, winStyle,fileExt)
 %%
 plotCmprMotBndDTaAlpha(masterD_Bbar0,masterD_BbarInf_pos,saveMe,moveSaveMe, winStyle,fileExt)
 %%
 % plotCmprMotBndDTa(masterD_Bbar0,masterD_BbarInf_pos,saveMe,moveSaveMe, winStyle,fileExt)
 %%
-plotMSD_MDBrequest(saveMe,moveSaveMe, winStyle,fileExt)
+%plotMSD_MDBrequest(saveMe,moveSaveMe, winStyle,fileExt)
