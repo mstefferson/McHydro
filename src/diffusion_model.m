@@ -111,6 +111,8 @@ tracer.probmov = zeros(n.num_tracer,1);
 % Derived parameters and store
 n.num_obst = obst.num; %square lattice
 n.num_tracer = tracer.num;
+
+% Derived parameters and store
 paramslist.ffo_act = tracer.ffActual; 
 paramslist.fft_act = obst.ffActual; 
 parsave(filename,paramslist,tracer,obst,const,modelopt);

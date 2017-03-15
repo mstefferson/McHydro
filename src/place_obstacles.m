@@ -72,6 +72,8 @@ while (numSitesFilled ~= maxFilledSites) && (numCornersAvail ~= 0)
   numSiteFilledTemp = numSitesFilled + numActualNew;
   % accept
   if numSiteFilledTemp <= maxFilledSites && ~isempty( actualNewSites )
+  % accept
+  if numSiteFilledTemp <= maxFilledSites && ~isempty( actualNewSites )
     % update all filled sites
     allSitesFilledTemp = [allSitesFilled; actualNewSites ];
     allSitesFilled = allSitesFilledTemp; 
@@ -105,7 +107,7 @@ obst.ffActual = numSitesFilled ./ ng^2;
 obst.length = lobst;
 obst.exclude = excludeVol;
 obst.trys2fill = numTrys;
-obst.corner = zeros( obst.num, 2 ); obst.centers = zeros( obst.num, 2 ); 
+obst.corner = zeros( obst.num, 2 ); obst.center = zeros( obst.num, 2 ); 
 % corners
 obst.cornerInds = obstCorners;
 [obst.corner(:,1), obst.corner(:,2)] = ind2sub( [ng ng], obstCorners );
@@ -117,3 +119,4 @@ obst.centerInds = sub2ind( [ng ng], obst.center(:,1), obst.center(:,2) );
 % all ptns
 obst.allpts = allSitesFilled;
 obst.numFilledSite = numSitesFilled;
+end
