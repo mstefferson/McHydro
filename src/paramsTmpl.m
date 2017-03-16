@@ -19,7 +19,8 @@ params.tr_unbnd_diff = 1; % unbound diffusion
 params.tr_bnd_diff = 0; %bound diffusion
 
 %grid stuff
-const.n_trials = trialmaster.nt;
+const.dimension = 2; % system dimension
+const.n_trials = trialmaster.nt; % number of trials
 const.n_gridpoints = 100; % number of grid points, same in x and y
 const.ntimesteps = 1e3; % number of timesteps Note 1e5 gives errors on my laptop.
 const.rec_interval = 1e1; % time elapsed before recording
@@ -45,7 +46,7 @@ modelopt.movie=0;           %1 to record movie
 modelopt.obst_excl=1;       %1 if obstacles sterically exclude each other, 0 if not
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
 modelopt.obst_trace_excl=1;  %1 if obstacles and tracers mutually exclude
-modelopt.dimension=2;    %system dimension, currently must be 2
+modelopt.dimension=const.dimension; %system dimension
 
 % Fix time stuff and add some calculated things
 if const.twait < 1; const.twait = 1; end;
