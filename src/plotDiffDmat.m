@@ -1,6 +1,6 @@
 % masterD( be, ffo, bBar, D, Dsig, tAsymp, tAsympSig, steadyState , ...
 % earlyAsymp, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
-function plotAlphaVsNuDmat( axTemp, D2plot, be2plot )
+function plotDvsNuDmat( axTemp, D2plot, xInd, be2plot )
 %
 numBe = length(be2plot);
 % colors
@@ -12,8 +12,8 @@ for ii = 1:numBe
   beTemp = be2plot(ii);
   % find ind
   ind2plot = find( D2plot(:,1) == beTemp );
-  x2plot =  D2plot(ind2plot,2);
-  y2plot =  1+D2plot(ind2plot,11);
+  x2plot =  D2plot(ind2plot,xInd);
+  y2plot =  D2plot(ind2plot,5);
   p = plot(axTemp, x2plot, y2plot,'o');
   
   p.Marker = 'o';

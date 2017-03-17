@@ -2,7 +2,7 @@
 
 % masterD( be, ffo, bBar, D, Dsig, tAsymp, tAsympSig, steadyState , ...
 % earlyAsymp, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
-function plotDiffTaAlpha(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,...
+function plotDiffTaAlpha(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,varyParam,...
   plotRng,saveMe,moveSaveMe, winStyle, fileExt)
 % Latex font
 set(0,'defaulttextinterpreter','latex')
@@ -24,17 +24,35 @@ lp = 0.4;
 % plotRng = [4];
 savename = 'diffTasympAlphaVsNu_';
 figpos = [1 1 1920 1080];
-if nargin == 0
-  if ~exist('masterD_Bbar0','var')
-    load('masterD_Bbar0.mat')
+% find what parameter you are varying
+if strcmp(varyParam,'nu')
+  labX = '$$ \nu $$';
+  xVarInd = 2;
+  xLim = [0 1];
+elseif strcmp(varyParam,'bdiff')
+  labX = '$$ D_{bound} $$';
+  xVarInd = 3;
+  minX = min( [masterD_Bbar0(:,xVarInd); masterD_BbarInf_pos(:,xVarInd) ] );
+  maxX = max( [masterD_Bbar0(:,xVarInd); masterD_BbarInf_pos(:,xVarInd) ] );
+  if minX < maxX
+    xLim = [ minX maxX ];
+  else
+    xLim = [ minX-minX/10  minX+minX/10];
   end
-  if ~exist('masterD_BbarInf_neg','var')
-    load('masterD_BbarInf_neg.mat')
+elseif strcmp(varyParam,'lobst')
+  labX = '$$ l_{obst} $$';
+  xVarInd = 4;
+  minX = min( masterD_BbarInf_pos(:,xVarInd) );
+  maxX = max( masterD_BbarInf_pos(:,xVarInd) );
+  if minX < maxX
+    xLim = [ minX maxX ];
+  else
+    xLim = [ minX-minX/10  minX+minX/10];
   end
-  if ~exist('masterD_BbarInf_pos','var')
-    load('masterD_BbarInf_pos.mat')
-  end
+else
+  error('cannot find varying parameter')
 end
+
 % set up threshold lines
 if plotThresLines
   colorFact = 0.5;
@@ -77,9 +95,8 @@ for ii = plotRng
   title(title1, 'Units', 'normalized', ...
     'Position', [0 1 0], 'HorizontalAlignment', 'left')
   axis square
-  labX = '$$ \nu $$';
   xlabel( ax1, labX); ylabel(ax1, '$$ D^* $$');
-  ax1.XLim = [0,1];
+  ax1.XLim = xLim;
   ax1.YLim = [0,1.1];
   hold
   % ta
@@ -91,7 +108,7 @@ for ii = plotRng
     'Position', [0 1 0], 'HorizontalAlignment', 'left')
   ax2.YTick = [10^2 10^4 10^6];
   ax2.YLim = ax2YLim;
-  ax2.XLim = [0,1];
+  ax2.XLim = xLim;
   xlabel(ax2, labX); ylabel(ax2,'$$ t_{a} $$');
   hold
   % alpha
@@ -101,7 +118,7 @@ for ii = plotRng
   title(title3, 'Units', 'normalized', ...
     'Position', [0 1 0], 'HorizontalAlignment', 'left')
   xlabel( ax3, labX); ylabel(ax3, '$$ \alpha_{min} $$');
-  ax3.XLim = [0,1];
+  ax3.XLim = xLim;
   ax3.YLim = [0,1.1];
   hold
   numBe = length(be2plot);
@@ -118,11 +135,11 @@ for ii = plotRng
   end
   % plot it
   % Diff
-  plotDvsNuDmat( ax1, D2plot, be2plot );
+  plotDiffDmat( ax1, D2plot, xVarInd, be2plot );
   % t_a
-  plotTasymVsNuDmat( ax2, D2plot, be2plot );
+  plotTasymDmat( ax2, D2plot, xVarInd, be2plot );
   % alpha
-  plotAlphaVsNuDmat( ax3, D2plot, be2plot );
+  plotAlphaDmat( ax3, D2plot, xVarInd, be2plot );
   % legend
   legH = legend(ax2, legbind);
   legH.Interpreter = 'latex';

@@ -2,10 +2,11 @@ addpath('./src')
 %%
 saveMe = 0;
 moveSaveMe = 0;
-winStyle = 'normal';
-plotRng = 3;
+winStyle = 'docked';
+plotRng = 1:4; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
 fileExt = 'eps';
 vertFlag = 0; % for Asym
+varyParam = 'bdiff'; % nu, lobst, bdiff
 
 if ~exist('masterD_Bbar0','var')
   load('masterD_Bbar0.mat')
@@ -18,12 +19,12 @@ if ~exist('masterD_BbarInf_pos','var')
 end
 
 %%
-plotLogCurvesVariousNu(saveMe,moveSaveMe, winStyle,fileExt)
+% plotLogCurvesVariousNu(saveMe,moveSaveMe, winStyle,fileExt)
 %%
-plotLogAsymptotes(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,...
-  saveMe,moveSaveMe, winStyle,fileExt, vertFlag)
+% plotLogAsymptotes(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,...
+%   saveMe,moveSaveMe, winStyle,fileExt, vertFlag)
 %%
-plotDiffTaAlpha(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,...
+plotDiffTaAlpha(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,varyParam, ...
   plotRng,saveMe,moveSaveMe, winStyle,fileExt)
 %%
 % plotDiffTaAll(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,plotRng,...
@@ -31,7 +32,7 @@ plotDiffTaAlpha(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,...
 %%
 %plotVarMSDfixedBe(saveMe,moveSaveMe, winStyle,fileExt)
 %%
-plotCmprMotBndDTaAlpha(masterD_Bbar0,masterD_BbarInf_pos,saveMe,moveSaveMe, winStyle,fileExt)
+% plotCmprMotBndDTaAlpha(masterD_Bbar0,masterD_BbarInf_pos,saveMe,moveSaveMe, winStyle,fileExt)
 %%
 % plotCmprMotBndDTa(masterD_Bbar0,masterD_BbarInf_pos,saveMe,moveSaveMe, winStyle,fileExt)
 %%
