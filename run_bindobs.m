@@ -57,37 +57,19 @@ try
   %display everything
   fprintf('parameters read in\n');
   disp(trialmaster); disp(params); disp(const); disp(modelopt);
-  
-  %build a parameter matrix
-  nbe      = length( params.bind_energy_vec );
-  nffo     = length( params.ffrac_obst_vec );
-  nsizeobs = length( params.size_obst );
-  nt       = const.n_trials;
-  nparams  = nbe * nffo * nsizeobs * nt;
-  %param matrix.  (:,1) = run ID (:,2) = binding (:,3) = ffrc obs
-  param_mat = zeros( nparams, 4 );
-  for i = 1:nt
-    for j = 1:nbe
-      for k = 1:nffo
-        for l = 1:nsizeobs
-          rowind = 1 + (i-1) + (j-1) * nt + (k-1) * nt * nbe + ...
-            (l-1) * nt * nbe * nffo;
-          param_mat( rowind, 1 ) = (i-1) + trialmaster.runstrtind;
-          param_mat( rowind, 2 ) = params.bind_energy_vec(j);
-          param_mat( rowind, 3 ) = params.ffrac_obst_vec(k);
-          param_mat( rowind, 4 ) = params.size_obst(l);
-        end
-      end
-    end
-  end
+
+  %build a parameter matrix 
+  runVec = trialmaster.runstrtind + (0:trialmaster.nt-1);
+  param_mat = combvec(runVec, params.bind_energy_vec, params.ffrac_obst_vec, params.size_obst );
+  [~,nparams] = size(param_mat);
   
   % For some reason, param_mat gets "sliced". Create vectors to get arround
-  % this
-  param_RunID   = param_mat(:,1);
-  param_bind    = param_mat(:,2);
-  param_ffo     = param_mat(:,3);
-  param_sizeobs = param_mat(:,4);
-  
+  param_RunID   = param_mat(1,:);
+  param_bind     = param_mat(2,:);
+  param_ffo      = param_mat(3,:);
+  param_sizeobs = param_mat(4,:);
+
+    
   fprintf('Starting paramloop \n')
   fprintf('nparams = %d\n', nparams)
   RunTimeID = tic;
