@@ -22,8 +22,13 @@ emptySite = totalSite( ~ismember( totalSite, obstSite ) );
 
 % put tracers on obstacles and empty sites randomly
 obj.allpts = zeros( nTracer, 1 );
-obj.allpts( 1:numTrObst ) = obstSite( randi( length(obstSite), [1 numTrObst] ) );
-obj.allpts( numTrObst+1:nTracer ) = emptySite( randi( length(emptySite), [1 numTrEmpty] ) );
+% on obstacles
+if numTrObst > 0
+  obj.allpts( 1:numTrObst ) = obstSite( randi( length(obstSite), [1 numTrObst] ) );
+end
+if numTrEmpty > 0
+  obj.allpts( numTrObst+1:nTracer ) = emptySite( randi( length(emptySite), [1 numTrEmpty] ) );
+end
 
 % convert it to x,y indices
 obj.center = zeros( nTracer, 3 );

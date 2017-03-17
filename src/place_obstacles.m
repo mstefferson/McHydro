@@ -22,6 +22,7 @@ else
   maxFilledCorners = round( ff * numSites / (lobst^dim) );
   maxFilledSites = maxFilledCorners .* lobst^dim;
 end
+minFilledSites = lobst^dim;
 % all Sites
 allSitesOpen = 1:numSites;
 availCorners = allSitesOpen;
@@ -67,48 +68,54 @@ numSitesFilled = length( allSitesFilled );
 % Now fill in remaining
 % Fill until you cannot
 numTrys = 0;
-while (numSitesFilled ~= maxFilledSites) && (numCornersAvail ~= 0)
-  % guess a new corner
-  newCornerInds = randperm( numCornersAvail, 1 );
-  newCorner = availCorners( newCornerInds );
-  [i, j, k] = ind2sub( gridSize, newCorner );
-  newiFill = mod( (i:i+deltaL1) - 1, gridSize(1) ) + 1;
-  newjFill = mod( (j:j+deltaL2) - 1, gridSize(2) ) + 1;
-  newkFill = mod( (k:k+deltaL3) - 1, gridSize(3) ) + 1;
-  newComb = combvec(newiFill, newjFill, newkFill);
-  newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
-  % Find actual new
-  actualNewSites = setdiff( newInds, allSitesFilled );
-  numActualNew = length( actualNewSites );
-  % See if we can accept
-  numSiteFilledTemp = numSitesFilled + numActualNew;
-  % accept
-  if numSiteFilledTemp <= maxFilledSites && ~isempty( actualNewSites )
-    % update all filled sites
-    allSitesFilledTemp = [allSitesFilled; actualNewSites ];
-    allSitesFilled = allSitesFilledTemp; 
-    % Add new center
-    obstCorners = unique( [obstCorners; newCorner] );
-    if ~excludeVol
-      availCorners = setdiff( availCorners, newCorner );
-      numCornersAvail =  max( numCornersAvail - 1, 0 );
+if maxFilledSites > minFilledSites
+  while (numSitesFilled ~= maxFilledSites) && (numCornersAvail ~= 0)
+    % guess a new corner
+    newCornerInds = randperm( numCornersAvail, 1 );
+    newCorner = availCorners( newCornerInds );
+    [i, j, k] = ind2sub( gridSize, newCorner );
+    newiFill = mod( (i:i+deltaL1) - 1, gridSize(1) ) + 1;
+    newjFill = mod( (j:j+deltaL2) - 1, gridSize(2) ) + 1;
+    newkFill = mod( (k:k+deltaL3) - 1, gridSize(3) ) + 1;
+    newComb = combvec(newiFill, newjFill, newkFill);
+    newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
+    % Find actual new
+    actualNewSites = setdiff( newInds, allSitesFilled );
+    numActualNew = length( actualNewSites );
+    % See if we can accept
+    numSiteFilledTemp = numSitesFilled + numActualNew;
+    % accept
+    if numSiteFilledTemp <= maxFilledSites && ~isempty( actualNewSites )
+      % update all filled sites
+      allSitesFilledTemp = [allSitesFilled; actualNewSites ];
+      allSitesFilled = allSitesFilledTemp;
+      % Add new center
+      obstCorners = unique( [obstCorners; newCorner] );
+      if ~excludeVol
+        availCorners = setdiff( availCorners, newCorner );
+        numCornersAvail =  max( numCornersAvail - 1, 0 );
+      else
+        newiNoCorner = mod( (i-deltaL1:i+deltaL1) - 1, gridSize(1) ) + 1;
+        newjNoCorner = mod( (j-deltaL2:j+deltaL2) - 1, gridSize(2) ) + 1;
+        newkNoCorner = mod( (k-deltaL3:k+deltaL3) - 1, gridSize(3) ) + 1;
+        newComb = combvec( newiNoCorner, newjNoCorner, newkNoCorner );
+        newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
+        availCorners = setdiff( availCorners, newInds  );
+        numCornersAvail =  length(availCorners);
+      end
     else
-      newiNoCorner = mod( (i-deltaL1:i+deltaL1) - 1, gridSize(1) ) + 1;
-      newjNoCorner = mod( (j-deltaL2:j+deltaL2) - 1, gridSize(2) ) + 1;
-      newkNoCorner = mod( (k-deltaL3:k+deltaL3) - 1, gridSize(3) ) + 1;
-      newComb = combvec( newiNoCorner, newjNoCorner, newkNoCorner );
-      newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
-      availCorners = setdiff( availCorners, newInds  );
+      availCorners = setdiff( availCorners, newCorner );
       numCornersAvail =  length(availCorners);
     end
-  else
-    availCorners = setdiff( availCorners, newCorner );
-    numCornersAvail =  length(availCorners);
+    % update what's not longer available
+    allSitesFilled = unique( allSitesFilled );
+    numSitesFilled = length( allSitesFilled );
+    numTrys = numTrys + 1;
   end
-  % update what's not longer available
-  allSitesFilled = unique( allSitesFilled );
-  numSitesFilled = length( allSitesFilled );
-  numTrys = numTrys + 1;
+else
+  obstCorners = [];
+  numSitesFilled = 0;
+  numTrys = 0;
 end
 % save it in obst
 % allocate
@@ -118,7 +125,7 @@ obst.ffActual = numSitesFilled ./ numSites;
 obst.length = lobst;
 obst.exclude = excludeVol;
 obst.trys2fill = numTrys;
-obst.corner = zeros( obst.num, 3 ); obst.center = zeros( obst.num, 3 ); 
+obst.corner = zeros( obst.num, 3 ); obst.center = zeros( obst.num, 3 );
 % corners
 obst.cornerInds = obstCorners;
 [obst.corner(:,1), obst.corner(:,2), obst.corner(:,3)] = ind2sub( gridSize, obstCorners );
