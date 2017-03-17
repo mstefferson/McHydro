@@ -41,7 +41,7 @@
 
 ### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
 ### NOTE if the simulation runs longer than this it will be killed
-#PBS -l walltime=23:59:59
+#PBS -l walltime=71:59:59
 
 ### Switch to the working directory; by default TORQUE launches processes
 ### from your home directory.
