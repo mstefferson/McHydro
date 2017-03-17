@@ -37,6 +37,8 @@ paramslist.ffo = ffrac_obst; %filling frac obs
 paramslist.be = bind_energy; % bind energy
 paramslist.so = size_obst;
 
+% verbose
+verbose = const.verbose;
 % Colors
 obst_color=[0 0 0]; %black
 obst_curv=0.2; %curvature for animations
@@ -97,14 +99,32 @@ else
 end
 
 % obstacle fields
+if verbose
+  fprintf('Placing obstacles\n');
+  tic
+end
 obst = place_obstacles( paramslist.ffo, paramslist.so, n.grid, modelopt.obst_excl );
 obst.color = obst_color;
 obst.curvature = obst_curv;
 obst.ffrac = ffrac_obst;
+if verbose
+  tOut = toc;
+  fprintf('Overlap = %d\n', ~modelopt.obst_excl );
+  fprintf('Placed %d obstacles in %d tries is %f sec\n', obst.num, obst.trys2fill, tOut);
+  fprintf('ff want: %f ff actual: %f \n', obst.ffWant, obst.ffActual);
+end
 
 % tracer fields
+if verbose
+  fprintf('Placing tracers\n');
+  tic
+end
 tracer = place_tracers( paramslist.fft, obst.allpts,...
   obst.ffActual, paramslist.be, n.grid);
+if verbose
+  tOut = toc;
+  fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
+end
 
 tracer.color = tracer_color;
 tracer.curvature = tracer_curv;
@@ -185,12 +205,11 @@ if animate && n.dim == 2
 end
 % preallocate some things to prevent errors
 center_new = ones( n.num_tracer, 3 );
-%% loop over time points
+% loop over time points
+if verbose; fprintf('Starting time loop\n'); tic; end;
 for m=1:n.ntimesteps
-  
   % Try and move everything
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);
-%   keyboard
   % Attempt new tracer positions
   center_old=tracer.center;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
@@ -307,6 +326,9 @@ for m=1:n.ntimesteps
           end
           jrectemp = 0;
           jchunk = jchunk + 1;
+          if verbose
+            fprintf('%d done\n', round(100 * m ./ n.ntimesteps ) )
+          end
         end % write mod(m, chuck)
         jrectemp = jrectemp + 1;
         jrec = jrec + 1;
@@ -314,6 +336,12 @@ for m=1:n.ntimesteps
     end % m > twait
   end % record
 end %loop over time
+
+if verbose
+  tOut = toc;
+  tOut =  tOut / 3600;
+  fprintf('\nFinished loop %f hours\n\n', tOut)
+end
 
 if modelopt.movie
   movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...

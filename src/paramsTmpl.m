@@ -9,6 +9,7 @@ trialmaster.tind = 1; % trial indicator
 trialmaster.runstrtind = 1; % run indicator
 trialmaster.nt = 1; % number of trials
 trialmaster.seedShift = 1; % seed shifter resolve cluster issues
+trialmaster.verbose = 0; % print things
 
 %key parameters and constants
 params.bind_energy_vec = [0]; % binding_energy
@@ -61,6 +62,9 @@ const.Nchunklost = ceil( const.twait / const.write_interval) - 1; % Number of ch
 const.twait      = (const.Nreclost + 1) * const.rec_interval; % fix wait time. Add 1 to start recording at twait
 const.NrecTot    = const.ntimesteps / const.rec_interval - const.Nreclost; % Number of recorded points
 const.NchunkTot  = const.ntimesteps / const.write_interval - const.Nchunklost; % Number of times time to file
+
+% Store verbose
+const.verbose = trialmaster.verbose;
 
 % Fix size issues
 params.size_obst( ~mod(params.size_obst,2) ) = ...
