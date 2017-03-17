@@ -10,6 +10,7 @@ eo/
 figs/
 gridAveMSDdata/
 sandbox/
+paperFigs/
 
 # Input parameters
 initParams.m

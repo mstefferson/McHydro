@@ -20,8 +20,8 @@ if (length(paramvec)<6)
   error('diffusion_model: parameter vector too short');
 elseif (length(paramvec)==6)
   ffrac_tracer = paramvec(1);
-  tr_hop_unb = paramvec(2);
-  tr_hop_bnd = paramvec(3);
+  tr_diff_unb = paramvec(2);
+  tr_diff_bnd = paramvec(3);
   ffrac_obst = paramvec(4);
   bind_energy = paramvec(5);
   size_obst = paramvec(6);
@@ -31,12 +31,14 @@ end
 
 % Paramvec as a struct
 paramslist.fft = ffrac_tracer; %filling frac tracer
-paramslist.tr_hop_unb = tr_hop_unb; %unbound hop energy
-paramslist.tr_hop_bnd = tr_hop_bnd ; % bound hop energy
+paramslist.tr_diff_unb = tr_diff_unb; %unbound hop energy
+paramslist.tr_diff_bnd = tr_diff_bnd ; % bound hop energy
 paramslist.ffo = ffrac_obst; %filling frac obs
 paramslist.be = bind_energy; % bind energy
 paramslist.so = size_obst;
 
+% verbose
+verbose = const.verbose;
 % Colors
 obst_color=[0 0 0]; %black
 obst_curv=0.2; %curvature for animations
@@ -48,7 +50,7 @@ red=[1 0 0];
 % Take exponential of binding energy out of time loop, then pick a value
 % based on occupancy change.
 % expBE(1): unbinding expBE(2): no change expBE(3): binding
-if isinf( paramslist.be );
+if isinf( paramslist.be )
   bindFlag = 0;
 else
   bindFlag = 1;
@@ -58,6 +60,14 @@ end
 % Assign internal variables
 n = const;
 n.size_obst = size_obst;
+if n.dim == 2
+  n.grid = [ n.n_gridpoints n.n_gridpoints ];
+elseif n.dim == 3
+  n.grid = [ n.n_gridpoints n.n_gridpoints n.n_gridpoints ];
+else
+  fprintf('Error!!! Cannot handle this dimension. Must be 2 or 3')
+  error('Error!!! Cannot handle this dimension. Must be 2 or 3')
+end
 
 % Records
 if n.trPosRecNoModFlag || n.trPosRecModFlag ||  n.obsPosRecNoModFlag ||...
@@ -75,45 +85,62 @@ animate=modelopt.animate;    %1 to show animation, 0 for no animation
 tpause=modelopt.tpause;      %pause time in animation
 
 %define box for plotting
-if animate
+if animate && n.dim == 2
   figure()
 end
 
-% Derived parameters
-n.num_obst=round(ffrac_obst*(n.n_gridpoints/n.size_obst)^modelopt.dimension); %square lattice
-n.num_tracer=round(ffrac_tracer*(n.n_gridpoints/n.size_tracer)^modelopt.dimension);
-
-% Store actual filling fractions
-paramslist.ffo_act = n.num_obst * (n.size_obst/n.n_gridpoints)^modelopt.dimension;
-paramslist.fft_act = n.num_tracer * (n.size_tracer/n.n_gridpoints)^modelopt.dimension;
-
-% Square lattice definition - assume 2D for now
-lattice.moves=[1 0;
-  -1 0;
-  0 1;
-  0 -1];
+% Square lattice definition 
+if n.dim == 2
+  lattice.moves=[1 0; -1 0; 0 1; 0 -1];
+elseif n.dim == 3
+  lattice.moves=[1 0 0; -1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
+else
+  lattice.moves = 0;
+end
 
 % obstacle fields
-%obst=place_objects(n.num_obst,n.size_obst,n.n_gridpoints,modelopt,modelopt.obst_excl,...
-%0,obst_color,obst_curv);
-obst = place_obstacles( n.num_obst, n.n_gridpoints );
-obst.color=obst_color;
-obst.curvature=obst_curv;
-obst.ffrac=ffrac_obst;
+if verbose
+  fprintf('Placing obstacles\n');
+  tic
+end
+obst = place_obstacles( paramslist.ffo, paramslist.so, n.grid, modelopt.obst_excl );
+obst.color = obst_color;
+obst.curvature = obst_curv;
+obst.ffrac = ffrac_obst;
+if verbose
+  tOut = toc;
+  fprintf('Overlap = %d\n', ~modelopt.obst_excl );
+  fprintf('Placed %d obstacles in %d tries is %f sec\n', obst.num, obst.trys2fill, tOut);
+  fprintf('ff want: %f ff actual: %f \n', obst.ffWant, obst.ffActual);
+end
 
 % tracer fields
-% tracer=place_objects(n.num_tracer,n.size_tracer,n.n_gridpoints,modelopt,...
-%   modelopt.tracer_excl,1,tracer_color,tracer_curv,obst);
-tracer = place_tracers( n.num_tracer, n.n_gridpoints, obst.allpts,...
-  paramslist.ffo, paramslist.be);
-tracer.color=tracer_color;
-tracer.curvature=tracer_curv;
-tracer.ffrac=ffrac_tracer;
-tracer.pmove_unb=exp(-tr_hop_unb);
-tracer.pmove_bnd=exp(-tr_hop_bnd);
-tracer.state=ismember(tracer.allpts, obst.allpts);
+if verbose
+  fprintf('Placing tracers\n');
+  tic
+end
+tracer = place_tracers( paramslist.fft, obst.allpts,...
+  obst.ffActual, paramslist.be, n.grid);
+if verbose
+  tOut = toc;
+  fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
+end
+
+tracer.color = tracer_color;
+tracer.curvature = tracer_curv;
+tracer.ffrac = ffrac_tracer;
+tracer.pmove_unb = tr_diff_unb;
+tracer.pmove_bnd = tr_diff_bnd;
+tracer.state = ismember(tracer.allpts, obst.allpts);
 tracer.probmov = zeros(n.num_tracer,1);
 
+% Derived parameters and store
+n.num_obst = obst.num; %square lattice
+n.num_tracer = tracer.num;
+
+% Derived parameters and store
+paramslist.ffo_act = tracer.ffActual; 
+paramslist.fft_act = obst.ffActual; 
 parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 % Set up things for recording
@@ -127,12 +154,12 @@ fileObj = matfile(filename,'Writable',true);
 % everything though
 % tracer temp records
 if n.trPosRecModFlag
-  tracer_cen_rec_temp = zeros( n.num_tracer, 2, n.NrecChunk );
-  fileObj.tracer_cen_rec = zeros( n.num_tracer, 2, 2 );
+  tracer_cen_rec_temp = zeros( n.num_tracer, n.dim, n.NrecChunk );
+  fileObj.tracer_cen_rec = zeros( n.num_tracer, n.dim, 2 );
 end
 if n.trPosRecNoModFlag
-  tracer_cen_rec_nomod_temp = zeros( n.num_tracer, 2, n.NrecChunk );
-  fileObj.tracer_cen_rec_nomod = zeros( n.num_tracer, 2, 2 );
+  tracer_cen_rec_nomod_temp = zeros( n.num_tracer, n.dim, n.NrecChunk );
+  fileObj.tracer_cen_rec_nomod = zeros( n.num_tracer, n.dim, 2 );
 end
 if n.trStateRecFlag
   tracer_state_rec_temp = zeros( n.num_tracer, n.NrecChunk );
@@ -143,20 +170,20 @@ if n.trackOcc
 end
 % obstacles temp records
 if n.obsPosRecModFlag
-  obst_cen_rec_temp = zeros( n.num_obst, 2, n.NrecChunk );
-  fileObj.obst_cen_rec = zeros( n.num_obst, 2, 2 );
+  obst_cen_rec_temp = zeros( n.num_obst, n.dim, n.NrecChunk );
+  fileObj.obst_cen_rec = zeros( n.num_obst, n.dim, 2 );
 end
 if n.obsPosRecNoModFlag
-  obst_cen_rec_nomod_temp = zeros( n.num_obst,2, n.NrecChunk );
-  fileObj.obst_cen_rec_nomod = zeros( n.num_obst, 2, 2);
+  obst_cen_rec_nomod_temp = zeros( n.num_obst,n.dim, n.NrecChunk );
+  fileObj.obst_cen_rec_nomod = zeros( n.num_obst, n.dim, 2);
 end
 
 % Pre-Allocate some commonly used matrices
-onesNt2 = ones( n.num_tracer, 2 ); % matrix of ones ( Ntracer x 2 ) used for mod
-NgsNt2 = n.n_gridpoints .* ones( n.num_tracer, 2 ); % matix of Ng ( Ntracer x 2 ) used for mod
+onesNt2 = ones( n.num_tracer, n.dim ); % matrix of ones ( Ntracer x 2 ) used for mod
+NgsNt2 = repmat( n.grid, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
 
 % Animate first position
-if animate
+if animate && n.dim == 2
   ax=gca;axis square;ax.XGrid='on';ax.YGrid='on';
   ax.XLim=[0.5 n.n_gridpoints+0.5];ax.YLim=[0.5 n.n_gridpoints+0.5];
   ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
@@ -176,21 +203,21 @@ if animate
   end
 
 end
-
-%% loop over time points
-for m=1:n.ntimesteps;
-  
+% preallocate some things to prevent errors
+center_new = ones( n.num_tracer, 3 );
+% loop over time points
+if verbose; fprintf('Starting time loop\n'); tic; end;
+for m=1:n.ntimesteps
   % Try and move everything
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);
-%   keyboard
   % Attempt new tracer positions
   center_old=tracer.center;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
 
   % Enforcing periodic boundary conditions
-  center_new = mod( center_temp - onesNt2 , NgsNt2 ) + onesNt2;
+  center_new(:,1:n.dim) = mod( center_temp - onesNt2 , NgsNt2 ) + onesNt2;
   sites_new = ...
-    sub2ind([n.n_gridpoints n.n_gridpoints], center_new(:,1), center_new(:,2));
+    sub2ind(n.grid, center_new(:,1), center_new(:,2), center_new(:,3) );
   
   % Find old and new occupancy, i.e, when tracer and obs on same site
   occ_old=tracer.state;
@@ -225,18 +252,18 @@ for m=1:n.ntimesteps;
   end
   
   % Move all accepted changes
-  tracer.center(list.accept,:) = center_new(list.accept,:); %temporary update rule for drawing
-  tracer.cen_nomod(list.accept,:) = tracer.cen_nomod(list.accept,:)+...
-    lattice.moves(list.tracerdir(list.accept),:); %center, no periodic wrapping
+  tracer.center(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
+  tracer.cen_nomod(list.accept,1:n.dim) = tracer.cen_nomod(list.accept,1:n.dim)+...
+    lattice.moves(list.tracerdir(list.accept),1:n.dim); %center, no periodic wrapping
   
-  tracer.allpts(list.accept,:)=sites_new(list.accept,:); %update other sites
+  tracer.allpts(list.accept)=sites_new(list.accept); %update other sites
   tracer.state(list.accept)=occ_new(list.accept);
   
   % Track reject changes
   list.reject=setdiff(list.attempt,list.accept);
   
   % Animations
-  if animate
+  if animate && n.dim == 2
     for kTracer=1:n.num_tracer
       tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
         tracer.color,tracer.curvature);
@@ -250,10 +277,10 @@ for m=1:n.ntimesteps;
       if mod( m, n.rec_interval  ) == 0
         % tracer temp records
         if n.trPosRecModFlag
-          tracer_cen_rec_temp(1:n.num_tracer,1:2,jrectemp) = tracer.center;
+          tracer_cen_rec_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.center;
         end
         if n.trPosRecNoModFlag
-          tracer_cen_rec_nomod_temp(1:n.num_tracer,1:2,jrectemp) = tracer.cen_nomod;
+          tracer_cen_rec_nomod_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.cen_nomod;
         end
         if n.trStateRecFlag
           tracer_state_rec_temp(1:n.num_tracer,jrectemp) = tracer.state;
@@ -264,21 +291,21 @@ for m=1:n.ntimesteps;
         end
         % obstacles temp records
         if n.obsPosRecModFlag
-          obst_cen_rec_temp(1:n.num_obst,1:2,jrectemp) = obst.center;
+          obst_cen_rec_temp(1:n.num_obst,1:n.dim,jrectemp) = obst.center;
         end
         if n.obsPosRecNoModFlag
-          obst_cen_rec_nomod_temp(1:n.num_obst,1:2,jrectemp) = obst.cen_nomod;
+          obst_cen_rec_nomod_temp(1:n.num_obst,1:n.dim,jrectemp) = obst.cen_nomod;
         end
         
         if mod( m, const.write_interval  ) == 0
           RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
           % tracer write to file
           if n.trPosRecModFlag
-            fileObj.tracer_cen_rec(1:n.num_tracer,1:2,RecIndTemp) = ...
+            fileObj.tracer_cen_rec(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
               tracer_cen_rec_temp;
           end
           if n.trPosRecNoModFlag
-            fileObj.tracer_cen_rec_nomod(1:n.num_tracer,1:2,RecIndTemp) = ...
+            fileObj.tracer_cen_rec_nomod(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
               tracer_cen_rec_nomod_temp;
           end
           if n.trStateRecFlag
@@ -290,23 +317,31 @@ for m=1:n.ntimesteps;
           end
           % obstacles temp records
           if n.obsPosRecModFlag
-            fileObj.obst_cen_rec(1:n.num_obst,1:2,RecIndTemp) = ...
+            fileObj.obst_cen_rec(1:n.num_obst,1:n.dim,RecIndTemp) = ...
               obst_cen_rec_temp;
           end
           if n.obsPosRecNoModFlag
-            fileObj.obst_cen_rec_nomod(1:n.num_obst,1:2,RecIndTemp) = ...
+            fileObj.obst_cen_rec_nomod(1:n.num_obst,1:n.dim,RecIndTemp) = ...
               obst_cen_rec_nomod_temp;
           end
           jrectemp = 0;
           jchunk = jchunk + 1;
+          if verbose
+            fprintf('%d done\n', round(100 * m ./ n.ntimesteps ) )
+          end
         end % write mod(m, chuck)
         jrectemp = jrectemp + 1;
         jrec = jrec + 1;
       end % rec mod(m,trec)
     end % m > twait
   end % record
-  
 end %loop over time
+
+if verbose
+  tOut = toc;
+  tOut =  tOut / 3600;
+  fprintf('\nFinished loop %f hours\n\n', tOut)
+end
 
 if modelopt.movie
   movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
