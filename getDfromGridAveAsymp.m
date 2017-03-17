@@ -16,8 +16,17 @@ for ii = 1:numFiles
   load( [path2files files2analyze(ii).name ] );
   masterD(ii,1) = aveGrid.be;
   masterD(ii,2) = aveGrid.ffo;
-  masterD(ii,3) = aveGrid.bDiff;
-  masterD(ii,4) = aveGrid.so;
+  % handle changing parameter names
+  if isfield(aveGrid,'bDiff')
+    masterD(ii,3) = aveGrid.bDiff;
+  else
+    masterD(ii,3) = exp(-aveGrid.bBar);
+  end
+  if isfield(aveGrid,'so')
+    masterD(ii,4) = aveGrid.so;
+  else
+    masterD(ii,4) = 1;
+  end
   % find the horzontal asymptote
   out = findHorztlAsymp( aveGrid.time, aveGrid.msdW, aveGrid.sigW );
   masterD(ii,5) = out.D;
