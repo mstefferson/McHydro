@@ -1,6 +1,6 @@
 % masterD( be, ffo, bBar, D, Dsig, tAsymp, tAsympSig, steadyState , ...
 % earlyAsymp, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
-function plotDvsNuDmat( axTemp, D2plot, xInd, be2plot )
+function plotDiffDmat( axTemp, D2plot, xInd, be2plot )
 %
 numBe = length(be2plot);
 % colors

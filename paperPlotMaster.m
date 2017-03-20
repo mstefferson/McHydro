@@ -6,10 +6,14 @@ winStyle = 'docked';
 plotRng = 1:4; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
 fileExt = 'eps';
 vertFlag = 0; % for Asym
-varyParam = 'bdiff'; % nu, lobst, bdiff
+varyParam = 'nu'; % nu, lobst, bdiff
 
-if ~exist('masterD_Bbar0','var')
-  load('masterD_Bbar0.mat')
+% load it
+if ~exist('masterD_Bbar0_pos','var')
+  load('masterD_Bbar0_pos.mat')
+end
+if ~exist('masterD_Bbar0_neg','var')
+  load('masterD_Bbar0_neg.mat')
 end
 if ~exist('masterD_BbarInf_neg','var')
   load('masterD_BbarInf_neg.mat')
@@ -24,8 +28,48 @@ end
 % plotLogAsymptotes(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,...
 %   saveMe,moveSaveMe, winStyle,fileExt, vertFlag)
 %%
-plotDiffTaAlpha(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,varyParam, ...
-  plotRng,saveMe,moveSaveMe, winStyle,fileExt)
+for ii = plotRng
+  if ii == 1
+    masterD2plot = masterD_Bbar0_pos;
+    saveID = 'Bbar0Pos';
+    be2plot = [0 1 2 3 4 5 10];
+      plotThresLines = 0;
+    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+      saveMe,moveSaveMe, saveID, winStyle,fileExt)
+  end
+  if ii == 2
+    masterD2plot = masterD_Bbar0_neg;
+    saveID = 'Bbar0Neg';
+    be2plot = [0 -1 -2 -3 -4 -5];
+    plotThresLines = 0;
+    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+      saveMe,moveSaveMe, saveID, winStyle,fileExt)
+  end
+  if ii == 3
+    masterD2plot = masterD_BbarInf_pos;
+    saveID = 'BbarInfPos';
+    be2plot = [0 2 4 10 Inf];
+    if strcmp( varyParam, 'nu' ) 
+      plotThresLines = 1;
+    else
+      plotThresLines = 0;
+    end
+    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+      saveMe,moveSaveMe, saveID, winStyle,fileExt)
+  end
+  if ii == 4
+    masterD2plot = masterD_BbarInf_neg;
+    saveID = 'BbarInfNeg';
+    be2plot = [0 -1 -2 -3 -4 -5];
+    if strcmp( varyParam, 'nu' ) 
+      plotThresLines = 1;
+    else
+      plotThresLines = 0;
+    end
+    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+      saveMe,moveSaveMe, saveID, winStyle,fileExt)
+  end
+end
 %%
 % plotDiffTaAll(masterD_Bbar0,masterD_BbarInf_neg,masterD_BbarInf_pos,plotRng,...
 %   saveMe,moveSaveMe, winStyle,fileExt)
