@@ -1,15 +1,15 @@
 %[diffStruct, param] = ...
-%  diffMatParamExtact( Dmat, pVaryStr, p1want, p2want, p3want )
+%  diffMatParamExtact( Dmat, pVaryStr, p1Want, p2Want, p3Want )
 %
 % diffMatParamExtact return an organize structure and parameter cell that 
 % make plotting over various parameters much more useful. 
 
 function [diffStruct, param] = ...
-  diffMatParamExtact( Dmat, pVaryStr, p1want, p2want, p3want )
+  diffMatParamExtact( Dmat, pVaryStr, pVaryWant, p1Want, p2Want, p3Want )
 % from str, get parameter info
 if strcmp(pVaryStr,'bdiff')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = ' $$ D_{bound} $$ ';
+  param.pVaryTex = '$$ D_{bound} $$';
   varyInd = 1;
   p1Ind = 2;
   p1Name = '\Delta G';
@@ -19,32 +19,32 @@ if strcmp(pVaryStr,'bdiff')
   p3Name = 'l_{obst}';
 elseif strcmp(pVaryStr,'be')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = ' $$ \Delta G $$ ';
+  param.pVaryTex = '$$ \Delta G $$';
   varyInd = 2;
   p1Ind = 1;
-  p1Name = ' D_{bound} ';
+  p1Name = 'D_{bound}';
   p2Ind = 3;
   p2Name= '\nu';
   p3Ind = 4;
   p3Name = 'l_{obst}';
 elseif strcmp(pVaryStr,'nu')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = ' $$ \nu $$ ';
+  param.pVaryTex = '$$ \nu $$';
   varyInd = 3;
   p1Ind = 1;
-  p1Name = ' D_{bound} ';
+  p1Name = 'D_{bound}';
   p2Ind = 2;
-  p2Name = ' \Delta G ';
+  p2Name = '\Delta G';
   p3Ind = 4;
   p3Name = 'l_{obst}';
 elseif strcmp(pVaryStr,'lobst')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = ' $$ l_{obst} $$ ';
+  param.pVaryTex = '$$ l_{obst} $$';
   varyInd = 4;
   p1Ind = 1;
-  p1Name = ' D_{bound} ';
+  p1Name = 'D_{bound}';
   p2Ind = 2;
-  p2Name = ' \Delta G ';
+  p2Name = '\Delta G';
   p3Ind = 3;
   p3Name= '\nu';
 else
@@ -58,28 +58,36 @@ p1 = unique( Dmat(:, p1Ind ), 'stable'  );
 p2 = unique( Dmat(:, p2Ind ), 'stable'  );
 p3 = unique( Dmat(:, p3Ind ), 'stable'  );
 % if empty, you get everything. if not, get what you want
-if isempty(p1want)
-  p1want = p1; 
+if isempty(pVaryWant)
+  pVaryWant = pVary; 
 else
-  p1want = intersect( p1want, p1, 'stable' );
+  pVaryWant = intersect( pVaryWant, pVary, 'stable' );
 end
-if isempty(p2want)
-  p2want = p2; 
+if isempty(p1Want)
+  p1Want = p1; 
 else
-  p2want = intersect( p2want, p2, 'stable' );
+  p1Want = intersect( p1Want, p1, 'stable' );
 end
-if isempty(p3want)
-  p3want = p3;
+if isempty(p2Want)
+  p2Want = p2; 
 else
-  p3want = intersect( p3want, p3, 'stable' );
+  p2Want = intersect( p2Want, p2, 'stable' );
+end
+if isempty(p3Want)
+  p3Want = p3;
+else
+  p3Want = intersect( p3Want, p3, 'stable' );
+end
+if isempty(p1Want) || isempty(p2Want) || isempty(p3Want) || isempty(pVaryWant)
+  error('input parameter error')
 end
 % get length
-numP1 = length(p1want);
-numP2 = length(p2want);
-numP3 = length(p3want);
+numP1 = length(p1Want);
+numP2 = length(p2Want);
+numP3 = length(p3Want);
 numParams = numP1 * numP2 * numP3;
 % paramMat
-paramMat = combvec( p1want', p2want', p3want' );
+paramMat = combvec( p1Want', p2Want', p3Want' );
 % find max
 numVec = [numP1, numP2, numP3];
 numVecSort = sort( numVec );
@@ -94,7 +102,7 @@ end
 maxInd1 = indsV( max1 ==  numVec );
 maxInd2 = indsV( max2 ==  numVec );
 % extract max vector
-maxTemp = {p1want, p2want, p3want};
+maxTemp = {p1Want, p2Want, p3Want};
 nameTemp = {p1Name, p2Name, p3Name};
 maxVec1 = maxTemp{maxInd1};
 maxVec2 = maxTemp{maxInd2};
@@ -114,7 +122,7 @@ param.colorMat = colorArray( indsColorMark(1,:), : );
 param.markerVec = markerArray( indsColorMark(2,:) );
 % Allocate diffStruct and paramCell
 paramCell = cell( 1, numParams );
-diffStruct(numParams).pVary = pVary;
+diffStruct(numParams).pVary = pVaryWant;
 % build D struct
 for ii = 1:numParams
   str = [];
@@ -130,6 +138,14 @@ for ii = 1:numParams
   % extra just the info we want
   inds = intersect( getInd1, intersect(getInd2, getInd3) );
   DmatTemp = Dmat(inds, :);
+  % repeat for varyign ind
+  DmatTemp( :, varyInd ) = round( roundVal .*  DmatTemp( :, varyInd ) ) ./ roundVal;
+  pVaryTemp = intersect( pVaryWant,  DmatTemp( :, varyInd ), 'stable' );
+  getIndVary = zeros( length(pVaryTemp), 1 );
+  for jj = 1:length(pVaryWant)
+    getIndVary(jj) =  find( DmatTemp( :, varyInd ) == pVaryTemp(jj) );
+  end
+  DmatTemp = DmatTemp(getIndVary,:);
   % build cell
   if max2 >  1
     if isinf(maxtemp2)
@@ -151,7 +167,7 @@ for ii = 1:numParams
   end
   % store it
   diffStruct(ii).Dmat = DmatTemp;
-  diffStruct(ii).pVary = DmatTemp(:,varyInd);
+  diffStruct(ii).pVary = pVaryTemp;
   diffStruct(ii).p1Name = p1Name;
   diffStruct(ii).p1 = p1temp;
   diffStruct(ii).p2Name = p2Name;
@@ -164,12 +180,12 @@ end
 % param stuff
 param.numParams = numParams;
 param.pVaryStr = pVaryStr;
-param.pVary = pVary;
+param.pVary = pVaryWant;
 param.p1Str = p1Name;
-param.p1 = p1want;
+param.p1 = p1Want;
 param.p2Str = p2Name;
-param.p2 = p2want;
+param.p2 = p2Want;
 param.p3Str = p3Name;
-param.p3 = p3want;
+param.p3 = p3Want;
 param.vals = paramMat.';
 param.legcell = paramCell;

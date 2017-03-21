@@ -20,7 +20,7 @@ if errorFlag
 else
   plot( x, y_x );
 end
-xlabel( 't' ); ylabel( 'x^2/t' );
+xlabel( '$$ t $$' ); ylabel( '$$x^2/t$$' );
 titstr = ['Log Plot Data and bin lines be = ' num2str( be ) ...
   ' ffo = ' num2str( ffo, '%.2f' ) ' bBar = ' num2str( bBar ) ];
 title(titstr)
