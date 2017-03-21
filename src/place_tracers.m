@@ -1,14 +1,12 @@
 % place tracers based on binding
 % tracers are size one
 
-function obj = place_tracers( fft, obstSite, ffo, be, gridSize )
+function obj = place_tracers( nTracer, obstSite, ffo, be, gridSize )
 % dimension and sites
 dim = length(gridSize);
 numSites = prod( gridSize );
 % keep track of number
-nTracer = round(fft*numSites);
 obj.num = nTracer;
-obj.ffWant = fft;
 obj.ffActual = nTracer ./ numSites; 
 obj.length = 1;
 

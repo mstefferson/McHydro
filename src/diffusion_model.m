@@ -19,7 +19,7 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
 if (length(paramvec)<6)
   error('diffusion_model: parameter vector too short');
 elseif (length(paramvec)==6)
-  ffrac_tracer = paramvec(1);
+  num_tracer = paramvec(1);
   tr_diff_unb = paramvec(2);
   tr_diff_bnd = paramvec(3);
   ffrac_obst = paramvec(4);
@@ -30,7 +30,7 @@ elseif (length(paramvec)>6)
 end
 
 % Paramvec as a struct
-paramslist.fft = ffrac_tracer; %filling frac tracer
+paramslist.num_tracer = num_tracer; %filling frac tracer
 paramslist.tr_diff_unb = tr_diff_unb; %unbound hop energy
 paramslist.tr_diff_bnd = tr_diff_bnd ; % bound hop energy
 paramslist.ffo = ffrac_obst; %filling frac obs
@@ -119,7 +119,7 @@ if verbose
   fprintf('Placing tracers\n');
   tic
 end
-tracer = place_tracers( paramslist.fft, obst.allpts,...
+tracer = place_tracers( paramslist.num_tracer, obst.allpts,...
   obst.ffActual, paramslist.be, n.grid);
 if verbose
   tOut = toc;
@@ -128,19 +128,17 @@ end
 
 tracer.color = tracer_color;
 tracer.curvature = tracer_curv;
-tracer.ffrac = ffrac_tracer;
 tracer.pmove_unb = tr_diff_unb;
 tracer.pmove_bnd = tr_diff_bnd;
 tracer.state = ismember(tracer.allpts, obst.allpts);
-tracer.probmov = zeros(n.num_tracer,1);
+tracer.probmov = zeros(num_tracer,1);
 
 % Derived parameters and store
 n.num_obst = obst.num; %square lattice
 n.num_tracer = tracer.num;
 
 % Derived parameters and store
-paramslist.ffo_act = tracer.ffActual; 
-paramslist.fft_act = obst.ffActual; 
+paramslist.ffo_act = obst.ffActual; 
 parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 % Set up things for recording

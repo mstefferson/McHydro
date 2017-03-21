@@ -15,7 +15,7 @@ trialmaster.verbose = 0; % print things
 params.bind_energy_vec = [0]; % binding_energy
 params.ffrac_obst_vec= [ 0.1 ]; %filling fraction of obstacles
 params.size_obst = [1]; % size of obst. prgm forces it ot be odd
-params.ffrac_tracer = 0.1; %filling fraction of tracers
+params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion
 params.tr_bnd_diff = 0; %bound diffusion
 
@@ -77,13 +77,8 @@ if isempty(params.size_obst); params.size_obst = 1; end;
 const.size_tracer( ~mod(const.size_tracer,2) ) = ...
   const.size_tracer(~mod(const.size_tracer,2) ) - 1; 
 const.size_tracer = unique(const.size_tracer);
-const.size_tracer = const.size_tracer( const.size_tracer <= ...
-  round( max(params.ffrac_tracer) ^ (1/const.dim) * const.n_gridpoints ) );
 if isempty(const.size_tracer); const.size_tracer = 1; end;
 
-% Number of particles on the grid
-const.num_tracer = round(params.ffrac_tracer .* ...
-  (const.n_gridpoints/const.size_tracer) ^ const.dim);
 
 % Save it
 save('Params', 'const','params','trialmaster','modelopt');
