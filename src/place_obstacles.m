@@ -2,6 +2,7 @@
 
 function obst = place_obstacles( ff, lobst, gridSize, excludeVol )
 % make sure length of obstacle is at least one
+tic
 lobst = max( lobst, 1 );
 % get dimension and add ones for unused higher dimensions
 dim = length(gridSize);
@@ -30,7 +31,7 @@ numCornersAvail = length( availCorners );
 % number of filled
 allSitesFilled = [];
 % do Initial fill
-if ~excludeVol
+if ~excludeVol || lobst == 1
   numCornersInit = maxFilledCorners;
 else
   numCornersInit = 1;
@@ -38,21 +39,19 @@ end
 obstCornersInds = randperm( numCornersAvail, numCornersInit );
 obstCorners = availCorners( obstCornersInds )';
 % Find coordinates
-for nn = 1:numCornersInit
-  [i, j, k] = ind2sub( gridSize, obstCorners(nn) );
-  newiFill = mod( (i:i+deltaL1) - 1, gridSize(1) ) + 1;
-  newjFill = mod( (j:j+deltaL2) - 1, gridSize(2) ) + 1;
-  newkFill = mod( (k:k+deltaL3) - 1, gridSize(3) ) + 1;
-  newComb = combvec( newiFill, newjFill, newkFill );
-  newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
-  % Find actual new
-  actualNewSites = setdiff( newInds, allSitesFilled );
-  allSitesFilledTemp = [allSitesFilled; actualNewSites];
-  allSitesFilled = allSitesFilledTemp;
-  if ~excludeVol
-    availCorners = setdiff( availCorners, obstCorners(nn)  );
-    numCornersAvail = max( numCornersAvail - 1, 0 );
-  else
+if lobst > 1 && excludeVol
+  for nn = 1:numCornersInit
+    [i, j, k] = ind2sub( gridSize, obstCorners(nn) );
+    newiFill = mod( (i:i+deltaL1) - 1, gridSize(1) ) + 1;
+    newjFill = mod( (j:j+deltaL2) - 1, gridSize(2) ) + 1;
+    newkFill = mod( (k:k+deltaL3) - 1, gridSize(3) ) + 1;
+    newComb = combvec( newiFill, newjFill, newkFill );
+    newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
+    % Find actual new
+    actualNewSites = setdiff( newInds, allSitesFilled );
+    allSitesFilledTemp = [allSitesFilled; actualNewSites];
+    allSitesFilled = allSitesFilledTemp;
+    % excluded volume
     newiNoCorner = mod( (i-deltaL1:i+deltaL1) - 1, gridSize(1) ) + 1;
     newjNoCorner = mod( (j-deltaL2:j+deltaL2) - 1, gridSize(2) ) + 1;
     newkNoCorner = mod( (k-deltaL3:k+deltaL3) - 1, gridSize(2) ) + 1;
@@ -60,7 +59,12 @@ for nn = 1:numCornersInit
     newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)'  );
     availCorners = setdiff( availCorners, newInds  );
     numCornersAvail = length(availCorners);
+    %     end
   end
+else
+  availCorners = setdiff( availCorners, obstCorners  );
+  numCornersAvail = length( availCorners );
+  allSitesFilled = obstCorners;
 end
 % save unique
 allSitesFilled = unique( allSitesFilled );
@@ -91,7 +95,7 @@ if maxFilledSites > minFilledSites
       allSitesFilled = allSitesFilledTemp;
       % Add new center
       obstCorners = unique( [obstCorners; newCorner] );
-      if ~excludeVol
+      if ~excludeVol || lobst == 1
         availCorners = setdiff( availCorners, newCorner );
         numCornersAvail =  max( numCornersAvail - 1, 0 );
       else
