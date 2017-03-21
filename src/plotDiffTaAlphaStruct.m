@@ -3,7 +3,7 @@
 % masterD( be, ffo, bBar, D, Dsig, tAsymp, tAsympSig, steadyState , ...
 % earlyAsymp, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
 
-function plotDiffTaAlpha(D2plot, be2plot, varyParam, plotThresLines, ...
+function plotDiffTaAlphaStruct( Dstruct, param, plotThresLines, ...
   saveMe,moveSaveMe, saveID, winStyle, fileExt)
 % Latex font
 set(0,'defaulttextinterpreter','latex')
@@ -21,15 +21,11 @@ end
 savename = 'diffTasympAlphaVsNu_';
 figpos = [1 1 1920 1080];
 % find what parameter you are varying
-if strcmp(varyParam,'nu')
-  labX = '$$ \nu $$';
-  xVarInd = 2;
+if strcmp(param.pVaryStr,'nu')
   xLim = [0 1];
-elseif strcmp(varyParam,'bdiff')
-  labX = '$$ D_{bound} $$';
-  xVarInd = 3;
-  minX = min( D2plot(:,xVarInd) );
-  maxX = max( D2plot(:,xVarInd) );
+elseif strcmp(param.pVaryStr,'bdiff')
+  minX = min( param.pVary );
+  maxX = max( param.pVary  );
   if minX < maxX
     xLim = [ minX maxX ];
   elseif (minX == 0) && (maxX == 0 )
@@ -37,11 +33,9 @@ elseif strcmp(varyParam,'bdiff')
   else
     xLim = [ minX-minX/10  minX+minX/10];
   end
-elseif strcmp(varyParam,'lobst')
-  labX = '$$ l_{obst} $$';
-  xVarInd = 4;
-  minX = min( D2plot(:,xVarInd) );
-  maxX = max( D2plot(:,xVarInd) );
+elseif strcmp(param.pVaryStr,'lobst')
+  minX = min( param.pVary  );
+  maxX = max( param.pVary  );
   if minX < maxX
     xLim = [ minX maxX ];
   elseif (minX == 0) && (maxX == 0 )
@@ -52,8 +46,9 @@ elseif strcmp(varyParam,'lobst')
 else
   error('cannot find varying parameter')
 end
-% make sure to only plot the be that is available
-be2plot = intersect( be2plot, D2plot(:,1) );
+% label is already saved
+labX = param.pVaryTex;
+
 % set up threshold lines
 if plotThresLines
   colorFact = 0.5;
@@ -99,27 +94,15 @@ xlabel( ax3, labX); ylabel(ax3, '$$ \alpha_{min} $$');
 ax3.XLim = xLim;
 ax3.YLim = [0,1.1];
 hold
-numBe = length(be2plot);
-% legend
-legbind = cell( 1, numBe );
-% loop over be
-for ii = 1:numBe
-  beTemp = be2plot(ii);
-  if isinf( beTemp )
-    legbind{ii} = ['$$ \Delta G = \infty $$'] ;
-  else
-    legbind{ii} = ['$$ \Delta G = $$ ', num2str( beTemp ) ] ;
-  end
-end
 % plot it
 % Diff
-plotDiffDmat( ax1, D2plot, xVarInd, be2plot );
+plotDiffDstruct( ax1, Dstruct, param );
 % t_a
-plotTasymDmat( ax2, D2plot, xVarInd, be2plot );
+plotTasymDstruct( ax2, Dstruct, param );
 % alpha
-plotAlphaDmat( ax3, D2plot, xVarInd, be2plot );
+plotAlphaDstruct( ax3, Dstruct, param );
 % legend
-legH = legend(ax2, legbind);
+legH = legend(ax2, param.legcell);
 legH.Interpreter = 'latex';
 legH.Position = [0.8848    0.7438    0.1012    0.2448];
 % plot threshold lines

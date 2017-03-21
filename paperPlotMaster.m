@@ -30,43 +30,49 @@ end
 %%
 for ii = plotRng
   if ii == 1
-    masterD2plot = masterD_Bbar0_pos;
+    masterD2plot = masterD_Bbar0_pos_new;
     saveID = 'Bbar0Pos';
-    be2plot = [0 1 2 3 4 5 10];
+    dDiffWant = 1;
+    beWant = [0 1 2 3 4 5 10];
       plotThresLines = 0;
-    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+    sizeWant = 1;
+    [Dstruct, param] = ...
+      diffMatParamExtact( masterD2plot, varyParam, dDiffWant, beWant, sizeWant );
+    %plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+      %saveMe,moveSaveMe, saveID, winStyle,fileExt)
+    plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, ...
       saveMe,moveSaveMe, saveID, winStyle,fileExt)
   end
   if ii == 2
     masterD2plot = masterD_Bbar0_neg;
     saveID = 'Bbar0Neg';
-    be2plot = [0 -1 -2 -3 -4 -5];
+    beWant = [0 -1 -2 -3 -4 -5];
     plotThresLines = 0;
-    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+    plotDiffTaAlpha(masterD2plot, beWant, varyParam, plotThresLines, ...
       saveMe,moveSaveMe, saveID, winStyle,fileExt)
   end
   if ii == 3
     masterD2plot = masterD_BbarInf_pos;
     saveID = 'BbarInfPos';
-    be2plot = [0 2 4 10 Inf];
+    beWant = [0 2 4 10 Inf];
     if strcmp( varyParam, 'nu' ) 
       plotThresLines = 1;
     else
       plotThresLines = 0;
     end
-    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+    plotDiffTaAlpha(masterD2plot, beWant, varyParam, plotThresLines, ...
       saveMe,moveSaveMe, saveID, winStyle,fileExt)
   end
   if ii == 4
     masterD2plot = masterD_BbarInf_neg;
     saveID = 'BbarInfNeg';
-    be2plot = [0 -1 -2 -3 -4 -5];
+    beWant = [0 -1 -2 -3 -4 -5];
     if strcmp( varyParam, 'nu' ) 
       plotThresLines = 1;
     else
       plotThresLines = 0;
     end
-    plotDiffTaAlpha(masterD2plot, be2plot, varyParam, plotThresLines, ...
+    plotDiffTaAlpha(masterD2plot, beWant, varyParam, plotThresLines, ...
       saveMe,moveSaveMe, saveID, winStyle,fileExt)
   end
 end

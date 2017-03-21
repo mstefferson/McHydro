@@ -14,14 +14,14 @@ masterD = zeros( numFiles, 14 );
 for ii = 1:numFiles
   % load and save parameters
   load( [path2files files2analyze(ii).name ] );
-  masterD(ii,1) = aveGrid.be;
-  masterD(ii,2) = aveGrid.ffo;
-  % handle changing parameter names
   if isfield(aveGrid,'bDiff')
-    masterD(ii,3) = aveGrid.bDiff;
+    masterD(ii,1) = aveGrid.bDiff;
   else
-    masterD(ii,3) = exp(-aveGrid.bBar);
+    masterD(ii,1) = exp(-aveGrid.bBar);
   end
+  masterD(ii,2) = aveGrid.be;
+  masterD(ii,3) = aveGrid.ffo;
+  % handle changing parameter names
   if isfield(aveGrid,'so')
     masterD(ii,4) = aveGrid.so;
   else
