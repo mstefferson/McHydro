@@ -48,7 +48,6 @@ else
 end
 % label is already saved
 labX = param.pVaryTex;
-
 % set up threshold lines
 if plotThresLines
   colorFact = 0.5;
@@ -57,6 +56,7 @@ if plotThresLines
   x2plot = linspace(0,1,100);
   ta0 = log( ax2YLim(1) );
 end
+
 % set-up figure
 figure()
 fig = gcf;
@@ -96,11 +96,11 @@ ax3.YLim = [0,1.1];
 hold
 % plot it
 % Diff
-plotDiffDstruct( ax1, Dstruct, param );
+plotDiff( ax1, Dstruct, param );
 % t_a
-plotTasymDstruct( ax2, Dstruct, param );
+plotTasym( ax2, Dstruct, param );
 % alpha
-plotAlphaDstruct( ax3, Dstruct, param );
+plotAlpha( ax3, Dstruct, param );
 % legend
 legH = legend(ax2, param.legcell);
 legH.Interpreter = 'latex';

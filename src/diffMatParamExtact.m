@@ -53,25 +53,25 @@ end
 % exact the parameters you want
 % be careful about rounding
 roundVal = 1000;
-pVary = unique( round( roundVal .* Dmat(:, varyInd ) ) ./ roundVal );
-p1 = unique( Dmat(:, p1Ind ) );
-p2 = unique( Dmat(:, p2Ind ) );
-p3 = unique( Dmat(:, p3Ind ) );
+pVary = unique( round( roundVal .* Dmat(:, varyInd ) ) ./ roundVal, 'stable' );
+p1 = unique( Dmat(:, p1Ind ), 'stable'  );
+p2 = unique( Dmat(:, p2Ind ), 'stable'  );
+p3 = unique( Dmat(:, p3Ind ), 'stable'  );
 % if empty, you get everything. if not, get what you want
 if isempty(p1want)
   p1want = p1; 
 else
-  p1want = intersect( p1want, p1 );
+  p1want = intersect( p1want, p1, 'stable' );
 end
 if isempty(p2want)
   p2want = p2; 
 else
-  p2want = intersect( p2want, p2 );
+  p2want = intersect( p2want, p2, 'stable' );
 end
 if isempty(p3want)
   p3want = p3;
 else
-  p3want = intersect( p3want, p3 );
+  p3want = intersect( p3want, p3, 'stable' );
 end
 % get length
 numP1 = length(p1want);
@@ -83,9 +83,7 @@ paramMat = combvec( p1want', p2want', p3want' );
 % find max
 numVec = [numP1, numP2, numP3];
 numVecSort = sort( numVec );
-%indsV = [p1Ind, p2Ind, p3Ind];
 indsV = 1:3;
-%nameCell = {p1Name, p2Name, p3Name};
 max1 = numVecSort(3);
 max2 = numVecSort(2);
 max3 = numVecSort(1);
@@ -96,7 +94,7 @@ end
 maxInd1 = indsV( max1 ==  numVec );
 maxInd2 = indsV( max2 ==  numVec );
 % extract max vector
-maxTemp = {p1, p2, p3};
+maxTemp = {p1want, p2want, p3want};
 nameTemp = {p1Name, p2Name, p3Name};
 maxVec1 = maxTemp{maxInd1};
 maxVec2 = maxTemp{maxInd2};
@@ -104,8 +102,9 @@ maxName1 = nameTemp{maxInd1};
 maxName2 = nameTemp{maxInd2};
 maxMat = combvec( maxVec1', maxVec2' );
 % Allocate markers and colors
-colormap(['lines(' num2str(numParams) ')']);
-colorArray = colormap;
+figure(1000)
+colorArray = colormap(['lines(' num2str(numParams) ')']);
+close(1000)
 colorInds = 1:max1;
 markerArray = ['o','s','^','d','+','x'];
 markerInds = 1:max2;
@@ -152,7 +151,7 @@ for ii = 1:numParams
   end
   % store it
   diffStruct(ii).Dmat = DmatTemp;
-  diffStruct(ii).pVary = pVary;
+  diffStruct(ii).pVary = DmatTemp(:,varyInd);
   diffStruct(ii).p1Name = p1Name;
   diffStruct(ii).p1 = p1temp;
   diffStruct(ii).p2Name = p2Name;
