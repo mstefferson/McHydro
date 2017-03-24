@@ -36,13 +36,7 @@ if isempty(params.size_obst); params.size_obst = 1; end;
 const.size_tracer( ~mod(const.size_tracer,2) ) = ...
   const.size_tracer(~mod(const.size_tracer,2) ) - 1; 
 const.size_tracer = unique(const.size_tracer);
-const.size_tracer = const.size_tracer( const.size_tracer <= ...
-  round( max(params.ffrac_tracer) ^ (1/modelopt.dimension) * const.n_gridpoints ) );
 if isempty(const.size_tracer); const.size_tracer = 1; end;
-
-% Number of particles on the grid
-const.num_tracer = round(params.ffrac_tracer .* ...
-  (const.n_gridpoints/const.size_tracer) ^ modelopt.dimension);
 
 save('Params', 'const','params','trialmaster','modelopt')
 
