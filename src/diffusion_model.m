@@ -139,7 +139,6 @@ n.num_tracer = tracer.num;
 
 % Derived parameters and store
 paramslist.ffo_act = obst.ffActual; 
-parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 % Set up things for recording
 obst.cen_nomod=obst.center;
@@ -340,6 +339,16 @@ if verbose
   tOut =  tOut / 3600;
   fprintf('\nFinished loop %f hours\n\n', tOut)
 end
+
+% rm obst field in 3d. Way too much data
+if n.dim == 3
+  fields2go = {'allpts', 'center', 'centerInds',...
+     'corner' ,'cornerInds','cen_nomod'};
+  obst = rmfield( obst, fields2go );
+end
+
+% save it
+parsave(filename,paramslist,tracer,obst,const,modelopt);
 
 if modelopt.movie
   movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
