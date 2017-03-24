@@ -2,7 +2,7 @@
 %     earlyAsymp, hAsymp, sigh, be, ffo, bBar, errorFlag )
 % Description: Plot horizontal asymptope with error bars, tasymp, and max slope
 function plotDataAsympError( x, y, erry, slopeMax, yinterAsy, tanom, ...
-  earlyAsymp, hAsymp, sigh, be, ffo, bBar, errorFlag )
+  earlyAsymp, hAsymp, sigh, be, ffo, bndDiff, so, errorFlag )
 % Calculate lenght and logs
 lenX = length(x);
 y_x = y ./ x;
@@ -22,7 +22,8 @@ else
 end
 xlabel( '$$ t $$' ); ylabel( '$$x^2/t$$' );
 titstr = ['Log Plot Data and bin lines be = ' num2str( be ) ...
-  ' ffo = ' num2str( ffo, '%.2f' ) ' bBar = ' num2str( bBar ) ];
+  ' ffo = ' num2str( ffo, '%.2f' ) ' bndDiff = ' num2str( bndDiff ),...
+  ' size obst = ' num2str(so,'%.2d') ];
 title(titstr)
 % plot asymptote and friends
 plot( x, hAsymp .* ones( lenX , 1) );
