@@ -3,10 +3,10 @@ addpath('./src')
 saveMe = 0;
 moveSaveMe = 0;
 winStyle = 'docked';
-plotDstickSlipp = 0;
+plotDstickSlipp = 1;
 plotDsize = 0;
-plotDbnddiff = 1;
-plotRng = 1:2; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
+plotDbnddiff = 0;
+plotRng = 1; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
 fileExt = 'eps';
 vertFlag = 0; % for Asym
 varyParam = 'nu'; % nu, lobst, bdiff
@@ -36,7 +36,8 @@ if plotDstickSlipp
   nuWant = [];
   for ii = plotRng
     if ii == 1
-      masterD2plot = masterD_Bbar0_pos;
+%       masterD2plot = masterD_Bbar0_pos;
+      masterD2plot = masterD_Bbar0_temp;
       saveID = 'Bbar0Pos';
       plotThresLines = 0;
       dDiffWant = 1;
@@ -58,7 +59,8 @@ if plotDstickSlipp
         saveMe,moveSaveMe, saveID, winStyle,fileExt)
     end
     if ii == 3
-      masterD2plot = masterD_BbarInf_pos;
+%       masterD2plot = masterD_BbarInf_pos;
+      masterD2plot = masterD_BbarInf_pos_temp;
       saveID = 'BbarInfPos';
       if strcmp( varyParam, 'nu' )
         plotThresLines = 1;
@@ -73,7 +75,8 @@ if plotDstickSlipp
         saveMe,moveSaveMe, saveID, winStyle,fileExt)
     end
     if ii == 4
-      masterD2plot = masterD_BbarInf_neg;
+%       masterD2plot = masterD_BbarInf_neg;
+        masterD2plot = masterD_BbarInf_neg_temp;
       saveID = 'BbarInfNeg';
       if strcmp( varyParam, 'nu' )
         plotThresLines = 1;

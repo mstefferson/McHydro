@@ -6,6 +6,8 @@ for ii = 1:param.numParams
   % plot it
   x2plot =  Dstruct(ii).pVary;
   y2plot =  Dstruct(ii).Dmat(:,5);
+  % if steady state was not reached, plot it at zero
+  y2plot( Dstruct(ii).Dmat(:,9) == 0 ) = 0;
   p = plot(axTemp, x2plot, y2plot, param.markerVec(ii));
   % design
   p.Marker = param.markerVec(ii);

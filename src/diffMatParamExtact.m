@@ -142,7 +142,7 @@ for ii = 1:numParams
   DmatTemp( :, varyInd ) = round( roundVal .*  DmatTemp( :, varyInd ) ) ./ roundVal;
   pVaryTemp = intersect( pVaryWant,  DmatTemp( :, varyInd ), 'stable' );
   getIndVary = zeros( length(pVaryTemp), 1 );
-  for jj = 1:length(pVaryWant)
+  for jj = 1:length(pVaryTemp)
     getIndVary(jj) =  find( DmatTemp( :, varyInd ) == pVaryTemp(jj) );
   end
   DmatTemp = DmatTemp(getIndVary,:);
