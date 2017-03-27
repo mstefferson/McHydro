@@ -30,12 +30,12 @@ elseif (length(paramvec)>6)
 end
 
 % Paramvec as a struct
-paramslist.num_tracer = num_tracer; %filling frac tracer
-paramslist.tr_diff_unb = tr_diff_unb; %unbound hop energy
-paramslist.tr_diff_bnd = tr_diff_bnd ; % bound hop energy
-paramslist.ffo = ffrac_obst; %filling frac obs
-paramslist.be = bind_energy; % bind energy
-paramslist.so = size_obst;
+paramlist.num_tracer = num_tracer; %filling frac tracer
+paramlist.tr_diff_unb = tr_diff_unb; %unbound hop energy
+paramlist.tr_diff_bnd = tr_diff_bnd ; % bound hop energy
+paramlist.ffo = ffrac_obst; %filling frac obs
+paramlist.be = bind_energy; % bind energy
+paramlist.so = size_obst;
 
 % verbose
 verbose = const.verbose;
@@ -50,7 +50,7 @@ red=[1 0 0];
 % Take exponential of binding energy out of time loop, then pick a value
 % based on occupancy change.
 % expBE(1): unbinding expBE(2): no change expBE(3): binding
-if isinf( paramslist.be )
+if isinf( paramlist.be )
   bindFlag = 0;
 else
   bindFlag = 1;
@@ -103,7 +103,7 @@ if verbose
   fprintf('Placing obstacles\n');
   tic
 end
-obst = place_obstacles( paramslist.ffo, paramslist.so, n.grid, modelopt.obst_excl );
+obst = place_obstacles( paramlist.ffo, paramlist.so, n.grid, modelopt.obst_excl );
 obst.color = obst_color;
 obst.curvature = obst_curv;
 obst.ffrac = ffrac_obst;
@@ -119,8 +119,8 @@ if verbose
   fprintf('Placing tracers\n');
   tic
 end
-tracer = place_tracers( paramslist.num_tracer, obst.allpts,...
-  obst.ffActual, paramslist.be, n.grid);
+tracer = place_tracers( paramlist.num_tracer, obst.allpts,...
+  obst.ffActual, paramlist.be, n.grid);
 if verbose
   tOut = toc;
   fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
@@ -138,7 +138,7 @@ n.num_obst = obst.num; %square lattice
 n.num_tracer = tracer.num;
 
 % Derived parameters and store
-paramslist.ffo_act = obst.ffActual; 
+paramlist.ffo_act = obst.ffActual; 
 
 % Set up things for recording
 obst.cen_nomod=obst.center;
@@ -348,9 +348,14 @@ if n.dim == 3
 end
 
 % save it
-parsave(filename,paramslist,tracer,obst,const,modelopt);
+fileObj.const = const;
+fileObj.paramlist = paramlist;
+fileObj.obst = obst;
+fileObj.tracer = tracer;
+fileObj.modelopt = modelopt;
 
 if modelopt.movie
   movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
     const,n,modelopt.movie_timestep,modelopt.movie_filename);
 end
+
