@@ -23,7 +23,7 @@ for hh = 1:length(bind)
           bDiffTemp = bDiff(kk);
           fileId = [ 'msd_unD1_bD' num2str(bDiffTemp, '%.2f') ...
             '_bind' num2str(bindTemp ) '_fo' num2str(ffoTemp, '%.2f') ...
-            '_so' num2str(sizeObstTemp, '%.1d') '_*'];
+            '_so' num2str(sizeObstTemp, '%.2d') '_*'];
           files = dir( [fullpath fileId] );
           numGrids = length(files);
           load( [ fullpath files(1).name ] );
