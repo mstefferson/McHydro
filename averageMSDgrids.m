@@ -27,6 +27,7 @@ for hh = 1:length(bind)
           files = dir( [fullpath fileId] );
           numGrids = length(files);
           load( [ fullpath files(1).name ] );
+          obstExclude = modelopt.obst_excl;
           % Do a weight average
           msdTemp = msd(:,1);
           timeTemp = dtime;
@@ -83,6 +84,7 @@ for hh = 1:length(bind)
           aveGrid.be   = bindTemp ;
           aveGrid.bDiff = bDiffTemp;
           aveGrid.so = sizeObstTemp;
+          aveGrid.obstExclude = obstExclude;
           aveGrid.gridConfigs = numGrids;
           aveGrid.time  = timeAve;
           aveGrid.nPts = nPtsAve;
@@ -94,8 +96,9 @@ for hh = 1:length(bind)
           aveGrid.stdUw = stdUw;
           aveGrid.sigUw = sigUw;
           % save file
-          savename = [ 'aveGrid_' fileId(1:end-1) '_ng' num2str(numGrids) '_' ...
-            't' num2str( const.ntimesteps ) '_' nameID '.mat' ];
+          savename = [ 'aveGrid_' fileId(1:end-1) 'oe' num2str(obstExclude)...
+            '_ng' num2str(numGrids)  ...
+            '_t' num2str( const.ntimesteps ) '_' nameID '.mat' ];
           save(savename, 'aveGrid');
           movefile(savename, 'gridAveMSDdata/');
         end
