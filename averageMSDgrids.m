@@ -54,7 +54,6 @@ for hh = 1:length(bind)
           for kk = 2:numGrids
             load( [fullpath files(kk).name] );
             msdTemp = msd(:,1);
-            plot( msdTemp );
             timeTemp = dtime;
             stdTemp = msd(:,2);
             nPtsTemp = msd(:,3);
