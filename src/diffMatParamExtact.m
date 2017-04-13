@@ -174,6 +174,11 @@ for ii = 1:numParams
   diffStruct(ii).p2 = p2temp;
   diffStruct(ii).p3Name = p3Name;
   diffStruct(ii).p3 = p3temp;
+  diffStruct(ii).D = DmatTemp(:,5);
+  diffStruct(ii).Dsig = DmatTemp(:,6);
+  diffStruct(ii).tAnom = DmatTemp(:,7);
+  diffStruct(ii).tAnomSig = DmatTemp(:,8);
+  diffStruct(ii).alpha = DmatTemp(:,12);
   diffStruct(ii).legStr = str;
   paramCell{ii} = str;
 end
