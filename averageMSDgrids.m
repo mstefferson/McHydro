@@ -42,6 +42,7 @@ for hh = 1:length(bind)
           errorMat = zeros( length(errorTemp), numGrids );
           weightMat = zeros( length(weightTemp), numGrids );
           nPtsMat = zeros( length(nPtsTemp), numGrids );
+          occupancyMat = zeros( 1, numGrids );
           % Save first one out of loop
           msdMat(:,1) = msdTemp;
           timeMat(:,1) = timeTemp;
@@ -53,6 +54,7 @@ for hh = 1:length(bind)
           for kk = 2:numGrids
             load( [fullpath files(kk).name] );
             msdTemp = msd(:,1);
+            plot( msdTemp );
             timeTemp = dtime;
             stdTemp = msd(:,2);
             nPtsTemp = msd(:,3);
@@ -65,6 +67,9 @@ for hh = 1:length(bind)
             errorMat(:,kk) = errorTemp;
             weightMat(:,kk) = weightTemp;
             nPtsMat(:,kk) = nPtsTemp;
+            if const.trackOcc
+              occupancyMat(kk) = mean(occupancy);
+            end
           end
           % unweighted averages
           msdUw = mean( msdMat, 2 );
@@ -79,6 +84,10 @@ for hh = 1:length(bind)
             ( msdMat - repmat( msdW, [1, numGrids] ) ) .^ 2 .* weightMat, 2 ) ...
             ./ (  ( numGrids - 1 ) ./ numGrids  .* sumW ) );
           sigW = stdW ./ sqrt( numGrids );
+          % if weight is nan (constant msd), set it to unweighted value
+          if any( isnan( msdW ) )
+            keyboard
+          end
           % Save parameters and time
           aveGrid.ffo  = ffoTemp;
           aveGrid.be   = bindTemp ;
@@ -95,6 +104,7 @@ for hh = 1:length(bind)
           aveGrid.msdUw  = msdUw;
           aveGrid.stdUw = stdUw;
           aveGrid.sigUw = sigUw;
+          aveGrid.occupancy = mean( occupancyMat );
           % save file
           savename = [ 'aveGrid_' fileId(1:end-1) 'oe' num2str(obstExclude)...
             '_ng' num2str(numGrids)  ...
