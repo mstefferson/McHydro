@@ -4,7 +4,7 @@
 % earlyAsymp, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
 
 function plotDiffTaAlphaStruct( Dstruct, param, plotThresLines, ...
-  saveMe,moveSaveMe, saveID, winStyle, fileExt)
+  connectDots, saveMe,moveSaveMe, saveID, winStyle, fileExt)
 % Latex font
 set(0,'defaulttextinterpreter','latex')
 fontSize = 24;
@@ -96,11 +96,11 @@ ax3.YLim = [0,1.1];
 hold
 % plot it
 % Diff
-plotDiff( ax1, Dstruct, param );
+plotDiff( ax1, Dstruct, param, connectDots );
 % t_a
-plotTasym( ax2, Dstruct, param );
+plotTasym( ax2, Dstruct, param, connectDots );
 % alpha
-plotAlpha( ax3, Dstruct, param );
+plotAlpha( ax3, Dstruct, param, connectDots );
 % legend
 legH = legend(ax2, param.legcell);
 legH.Interpreter = 'latex';
