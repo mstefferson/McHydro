@@ -47,11 +47,15 @@ modelopt.movie=0;           %1 to record movie
 modelopt.obst_excl=0;       %1 if obstacles sterically exclude each other, 0 if not
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
 modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude
+modelopt.edges_place=0;   %1 if place tracers on obstacle edges
 
 % save something to const and modelopt 
 modelopt.dimension=const.dim; %system dimension
-modelopt.obst_excl=const.obst_excl; %system dimension
+const.obst_excl = modelopt.obst_excl; %system dimension
+const.obst_trace_excl = modelopt.obst_trace_excl; %system dimension
 
+% Dont place on edges if obstacles can overlap
+if modelopt.tracer_excl == 0; modelopt.edges_place == 0; end;
 % Fix time stuff and add some calculated things
 if const.twait < 1; const.twait = 1; end;
 if const.write_interval > const.ntimesteps; const.write_interval = const.ntimesteps; end;

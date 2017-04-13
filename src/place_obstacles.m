@@ -30,6 +30,15 @@ availCorners = allSitesOpen;
 numCornersAvail = length( availCorners );
 % number of filled
 allSitesFilled = [];
+if excludeVol
+  diInner = 1;
+  djInner = min( floor( dim/2 ), 1 );
+  dkInner = min( floor( dim/3 ), 1  );
+  deltaL1Inner = max( deltaL1 - 2, 0 );
+  deltaL2Inner = max( deltaL2 - 2, 0 );
+  deltaL3Inner = max( deltaL3 - 2, 0 );
+  obstEdges = [];
+end
 % do Initial fill
 if ~excludeVol || lobst == 1
   numCornersInit = maxFilledCorners;
@@ -41,7 +50,9 @@ obstCorners = availCorners( obstCornersInds )';
 % Find coordinates
 if lobst > 1 && excludeVol
   for nn = 1:numCornersInit
+    % get corner id
     [i, j, k] = ind2sub( gridSize, obstCorners(nn) );
+    % fill in all Sites
     newiFill = mod( (i:i+deltaL1) - 1, gridSize(1) ) + 1;
     newjFill = mod( (j:j+deltaL2) - 1, gridSize(2) ) + 1;
     newkFill = mod( (k:k+deltaL3) - 1, gridSize(3) ) + 1;
@@ -51,6 +62,17 @@ if lobst > 1 && excludeVol
     actualNewSites = setdiff( newInds, allSitesFilled );
     allSitesFilledTemp = [allSitesFilled; actualNewSites];
     allSitesFilled = allSitesFilledTemp;
+    % Find edges by removing inner square
+    iInner = i + diInner;
+    jInner = j + djInner;
+    kInner = k + dkInner;
+    newiInner = mod( (iInner:iInner+deltaL1Inner) - 1, gridSize(1) ) + 1;
+    newjInner = mod( (jInner:jInner+deltaL2Inner) - 1, gridSize(1) ) + 1;
+    newkInner = mod( (kInner:kInner+deltaL3Inner) - 1, gridSize(1) ) + 1;
+    newComb = combvec( newiInner, newjInner, newkInner );
+    newIndsInner = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
+    newEdges = setdiff( newInds, newIndsInner );
+    obstEdges = [obstEdges; newEdges];
     % excluded volume
     newiNoCorner = mod( (i-deltaL1:i+deltaL1) - 1, gridSize(1) ) + 1;
     newjNoCorner = mod( (j-deltaL2:j+deltaL2) - 1, gridSize(2) ) + 1;
@@ -99,7 +121,18 @@ if maxFilledSites > minFilledSites
         availCorners = setdiff( availCorners, newCorner );
         numCornersAvail =  max( numCornersAvail - 1, 0 );
       else
-        newiNoCorner = mod( (i-deltaL1:i+deltaL1) - 1, gridSize(1) ) + 1;
+      % Find edges by removing inner square
+        iInner = i + diInner;
+        jInner = j + djInner;
+        kInner = k + dkInner;
+        newiInner = mod( (iInner:iInner+deltaL1Inner) - 1, gridSize(1) ) + 1;
+        newjInner = mod( (jInner:jInner+deltaL2Inner) - 1, gridSize(1) ) + 1;
+        newkInner = mod( (kInner:kInner+deltaL3Inner) - 1, gridSize(1) ) + 1;
+        newComb = combvec( newiInner, newjInner, newkInner );
+        newIndsInner = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
+        newEdges = setdiff( newInds, newIndsInner );
+        obstEdges = [obstEdges; newEdges];
+          newiNoCorner = mod( (i-deltaL1:i+deltaL1) - 1, gridSize(1) ) + 1;
         newjNoCorner = mod( (j-deltaL2:j+deltaL2) - 1, gridSize(2) ) + 1;
         newkNoCorner = mod( (k-deltaL3:k+deltaL3) - 1, gridSize(3) ) + 1;
         newComb = combvec( newiNoCorner, newjNoCorner, newkNoCorner );
@@ -133,6 +166,16 @@ obst.corner = zeros( obst.num, 3 ); obst.center = zeros( obst.num, 3 );
 % corners
 obst.cornerInds = obstCorners;
 [obst.corner(:,1), obst.corner(:,2), obst.corner(:,3)] = ind2sub( gridSize, obstCorners );
+% edges
+if lobst == 1
+  obst.edgeInds = allSitesFilled;
+  obst.numEdges = numSitesFilled;
+else
+  if excludeVol
+    obst.edgeInds = unique( obstEdges );
+    obst.numEdges = length( obst.edgeInds );
+  end
+end
 % centers
 deltaCen = floor( ( lobst - 1 ) / 2 );
 obst.center(:,1) = mod( obst.corner(:,1) + deltaCen - 1, gridSize(1) ) + 1;

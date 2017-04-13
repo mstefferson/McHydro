@@ -59,6 +59,7 @@ end
 
 % Assign internal variables
 n = const;
+n.numSites = n.n_gridpoints .^ n.dim;
 n.size_obst = size_obst;
 if n.dim == 2
   n.grid = [ n.n_gridpoints n.n_gridpoints ];
@@ -119,8 +120,24 @@ if verbose
   fprintf('Placing tracers\n');
   tic
 end
-tracer = place_tracers( paramlist.num_tracer, obst.allpts,...
-  obst.ffActual, paramlist.be, n.grid);
+
+% place tracers
+% Handle exclusion
+if modelopt.obst_trace_excl == 1
+  be4place = Inf;
+else
+  be4place = paramlist.be;
+end
+% handle edges
+if modelopt.edges_place
+  ffTemp = obst.numEdges ./ ( n.numSites - obst.numFilledSite + obst.numEdges );
+  tracer = place_tracers( paramlist.num_tracer, obst.edgeInds, obst.allpts,...
+    ffTemp, be4place, n.grid);
+else
+  tracer = place_tracers( paramlist.num_tracer, obst.allpts, obst.allpts,...
+    obst.ffActual, be4place, n.grid);
+end
+
 if verbose
   tOut = toc;
   fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
@@ -203,6 +220,7 @@ end
 % preallocate some things to prevent errors
 center_new = ones( n.num_tracer, 3 );
 % loop over time points
+
 if verbose; fprintf('Starting time loop\n'); tic; end;
 for m=1:n.ntimesteps
   % Try and move everything

@@ -1,7 +1,7 @@
 % place tracers based on binding
 % tracers are size one
 
-function obj = place_tracers( nTracer, obstSite, ffo, be, gridSize )
+function obj = place_tracers( nTracer, availObstSites, allObstSites, ffo, be, gridSize )
 % dimension and sites
 dim = length(gridSize);
 numSites = prod( gridSize );
@@ -16,13 +16,13 @@ numTrEmpty = nTracer - numTrObst;
 
 % find empty sites
 totalSite = 1:numSites;
-emptySite = totalSite( ~ismember( totalSite, obstSite ) );
+emptySite = totalSite( ~ismember( totalSite, allObstSites ) );
 
 % put tracers on obstacles and empty sites randomly
 obj.allpts = zeros( nTracer, 1 );
 % on obstacles
 if numTrObst > 0
-  obj.allpts( 1:numTrObst ) = obstSite( randi( length(obstSite), [1 numTrObst] ) );
+  obj.allpts( 1:numTrObst ) = availObstSites( randi( length(availObstSites), [1 numTrObst] ) );
 end
 if numTrEmpty > 0
   obj.allpts( numTrObst+1:nTracer ) = emptySite( randi( length(emptySite), [1 numTrEmpty] ) );
