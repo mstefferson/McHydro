@@ -28,7 +28,11 @@ for ii = 1:numFiles
     masterD(ii,4) = 1;
   end
   % find the horzontal asymptote
+  try
   out = findHorztlAsymp( aveGrid.time, aveGrid.msdW, aveGrid.sigW );
+  catch err
+    keyboard
+  end
   masterD(ii,5) = out.D;
   masterD(ii,6) = out.Dsig;
   masterD(ii,7) = out.tAnom;

@@ -109,7 +109,7 @@ earlyBulkSlope = mean( slopeBinBulk( 1:middleIndBulk) );
 lateBulkSlope = mean( slopeBinBulk( middleIndBulk:end ) );
 dX =  sum( binLength( middleIndBulk:end) );
 thresholdSmallEndSlope = 0.02;
-thresholdHugeEndSlope = 0.2;
+thresholdHugeEndSlope = 0.21;
 % if late slope if below a critical value, assume it's zero
 critSlopeSmall = log(  ( 1 - thresholdSmallEndSlope / 2  ) ./ ...
   ( 1 + thresholdSmallEndSlope / 2 ) ) ./  dX;
@@ -138,7 +138,7 @@ thresholdMid = 0.03;
 dX = sum( binLength(end-endInd : end) ) ;
 deltaY = finalSlopes * dX;
 relUncertaintyEnd = 2 * abs( (1 - exp( deltaY ) ) ./ ( 1 + exp( -deltaY) ) );
-thresholdEnd = 0.09;
+thresholdEnd = 0.1;
 % determine steady state
 if (relUncertaintyMin > thresholdMid) || (relUncertaintyEnd > thresholdEnd) ...
     ||  lateSlopeTooBig
