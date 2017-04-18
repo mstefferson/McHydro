@@ -109,7 +109,7 @@ earlyBulkSlope = mean( slopeBinBulk( 1:middleIndBulk) );
 lateBulkSlope = mean( slopeBinBulk( middleIndBulk:end ) );
 dX =  sum( binLength( middleIndBulk:end) );
 thresholdSmallEndSlope = 0.02;
-thresholdHugeEndSlope = 0.21;
+thresholdHugeEndSlope = 0.3;
 % if late slope if below a critical value, assume it's zero
 critSlopeSmall = log(  ( 1 - thresholdSmallEndSlope / 2  ) ./ ...
   ( 1 + thresholdSmallEndSlope / 2 ) ) ./  dX;
@@ -125,7 +125,7 @@ if abs( finalSlopes )  > abs( critSlopeLate )
   lateSlopeTooBig = 1;
 end
 % make sure late slope isn't too big
-if ( abs( decidingFactor * lateBulkSlope ) > abs( earlyBulkSlope )) && ...
+if ( abs( decidingFactor * lateBulkSlope ) > abs( earlyBulkSlope ) ) && ...
     ( indMostZeroSlope < middleIndBins ) && abs( earlyBulkSlope ) > thresholdEarly
   lateSlopeTooBig = 1;
 end
