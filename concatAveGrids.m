@@ -23,13 +23,13 @@ for ii = 1:length( allfiles ) / 2
     aveLong = ave2;
   end
   % make sure they match
-  if aveShort.be ~= aveLong.be || abs( aveShort.ffo - aveLong.ffo) > 1e-12 || aveShort.bBar ~= aveLong.bBar
+  if aveShort.be ~= aveLong.be || abs( aveShort.ffo - aveLong.ffo) > 1e-12 || aveShort.bDiff ~= aveLong.bDiff
     error('files do not match')
   end
   % name stuff
   tempId = strfind( file2, 'ng96');
   nameStrt = file2(1:tempId+3);
-  tempId = strfind( file2, 't600.mat');
+  tempId = strfind( file2, 't700.mat');
   nameEnd = file2(tempId:end);
   saveName = [ nameStrt '_t' num2str( aveShort.time(end) + aveShort.time(1) )...
     '_t' num2str( aveLong.time(end) + aveLong.time(1) ) '_concat_' nameEnd];
@@ -37,7 +37,9 @@ for ii = 1:length( allfiles ) / 2
   ind = aveShort.time < aveLong.time(1);
   aveGrid.ffo = aveLong.ffo;
   aveGrid.be = aveLong.be;
-  aveGrid.bBar = aveLong.bBar;
+  aveGrid.bDiff = aveLong.bDiff;
+  aveGrid.so = aveLong.so;
+  aveGrid.obstExclude = aveShort.obstExclude;
   aveGrid.gridConfigs = aveLong.gridConfigs;
   aveGrid.time = [aveShort.time(ind); aveLong.time];
   aveGrid.msdW = [aveShort.msdW(ind); aveLong.msdW];
