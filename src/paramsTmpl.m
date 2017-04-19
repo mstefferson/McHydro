@@ -48,6 +48,11 @@ modelopt.obst_excl=0;       %1 if obstacles sterically exclude each other, 0 if 
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
 modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude
 modelopt.edges_place=0;   %1 if place tracers on obstacle edges
+if params.tr_bnd_diff == 1
+  modelopt.edges_place=0;   %1 if place tracers on obstacle edges
+else
+  modelopt.edges_place=1;
+end
 
 % save something to const and modelopt 
 modelopt.dimension=const.dim; %system dimension
