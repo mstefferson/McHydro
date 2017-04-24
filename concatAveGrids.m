@@ -1,7 +1,10 @@
 % concatAveGrids()
 % concatinates all files aveGrid* files in a directory. Assumes
 % that they are similarly named, just with different times
-function concatAveGrids(path2files)
+function concatAveGrids(path2files,trID)
+if nargin == 1
+  trID = '';
+end
 % get files
 allfiles = dir([path2files '*.mat']);
 % loop over
@@ -29,7 +32,7 @@ for ii = 1:length( allfiles ) / 2
   % name stuff
   tempId = strfind( file2, 'ng96');
   nameStrt = file2(1:tempId+3);
-  tempId = strfind( file2, 't700.mat');
+  tempId = strfind( file2, [ trID '.mat' ] );
   nameEnd = file2(tempId:end);
   saveName = [ nameStrt '_t' num2str( aveShort.time(end) + aveShort.time(1) )...
     '_t' num2str( aveLong.time(end) + aveLong.time(1) ) '_concat_' nameEnd];
