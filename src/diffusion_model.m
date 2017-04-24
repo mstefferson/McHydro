@@ -361,7 +361,7 @@ end
 % rm obst field in 3d. Way too much data
 if n.dim == 3
   fields2go = {'allpts', 'center', 'centerInds',...
-     'corner' ,'cornerInds','cen_nomod'};
+     'corner' ,'cornerInds','cen_nomod','edgeInds'};
   obst = rmfield( obst, fields2go );
 end
 
