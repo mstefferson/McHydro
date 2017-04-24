@@ -26,6 +26,7 @@ initSetupParams.m
 *.out
 *.fig
 *.jpg
+*.png
 
 #include some txt
 !runkey.txt

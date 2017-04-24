@@ -9,7 +9,7 @@ function [diffStruct, param] = ...
 % from str, get parameter info
 if strcmp(pVaryStr,'bdiff')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = '$$ D_{bound} $$';
+  param.pVaryTex = '$$ D_{bound} / D_{free} $$';
   varyInd = 1;
   p1Ind = 2;
   p1Name = '\Delta G';
@@ -54,9 +54,14 @@ end
 % be careful about rounding
 roundVal = 1000;
 pVary = unique( round( roundVal .* Dmat(:, varyInd ) ) ./ roundVal, 'stable' );
-p1 = unique( Dmat(:, p1Ind ), 'stable'  );
-p2 = unique( Dmat(:, p2Ind ), 'stable'  );
-p3 = unique( Dmat(:, p3Ind ), 'stable'  );
+p1 = unique( round( roundVal .* Dmat(:, p1Ind ) ) ./ roundVal, 'stable'  );
+p2 = unique( round( roundVal .* Dmat(:, p2Ind ) ) ./ roundVal, 'stable'  );
+p3 = unique( round( roundVal .* Dmat(:, p3Ind ) ) ./ roundVal, 'stable'  );
+pVaryWant = round( roundVal .* pVaryWant)  ./ roundVal;
+p1Want = round( roundVal .* p1Want)  ./ roundVal;
+p2Want = round( roundVal .* p2Want)  ./ roundVal;
+p3Want = round( roundVal .* p3Want)  ./ roundVal;
+
 % if empty, you get everything. if not, get what you want
 if isempty(pVaryWant)
   pVaryWant = pVary; 

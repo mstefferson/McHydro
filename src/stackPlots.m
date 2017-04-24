@@ -33,21 +33,21 @@ function stackPlots( fH, numCols )
 
 % get number of rows and plots
 numPlots = length( fH.Children ) ;
-axVec = cell(1,numPlots);
 axNum = 0;
-% grab axis handles in a smart way (like a book), and undo squaring
+% grab only axes handle, and undo squaring
 for ii = 1 : numPlots
   if strcmp( fH.Children(numPlots + 1 -ii ).Type, 'axes' )
     axNum = axNum + 1;
-    axVec{ axNum } = fH.Children(numPlots + 1 -ii );
-    axis( axVec{ axNum }, 'normal')
-    %     hold( axVec{ axNum + 1 }, 'off')
+    axis( fH.Children(numPlots + 1 -ii ), 'normal')
   end
 end
-% get rid of extras
-axVec = axVec( 1:axNum );
+% store axis handles in a smart way (like a book), and undo squaring
 numPlots = axNum;
 numRows = numPlots / numCols;
+axVec = cell(1,numPlots);
+for ii = 1 : numPlots
+  axVec{ ii } = subplot(numRows, numCols, ii );
+end
 % fix stretch
 stretchAmount = (1 - 1 / numRows ) * ...
   ( axVec{end-numCols}.Position(2) - ...
@@ -67,7 +67,9 @@ tY = 1 - shift ./ aspectRatio;
 % fix appearance
 % title spacing parameter
 titleWiggle = 3/2;
+% loop over plots
 for ii = 1 : numPlots
+  %%
   % grab font size for title scaling
   axVec{ii}.FontUnits = 'normalized';
   titleSpace = titleWiggle * axVec{1}.FontSize;
@@ -90,6 +92,7 @@ for ii = 1 : numPlots
   % erase labels
   if ii <= ( numRows - 1 ) * numCols
     axVec{ ii }.XTickLabel = {};
+    axVec{ ii }.XLabel.String = '';
   end
   axVec{ ii }.LineWidth = 1;
   % title

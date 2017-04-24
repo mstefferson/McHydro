@@ -4,22 +4,34 @@
 % earlyAsymp, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
 
 function plotDiffTaAlphaStruct( Dstruct, param, plotThresLines, ...
-  connectDots, saveMe,moveSaveMe, saveID, winStyle, fileExt)
+  connectDots, saveMe,moveSaveMe, saveID, winStyle, fileExt, ...
+  currentRow, totalRow, newFig)
 % Latex font
 set(0,'defaulttextinterpreter','latex')
 fontSize = 24;
-title1 = '(a)';
-title2 = '(b)';
-title3 = '(c)';
+if currentRow == 1
+  titleMaster = {'(a)', '(b)', '(c)'};
+elseif currentRow == 2
+  titleMaster = {'(d)', '(e)', '(f)'};
+elseif currentRow == 3
+  titleMaster = {'(g)', '(h)', '(i)'};
+else
+  titleMaster = {'', '', ''};
+end
+
+title1 = titleMaster{1};
+title2 = titleMaster{2};
+title3 = titleMaster{3};
+
 ax2YLim = [10 10^6];
 % threshold lines
-if plotThresLines
-  bigSlope = 1000;
-  up = 0.72;
-  lp = 0.4;
+if plotThresLines.flag
+  bigSlope = 10000;
+  up = plotThresLines.uppVal;
+  lp = plotThresLines.lowVal;
 end
-savename = 'diffTasympAlphaVsNu_';
-figpos = [1 1 1920 1080];
+
+% figpos = [1 1 1920 1080];
 % find what parameter you are varying
 if strcmp(param.pVaryStr,'nu')
   xLim = [0 1];
@@ -49,7 +61,7 @@ end
 % label is already saved
 labX = param.pVaryTex;
 % set up threshold lines
-if plotThresLines
+if plotThresLines.flag
   colorFact = 0.5;
   bl = -bigSlope .* up;
   bu = -bigSlope .* lp;
@@ -58,41 +70,54 @@ if plotThresLines
 end
 
 % set-up figure
-figure()
-fig = gcf;
-fig.WindowStyle = winStyle;
-fig.Position = figpos;
+if newFig
+  fig = figure();
+  fig.WindowStyle = winStyle;
+  figpos = [1 1 1920 1080/2];
+  fig.Position = figpos;
+else
+  fig = gcf;
+end
+
 % Diff
-ax1 = subplot(1,3,1);
+currSub = (currentRow-1) .* 3 ;
+ax1 = subplot(totalRow,3,currSub + 1);
 ax1.FontSize = fontSize;
 title(title1, 'Units', 'normalized', ...
-  'Position', [0 1 0], 'HorizontalAlignment', 'left')
-axis square
+  'Position', [0 1 0], 'HorizontalAlignment', 'left');
+% axis square
 xlabel( ax1, labX); ylabel(ax1, '$$ D^* $$');
 ax1.XLim = xLim;
-ax1.YLim = [0,1.1];
+ax1.YLim = [0,1.05];
+ax1.XMinorTick = 'on';
+ax1.YMinorTick = 'on';
+
 hold
 % ta
-ax2 = subplot(1,3,2);
+ax2 = subplot(totalRow,3,currSub + 2);
 ax2.FontSize = fontSize;
-axis square
+% axis square
 ax2.YScale = 'log';
 title(title2, 'Units', 'normalized', ...
-  'Position', [0 1 0], 'HorizontalAlignment', 'left')
+  'Position', [0 1 0], 'HorizontalAlignment', 'left');
 ax2.YTick = [10^2 10^4 10^6];
 ax2.YLim = ax2YLim;
 ax2.XLim = xLim;
 xlabel(ax2, labX); ylabel(ax2,'$$ t_{a} $$');
+ax2.XMinorTick = 'on';
+ax2.YMinorTick = 'on';
 hold
 % alpha
-ax3 = subplot(1,3,3);
+ax3 = subplot(totalRow,3,currSub + 3);
 ax3.FontSize = fontSize;
-axis square
+% axis square
 title(title3, 'Units', 'normalized', ...
-  'Position', [0 1 0], 'HorizontalAlignment', 'left')
+  'Position', [0 1 0], 'HorizontalAlignment', 'left');
 xlabel( ax3, labX); ylabel(ax3, '$$ \alpha_{min} $$');
 ax3.XLim = xLim;
-ax3.YLim = [0,1.1];
+ax3.YLim = [0,1.05];
+ax3.XMinorTick = 'on';
+ax3.YMinorTick = 'on';
 hold
 % plot it
 % Diff
@@ -101,12 +126,14 @@ plotDiff( ax1, Dstruct, param, connectDots );
 plotTasym( ax2, Dstruct, param, connectDots );
 % alpha
 plotAlpha( ax3, Dstruct, param, connectDots );
-% legend
-legH = legend(ax2, param.legcell);
-legH.Interpreter = 'latex';
-legH.Position = [0.8848    0.7438    0.1012    0.2448];
+% % legend
+if newFig
+  legH = legend(ax2, param.legcell);
+  legH.Interpreter = 'latex';
+  legH.Position = [0.8848    0.7438    0.1012    0.2448];
+end
 % plot threshold lines
-if plotThresLines
+if plotThresLines.flag
   % Diff
   p = plot( ax1, x2plot, bigSlope .* x2plot + bu, 'k:');
   p.LineWidth = 2;
@@ -131,14 +158,15 @@ if plotThresLines
 end
 % save it
 if saveMe
-  savefig( gcf, [ savename saveID ] );
+  savefig( gcf,  saveID );
   if strcmp(fileExt,'eps')
-    saveas( fig, [ savename saveID '.' fileExt ], 'epsc2' );
+    saveas( fig, [ saveID '.' fileExt ], 'epsc2' );
   else
-    saveas( fig, [ savename saveID '.' fileExt ], fileExt );
+    saveas( fig, [ saveID '.' fileExt ], fileExt );
   end
-end
-% move it
+  % move it
 if moveSaveMe
-  movefile( [ savename '*' ], './paperFigs' )
+  movefile( [ saveID '*' ], './paperFigs' )
 end
+end
+
