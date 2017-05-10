@@ -3,21 +3,23 @@ addpath('./src')
 saveMe = 1;
 moveSaveMe = 0;
 winStyle = 'normal';
+fontSize = 20;
 tempTitle = 0;
 sameXaxis = 1;
 plotThresLines.flag = 1;
 plotAllSep = 0; % plot everything seperately
 % flags
-plotDstickSlipp = 0;
+plotDstickSlipp = 1;
 plotDsize = 0;
-plotDbnddiff = 1;
+plotDbnddiff = 0;
 plot3d = 0;
 plotPercBnd0 = 0;
 plotPercBnd1 = 0;
+plotShowFit = 0;
 % ranges
-plotRng2d = 3:4; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
+plotRng2d = [1:2]; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
 plotRngSize = 2; % 1: slipp oe1, 2: sticky oe1 3: slipp oe0, 4: sticky oe0,
-plotRng3d = [4]; % 1: 2d slipp, 2: 3d slipp, 3: 2d sticky, 4: 3d sticky
+plotRng3d = [2 4]; % 1: 2d slipp, 2: 3d slipp, 3: 2d sticky, 4: 3d sticky
 %1: l = 1, oe = 1 ; %2: l = 3, oe = 1; 3: l = 5, oe = 1; 4: l = 7, oe = 1;
 %4: l = 3, oe = 0; 5: l = 5, oe = 0;
 plotPercRngBnd0 = [1 2 4];
@@ -148,7 +150,7 @@ if plotDstickSlipp
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        0, 0, saveID, winStyle, fileExt, subRow, totRow, plotAllSep);
+        0, 0, saveID, winStyle, fontSize, fileExt, subRow, totRow, plotAllSep);
       leg1 = param.legcell;
       if tempTitle; title('2D pos Slippery'); end;
     end
@@ -166,7 +168,7 @@ if plotDstickSlipp
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        0,0, saveID, winStyle, fileExt, subRow, totRow, plotAllSep)
+        0,0, saveID, winStyle, fontSize, fileExt, subRow, totRow, plotAllSep)
       leg2 = param.legcell;
       if tempTitle; title('2D neg Slippery'); end;
     end
@@ -184,7 +186,7 @@ if plotDstickSlipp
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        0,0, saveID, winStyle, fileExt, subRow, totRow, plotAllSep)
+        0,0, saveID, winStyle, fontSize, fileExt, subRow, totRow, plotAllSep)
       leg1 = param.legcell;
       if tempTitle; title('2D pos Sticky'); end;
     end
@@ -203,14 +205,14 @@ if plotDstickSlipp
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        0,0, saveID, winStyle, fileExt, subRow, totRow, plotAllSep)
+        0,0, saveID, winStyle, fontSize, fileExt, subRow, totRow, plotAllSep)
       leg2 = param.legcell;
       if tempTitle; title('2D neg Sticky'); end;
     end
     counter = counter + 1;
   end
   % stack em!
-  if plotAllSep == 0
+  if plotAllSep == 0 && length(plotRng2d) > 1
     axTemp = cell(1,2);
     axTemp{1} = subplot(totRow, 3, 3);
     axTemp{2} = subplot(totRow, 3, 6);
@@ -254,13 +256,13 @@ if plotDsize
         [Dstruct, param] = ...
           diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
         plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-          0,moveSaveMe, saveID, winStyle, fileExt, 1, 2, 0)
+          0,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 2, 0)
         if tempTitle; title('2D Slip oe1 nu = 0.3'); end;
         nuWant = [0.6];
         [Dstruct, param] = ...
           diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
         plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-          0,moveSaveMe, saveID, winStyle, fileExt, 2, 2, 0)
+          0,moveSaveMe, saveID, winStyle, fontSize, fileExt, 2, 2, 0)
         % stack em
         axTemp{1} = subplot(totRow, 3, 3);
         stackPlots( fig, 3 )
@@ -280,7 +282,7 @@ if plotDsize
         [Dstruct, param] = ...
           diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
         plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-          saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 1)
+          saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 1)
         if tempTitle; title('2D Slip oe1'); end;
       end
     end
@@ -300,13 +302,13 @@ if plotDsize
         [Dstruct, param] = ...
           diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
         plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-          0,moveSaveMe, saveID, winStyle, fileExt, 1, 2, 0)
+          0,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 2, 0)
         if tempTitle; title('2D Sticky oe1 nu = 0.3'); end;
         nuWant = [0.6];
         [Dstruct, param] = ...
           diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
         plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-          0,moveSaveMe, saveID, winStyle, fileExt, 2, 2, 0)
+          0,moveSaveMe, saveID, winStyle, fontSize, fileExt, 2, 2, 0)
         % stack em
         axTemp{1} = subplot(totRow, 3, 3);
         stackPlots( fig, 3 )
@@ -325,7 +327,7 @@ if plotDsize
         [Dstruct, param] = ...
           diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
         plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-          saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 1)
+          saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 1)
         if tempTitle; title('2D Slip oe1'); end;
       end
     end
@@ -337,7 +339,7 @@ if plotDsize
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 1)
+        saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 1)
       if tempTitle; title('2D Slip oe0'); end;
     end
     if ii == 4
@@ -348,7 +350,7 @@ if plotDsize
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, lWant, dDiffWant, beWant, nuWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 1)
+        saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 1)
       if tempTitle; title('2D Sticky oe0'); end;
     end
   end
@@ -375,13 +377,13 @@ if plotDbnddiff
     [Dstruct, param] = ...
       diffMatParamExtact( masterD2plot, varyParam, dDiffWant, beWant, nuWant,lWant );
     plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-      0,moveSaveMe, saveID, winStyle, fileExt, 1, 2, 0)
+      0,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 2, 0)
     if tempTitle; title('Semi-Sticky nu = 0.3'); end;
     nuWant = [0.6];
     [Dstruct, param] = ...
       diffMatParamExtact( masterD2plot, varyParam, dDiffWant, beWant, nuWant,lWant );
     plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-      0,moveSaveMe, saveID, winStyle, fileExt, 2, 2, 0)
+      0,moveSaveMe, saveID, winStyle, fontSize, fileExt, 2, 2, 0)
     % stack em
     axTemp{1} = subplot(totRow, 3, 3);
     stackPlots( fig, 3 )
@@ -402,7 +404,7 @@ if plotDbnddiff
     [Dstruct, param] = ...
       diffMatParamExtact( masterD2plot, varyParam, dDiffWant, beWant, nuWant,lWant );
     plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-      saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 1)
+      saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 1)
     if tempTitle; title('Semi-Sticky'); end;
   end
 end
@@ -427,7 +429,7 @@ if plot3d
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 1)
+        saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 1)
       if tempTitle; title('2D Slippery'); end;
     end
     if ii == 2
@@ -448,7 +450,7 @@ if plot3d
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 0)
+        saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 0)
       % Clean up legend
       legH = legend(  param.legcell );
       legH.Interpreter = 'latex';
@@ -473,7 +475,7 @@ if plot3d
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 1)
+        saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 1)
       if tempTitle; title('2D Sticky'); end;
     end
     if ii == 4
@@ -494,7 +496,7 @@ if plot3d
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMe,moveSaveMe, saveID, winStyle, fileExt, 1, 1, 0)
+        saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, 1, 1, 0)
       % legend
       legH = legend(  param.legcell );
       legH.Interpreter = 'latex';
@@ -544,7 +546,7 @@ if plotPercBnd0
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt,  subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt,  subRow, totRow, plotAllSep)
       if tempTitle; title('sticky l=1 oe1'); end;
     end
     if ii == 2
@@ -554,7 +556,7 @@ if plotPercBnd0
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt,  subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt,  subRow, totRow, plotAllSep)
       if tempTitle; title('sticky l=3 oe1'); end;
     end
     if ii == 3
@@ -564,7 +566,7 @@ if plotPercBnd0
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt,  subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt,  subRow, totRow, plotAllSep)
       if tempTitle; title('sticky l=5 oe1'); end;
     end
     if ii == 4
@@ -574,7 +576,7 @@ if plotPercBnd0
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt,  subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt,  subRow, totRow, plotAllSep)
       if tempTitle; title('sticky l=7 oe1'); end;
     end
     if ii == 5
@@ -584,7 +586,7 @@ if plotPercBnd0
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt,  subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt,  subRow, totRow, plotAllSep)
       if tempTitle; title('sticky l=3 oe0'); end;
     end
     if ii == 6
@@ -594,7 +596,7 @@ if plotPercBnd0
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt,  subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt,  subRow, totRow, plotAllSep)
       if tempTitle; title('sticky l=5 oe0'); end;
     end
     counter = counter + 1;
@@ -651,7 +653,7 @@ if plotPercBnd1
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt, subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt, subRow, totRow, plotAllSep)
       if tempTitle; title('slip l=1 oe1'); end;
     end
     if ii == 2
@@ -661,7 +663,7 @@ if plotPercBnd1
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt,  subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt,  subRow, totRow, plotAllSep)
       if tempTitle; title('slip l=3 oe1'); end;
     end
     if ii == 3
@@ -671,7 +673,7 @@ if plotPercBnd1
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt, subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt, subRow, totRow, plotAllSep)
       if tempTitle; title('slip l=5 oe1'); end;
     end
     if ii == 4
@@ -681,7 +683,7 @@ if plotPercBnd1
       [Dstruct, param] = ...
         diffMatParamExtact( masterD2plot, varyParam, nuWant, dDiffWant, beWant, sizeWant );
       plotDiffTaAlphaStruct(Dstruct, param, plotThresLines, connectDots, ...
-        saveMeTemp,moveSaveMe, saveID, winStyle, fileExt, subRow, totRow, plotAllSep)
+        saveMeTemp,moveSaveMe, saveID, winStyle, fontSize, fileExt, subRow, totRow, plotAllSep)
       if tempTitle; title('slip l=7 oe1'); end;
     end
     counter = counter + 1;
@@ -701,3 +703,13 @@ if plotPercBnd1
     end
   end
 end
+
+if plotShowFit == 1
+  plotFitExmpl(winStyle, fontSize)
+  if saveMe
+    saveID = 'figure03';
+    savefig( gcf, 'figure03' );
+    saveas( gcf, [ saveID '.' fileExt ], fileExt );
+  end
+end
+

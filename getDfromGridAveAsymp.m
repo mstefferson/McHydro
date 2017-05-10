@@ -4,13 +4,14 @@
 % key:
 % masterD( be, ffo, bBar, D, Dsig, tAnom, tAnomSig, steadyState , ...
 % earlyAnom, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
-function masterD = getDfromGridAveAsymp( path2files, fileId, plotAllFlag, saveFigFlag )
+function [masterD, masterOut] = getDfromGridAveAsymp( path2files, fileId, plotAllFlag, saveFigFlag )
 % addpath
 addpath('./src')
 % get files
 files2analyze = dir( [path2files fileId] );
 numFiles = length( files2analyze );
 masterD = zeros( numFiles, 14 );
+% master = zeros( numFiles, 100 );
 for ii = 1:numFiles
   % load and save parameters
   load( [path2files files2analyze(ii).name ] );
@@ -43,6 +44,7 @@ for ii = 1:numFiles
   masterD(ii,12) = out.slopeMostNeg;
   masterD(ii,13) = out.yinterMostNeg;
   masterD(ii,14) = min( log10( aveGrid.msdW ./ aveGrid.time) );
+  masterOut(ii) = out;
   % plotting routines
   if plotAllFlag
     plotDataAsympError( aveGrid.time, aveGrid.msdW, aveGrid.sigW, ...

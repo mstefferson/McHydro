@@ -5,7 +5,7 @@ function plotAlpha( axTemp, Dstruct, param, connectDots )
 for ii = 1:param.numParams
   % find ind
   x2plot =  Dstruct(ii).pVary;
-  y2plot =  1+Dstruct(ii).Dmat(:,12);
+  y2plot = Dstruct(ii).alpha;
   y2plot( y2plot < 0 ) = 0;
   if connectDots
     p = plot(axTemp, x2plot, y2plot, ['-' param.markerVec(ii)]);

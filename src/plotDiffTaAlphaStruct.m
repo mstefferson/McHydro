@@ -4,17 +4,17 @@
 % earlyAsymp, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
 
 function plotDiffTaAlphaStruct( Dstruct, param, plotThresLines, ...
-  connectDots, saveMe,moveSaveMe, saveID, winStyle, fileExt, ...
+  connectDots, saveMe,moveSaveMe, saveID, winStyle, fontSize, fileExt, ...
   currentRow, totalRow, newFig)
 % Latex font
 set(0,'defaulttextinterpreter','latex')
-fontSize = 24;
+
 if currentRow == 1
-  titleMaster = {'(a)', '(b)', '(c)'};
+  titleMaster = {'a', 'b', 'c'};
 elseif currentRow == 2
-  titleMaster = {'(d)', '(e)', '(f)'};
+  titleMaster = {'d', 'e', 'f'};
 elseif currentRow == 3
-  titleMaster = {'(g)', '(h)', '(i)'};
+  titleMaster = {'g', 'h', 'i'};
 else
   titleMaster = {'', '', ''};
 end
@@ -86,12 +86,11 @@ ax1.FontSize = fontSize;
 title(title1, 'Units', 'normalized', ...
   'Position', [0 1 0], 'HorizontalAlignment', 'left');
 % axis square
-xlabel( ax1, labX); ylabel(ax1, '$$ D^* $$');
+xlabel( ax1, labX); ylabel(ax1, 'Diffusion coeff. $$ D^* $$');
 ax1.XLim = xLim;
 ax1.YLim = [0,1.05];
 ax1.XMinorTick = 'on';
 ax1.YMinorTick = 'on';
-
 hold
 % ta
 ax2 = subplot(totalRow,3,currSub + 2);
@@ -103,7 +102,7 @@ title(title2, 'Units', 'normalized', ...
 ax2.YTick = [10^2 10^4 10^6];
 ax2.YLim = ax2YLim;
 ax2.XLim = xLim;
-xlabel(ax2, labX); ylabel(ax2,'$$ t_{a} $$');
+xlabel(ax2, labX); ylabel(ax2,'Anomalous time $$ t_{a} $$');
 ax2.XMinorTick = 'on';
 ax2.YMinorTick = 'on';
 hold
@@ -113,7 +112,7 @@ ax3.FontSize = fontSize;
 % axis square
 title(title3, 'Units', 'normalized', ...
   'Position', [0 1 0], 'HorizontalAlignment', 'left');
-xlabel( ax3, labX); ylabel(ax3, '$$ \alpha_{min} $$');
+xlabel( ax3, labX); ylabel(ax3, 'Min. scaling exponent $$ \alpha_{min} $$');
 ax3.XLim = xLim;
 ax3.YLim = [0,1.05];
 ax3.XMinorTick = 'on';

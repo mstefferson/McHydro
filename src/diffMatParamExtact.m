@@ -9,7 +9,7 @@ function [diffStruct, param] = ...
 % from str, get parameter info
 if strcmp(pVaryStr,'bdiff')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = '$$ D_{bound} / D_{free} $$';
+  param.pVaryTex = 'Bound diffusion coeff. $$ D_{bound} / D_{free} $$';
   varyInd = 1;
   p1Ind = 2;
   p1Name = '\Delta G';
@@ -19,7 +19,7 @@ if strcmp(pVaryStr,'bdiff')
   p3Name = 'l_{obst}';
 elseif strcmp(pVaryStr,'be')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = '$$ \Delta G $$';
+  param.pVaryTex = 'Binding energy $$ \Delta G $$';
   varyInd = 2;
   p1Ind = 1;
   p1Name = 'D_{bound}';
@@ -29,7 +29,7 @@ elseif strcmp(pVaryStr,'be')
   p3Name = 'l_{obst}';
 elseif strcmp(pVaryStr,'nu')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = '$$ \nu $$';
+  param.pVaryTex = ' Obstacle filling fraction $$ \nu $$';
   varyInd = 3;
   p1Ind = 1;
   p1Name = 'D_{bound}';
@@ -39,7 +39,7 @@ elseif strcmp(pVaryStr,'nu')
   p3Name = 'l_{obst}';
 elseif strcmp(pVaryStr,'lobst')
   param.pVaryStr = pVaryStr;
-  param.pVaryTex = '$$ l_{obst} $$';
+  param.pVaryTex = 'Obstacle length $$ l_{obst} $$';
   varyInd = 4;
   p1Ind = 1;
   p1Name = 'D_{bound}';
@@ -183,7 +183,7 @@ for ii = 1:numParams
   diffStruct(ii).Dsig = DmatTemp(:,6);
   diffStruct(ii).tAnom = DmatTemp(:,7);
   diffStruct(ii).tAnomSig = DmatTemp(:,8);
-  diffStruct(ii).alpha = DmatTemp(:,12);
+  diffStruct(ii).alpha = 1+DmatTemp(:,12);
   diffStruct(ii).legStr = str;
   paramCell{ii} = str;
 end
