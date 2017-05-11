@@ -1,6 +1,7 @@
 addpath('./src')
 %%
 saveMe = 1;
+paperTitles = 1; % use paper titles
 moveSaveMe = 0;
 winStyle = 'normal';
 fontSize = 20;
@@ -9,16 +10,17 @@ sameXaxis = 1;
 plotThresLines.flag = 1;
 plotAllSep = 0; % plot everything seperately
 % flags
-plotDstickSlipp = 1;
-plotDsize = 0;
+plotDstickSlipp = 0;
+plotDsize = 1;
 plotDbnddiff = 0;
 plot3d = 0;
+plotShowFit = 0;
 plotPercBnd0 = 0;
 plotPercBnd1 = 0;
-plotShowFit = 0;
+
 % ranges
-plotRng2d = [1:2]; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
-plotRngSize = 2; % 1: slipp oe1, 2: sticky oe1 3: slipp oe0, 4: sticky oe0,
+plotRng2d = [3:4]; % 1: slip pos, 2: slip neg, 3: stick pos, 4: sticky neg
+plotRngSize = 1; % 1: slipp oe1, 2: sticky oe1 3: slipp oe0, 4: sticky oe0,
 plotRng3d = [2 4]; % 1: 2d slipp, 2: 3d slipp, 3: 2d sticky, 4: 3d sticky
 %1: l = 1, oe = 1 ; %2: l = 3, oe = 1; 3: l = 5, oe = 1; 4: l = 7, oe = 1;
 %4: l = 3, oe = 0; 5: l = 5, oe = 0;
@@ -139,7 +141,11 @@ if plotDstickSlipp
     if ii == 1
       masterD2plot = masterD_pos_bnd1;
       saveID = 'pos_bnd1';
-      saveIDTog = '2d_slippery';
+      if paperTitles 
+        saveIDTog = 'figure07';
+      else
+        saveIDTog = '2d_slippery';
+      end
       if strcmp( varyParam, 'nu' )
         plotThresLines.flag = 1;
         plotThresLines.uppVal = 0.72;
@@ -157,7 +163,11 @@ if plotDstickSlipp
     if ii == 2
       masterD2plot = masterD_neg_bnd1;
       saveID = 'neg_bnd1';
-      saveIDTog = '2d_slippery';
+      if paperTitles 
+        saveIDTog = 'figure07';
+      else
+        saveIDTog = '2d_slippery';
+      end
       if strcmp( varyParam, 'nu' )
         plotThresLines.flag = 1;
         plotThresLines.uppVal = 0.72;
@@ -175,7 +185,11 @@ if plotDstickSlipp
     if ii == 3
       masterD2plot = masterD_pos_bnd0;
       saveID = 'pos_bnd0';
-      saveIDTog = '2d_sticky';
+      if paperTitles 
+        saveIDTog = 'figure04';
+      else
+        saveIDTog = '2d_sticky';
+      end
       if strcmp( varyParam, 'nu' )
         plotThresLines.flag = 1;
         plotThresLines.uppVal = 0.72;
@@ -193,7 +207,11 @@ if plotDstickSlipp
     if ii == 4
       masterD2plot = masterD_neg_bnd0;
       saveID = 'neg_bnd0';
-      saveIDTog = '2d_sticky';
+      if paperTitles 
+        saveIDTog = 'figure04';
+      else
+        saveIDTog = '2d_sticky';
+      end
       if strcmp( varyParam, 'nu' )
         plotThresLines.flag = 1;
         plotThresLines.uppVal = 0.72;
@@ -244,8 +262,12 @@ if plotDsize
       masterD2plot = masterD_size_oe1_bnd1;
       beWant = [0 1 2 3 Inf];
       dDiffWant = 1;
-      saveID = 'size_slippery_oe1';
       if plotAllSep == 0
+        if paperTitles
+          saveID = 'figure13';
+        else
+          saveID = 'size_slippery_oe1';
+        end
         fig = figure();
         figpos = [1 1 1920 1080];
         fig.WindowStyle = winStyle;
@@ -290,8 +312,12 @@ if plotDsize
       masterD2plot = masterD_size_oe1_bnd0;
       beWant = [0 1 2 3 Inf];
       dDiffWant = 0;
-      saveID = 'size_sticky_oe1';
       if plotAllSep == 0
+        if paperTitles
+          saveID = 'figure12';
+        else
+          saveID = 'size_sticky_oe1';
+        end
         fig = figure();
         fig.WindowStyle = winStyle;
         figpos = [1 1 1920 1080];
@@ -365,7 +391,11 @@ if plotDbnddiff
   dDiffWant = [];
   lWant = [1];
   beWant = [1 2 3 Inf];
-  saveID = 'bdiff';
+  if paperTitles
+    saveID = 'figure10';
+  else
+    saveID = 'bdiff';
+  end
   if plotAllSep == 0
     fig = figure();
     fig.WindowStyle = winStyle;
@@ -438,7 +468,11 @@ if plot3d
       figpos = [1 1 1920 1080/2];
       fig.Position = figpos;
       masterD2plot = masterD_3d_bnd1;
-      saveID = '3d_slippery';
+      if paperTitles
+        saveID = 'figure08';
+      else
+        saveID = '3d_slippery';
+      end
       dDiffWant = 1;
       beWant = [0 1 2 3 Inf];
       nuWant = [];
@@ -484,7 +518,11 @@ if plot3d
       figpos = [1 1 1920 1080/2];
       fig.Position = figpos;
       masterD2plot = masterD_3d_bnd0;
-      saveID = '3d_sticky';
+      if paperTitles
+        saveID = 'figure06';
+      else
+        saveID = '3d_sticky';
+      end
       dDiffWant = 0;
       beWant = [0 1 2 3 Inf];
       nuWant = [0.1 0.3 0.5 0.6 0.65 0.7 0.75 0.8 0.85 0.9];
@@ -507,6 +545,16 @@ if plot3d
       end
       if tempTitle; title('3D Sticky'); end;
     end
+  end
+end
+
+% plot the fit
+if plotShowFit == 1
+  plotFitExmpl(winStyle, fontSize)
+  if saveMe
+    saveID = 'figure03';
+    savefig( gcf, 'figure03' );
+    saveas( gcf, [ saveID '.' fileExt ], fileExt );
   end
 end
 
@@ -704,12 +752,4 @@ if plotPercBnd1
   end
 end
 
-if plotShowFit == 1
-  plotFitExmpl(winStyle, fontSize)
-  if saveMe
-    saveID = 'figure03';
-    savefig( gcf, 'figure03' );
-    saveas( gcf, [ saveID '.' fileExt ], fileExt );
-  end
-end
 
