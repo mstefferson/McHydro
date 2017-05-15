@@ -20,9 +20,9 @@ try
   modelopt = struct();
   
   % Check run status
-  if exist('StatusRunning.txt','file') ~= 0;
+  if exist('StatusRunning.txt','file') ~= 0
     %     error('Code is already running in directory');
-  elseif exist('StatusFinished.txt','file') ~= 0;
+  elseif exist('StatusFinished.txt','file') ~= 0
     movefile('StatusFinished.txt','StatusRunning.txt');
   else
     fopen('StatusRunning.txt','w');
@@ -33,8 +33,8 @@ try
   
   %load params. check if it exists, if not, run it, then delete it
   %initparams on tracked, so make it if it's not there
-  if exist('Params.mat','file') == 0;
-    if exist('initparams.m','file') == 0;
+  if exist('Params.mat','file') == 0
+    if exist('initparams.m','file') == 0
       cpmatparams
     end;
     initParams
