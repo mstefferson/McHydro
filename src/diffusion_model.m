@@ -60,7 +60,6 @@ end
 % Assign internal variables
 n = const;
 n.numSites = n.n_gridpoints .^ n.dim;
-n.size_obst = size_obst;
 if n.dim == 2
   n.grid = [ n.n_gridpoints n.n_gridpoints ];
 elseif n.dim == 3
@@ -107,7 +106,11 @@ end
 obst = place_obstacles( paramlist.ffo, paramlist.so, n.grid, modelopt.obst_excl );
 obst.color = obst_color;
 obst.curvature = obst_curv;
-obst.ffrac = ffrac_obst;
+obst.bindFlag = bindFlag;
+obst.be = bind_energy;
+obst.expBE = [ exp(bind_energy) 1 exp(-bind_energy) ];
+obst.ffrac = obst.ffActual;
+
 if verbose
   tOut = toc;
   fprintf('Overlap = %d\n', ~modelopt.obst_excl );
@@ -158,7 +161,6 @@ n.num_tracer = tracer.num;
 paramlist.ffo_act = obst.ffActual; 
 
 % Set up things for recording
-obst.cen_nomod=obst.center;
 tracer.cen_nomod=tracer.center;
 % Open file for incremental writing
 fileObj = matfile(filename,'Writable',true);
@@ -203,10 +205,9 @@ if animate && n.dim == 2
   ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
   ax.YTick=ax.XTick;
   ax.XLabel.String='x position';ax.YLabel.String='y position';
-  ax.FontSize=14;
-  
+  ax.FontSize=14; 
  for kObst=1:n.num_obst
-    obst=update_rectangle(obst,kObst,n.size_obst,n.n_gridpoints,...
+    obst=update_rectangle(obst,kObst,obst.length,n.n_gridpoints,...
       obst.color,obst.curvature);
     pause(tpause);
   end
@@ -215,13 +216,12 @@ if animate && n.dim == 2
       tracer.color,tracer.curvature);
     pause(tpause);
   end
-
 end
+
 % preallocate some things to prevent errors
 center_new = ones( n.num_tracer, 3 );
 % loop over time points
-
-if verbose; fprintf('Starting time loop\n'); tic; end;
+if verbose; fprintf('Starting time loop\n'); tic; end
 for m=1:n.ntimesteps
   % Try and move everything
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);
@@ -248,14 +248,14 @@ for m=1:n.ntimesteps
   
   % Accept moves based on binding energetics
   if ~isempty( list.attempt )
-    if bindFlag
+    if obst.bindFlag
       % Accept or not due to binding.
       % taccept in (1, numAttempts);  accept in (1, numTracer)
       % Generate random vector, if it's less than exp( \DeltaBE ) accept
       rvec2=rand(length(list.attempt),1);
       % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
       deltaOcc = occ_new(list.attempt) - occ_old(list.attempt) + 2;
-      ProbAcceptBind = expBE( deltaOcc )';
+      ProbAcceptBind = obst.expBE( deltaOcc )';
       list.taccept=find( rvec2 <= ProbAcceptBind );
     else
       % accept unbinding, obs-obs movement, free movement
@@ -309,7 +309,7 @@ for m=1:n.ntimesteps
           obst_cen_rec_temp(1:n.num_obst,1:n.dim,jrectemp) = obst.center;
         end
         if n.obsPosRecNoModFlag
-          obst_cen_rec_nomod_temp(1:n.num_obst,1:n.dim,jrectemp) = obst.cen_nomod;
+          obst_cen_rec_nomod_temp(1:n.num_obst,1:n.dim,jrectemp) = obst.center;
         end
         
         if mod( m, const.write_interval  ) == 0
