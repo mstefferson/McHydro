@@ -36,7 +36,7 @@ try
   if exist('Params.mat','file') == 0
     if exist('initparams.m','file') == 0
       cpmatparams
-    end;
+    end
     initParams
   end
   load Params.mat;
@@ -60,15 +60,31 @@ try
   
   %build a parameter matrix
   runVec = trialmaster.runstrtind + (0:trialmaster.nt-1);
-  param_mat = combvec(runVec, params.bind_energy_vec, params.ffrac_obst_vec, params.size_obst );
+  param_mat  = combvec(runVec, params.bind_energy_vec{1},...
+    params.ffrac_obst_vec{1}, params.size_obst{1}, params.tr_bnd_diff{1} );
+  numVariedParams =  size(param_mat,1);
+  for ii = 2:params.numObstType
+    tempParam  = combvec(runVec, params.bind_energy_vec{ii},...
+      params.ffrac_obst_vec{ii}, params.size_obst{ii},...
+      params.tr_bnd_diff{ii});
+    param_mat = combvec( param_mat, tempParam);
+  end
   [~,nparams] = size(param_mat);
   
+  %resize for multiple obstacles and get indices
+  param_mat = reshape( param_mat, [numVariedParams, nparams*params.numObstType] );
+  paraObstInds = 1:nparams:( (params.numObstType-1)*nparams+1 );
   % For some reason, param_mat gets "sliced". Create vectors to get arround
   param_RunID   = param_mat(1,:);
   param_bind     = param_mat(2,:);
   param_ffo      = param_mat(3,:);
   param_sizeobs = param_mat(4,:);
-  
+  param_tracer_bnd_diff = param_mat(5,:);
+  % reshape mult obst ones
+  param_bind = reshape( param_bind, [nparams, params.numObstType] );
+  param_ffo = reshape( param_ffo, [nparams, params.numObstType] );
+  param_sizeobs = reshape( param_sizeobs, [nparams, params.numObstType] );
+  param_tracer_bnd_diff = reshape( param_tracer_bnd_diff, [nparams, params.numObstType] );
   
   fprintf('Starting paramloop \n')
   fprintf('nparams = %d\n', nparams)
@@ -77,7 +93,6 @@ try
   % eliminate broadcast warning
   num_tracer = params.num_tracer;
   tr_unbnd_diff = params.tr_unbnd_diff;
-  tr_bnd_diff = params.tr_bnd_diff;
   size_tracer = const.size_tracer;
   obst_excl = modelopt.obst_excl;
   n_gridpoints = const.n_gridpoints;
@@ -85,6 +100,8 @@ try
   ntimesteps =  const.ntimesteps;
   NrecTot = const.NrecTot;
   tind = trialmaster.tind;
+  numObstType = params.numObstType;
+  % run it based on nparams
   if nparams > 1
     fprintf('Using parfor to run diffusion model\n');
     % Set-up a parpool that's cluster safe
@@ -117,14 +134,17 @@ try
       rng('shuffle');
       fprintf('Parfor j = %d Rand num = %f \n', j, rand() );
       
+      % grab parameters
       RunID       = param_RunID(j);
-      bind_energy = param_bind(j);
-      ffrac_obst  = param_ffo(j);
-      size_obst   = param_sizeobs(j);
+      bind_energy = param_bind(j,:);
+      ffrac_obst  = param_ffo(j,:);
+      size_obst   = param_sizeobs(j,:);
+      tr_bnd_diff = param_tracer_bnd_diff(j,:);
       
-      pvec=[num_tracer, ...
-        tr_unbnd_diff, tr_bnd_diff,...
-        ffrac_obst, bind_energy, size_obst]; %parameter vector
+     %parameter cell
+     pvec= {num_tracer, ...
+        numObstType, tr_unbnd_diff, tr_bnd_diff,...
+        ffrac_obst, bind_energy, size_obst};
       
       filestring=['unD',num2str(tr_unbnd_diff),...
         '_bD',num2str(tr_bnd_diff,'%.2f'),...
@@ -154,14 +174,17 @@ try
     rmdir(clustdir);
   else
     fprintf('Running diffusion model once\n');
-    RunID       = param_RunID(1);
-    bind_energy = param_bind(1);
-    ffrac_obst  = param_ffo(1);
-    size_obst   = param_sizeobs(1);
     
-    pvec=[num_tracer, ...
-      tr_unbnd_diff, tr_bnd_diff,...
-      ffrac_obst, bind_energy, size_obst]; %parameter vector
+    % grab parameters
+    RunID       = param_RunID(1);
+    % put multi obstacle values in one vector
+    bind_energy = param_bind(1,:);
+    ffrac_obst  = param_ffo(1,:);
+    size_obst   = param_sizeobs(1,:);
+    tr_bnd_diff = param_tracer_bnd_diff(1,:);
+    pvec={num_tracer, ...
+      numObstType,tr_unbnd_diff, tr_bnd_diff,...
+      ffrac_obst, bind_energy, size_obst}; %parameter vector
     
     filestring=['unD',num2str(tr_unbnd_diff),...
       '_bD',num2str(tr_bnd_diff,'%.2f'),...

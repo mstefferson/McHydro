@@ -16,16 +16,19 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
 
 % initialize everythin
 % Parameters from pvec
-if (length(paramvec)<6)
+totParams = 7;
+
+if (length(paramvec)<totParams)
   error('diffusion_model: parameter vector too short');
-elseif (length(paramvec)==6)
-  num_tracer = paramvec(1);
-  tr_diff_unb = paramvec(2);
-  tr_diff_bnd = paramvec(3);
-  ffrac_obst = paramvec(4);
-  bind_energy = paramvec(5);
-  size_obst = paramvec(6);
-elseif (length(paramvec)>6)
+elseif (length(paramvec)==totParams)
+  num_tracer = paramvec{1};
+  num_obst_types = paramvec{2};
+  tr_diff_unb = paramvec{3};
+  tr_diff_bnd = paramvec{4};
+  ffrac_obst = paramvec{5};
+  bind_energy = paramvec{6};
+  size_obst = paramvec{7};
+elseif (length(paramvec)>totParams)
   error('diffusion_model: parameter vector too long');
 end
 
@@ -39,23 +42,13 @@ paramlist.so = size_obst;
 
 % verbose
 verbose = const.verbose;
+% Animation features
 % Colors
-obst_color=[0 0 0]; %black
+colorArray = colormap(['lines(' num2str(num_obst_types) ')']);
+obst_color = colorArray;
 obst_curv=0.2; %curvature for animations
 tracer_color=[0 1 1]; %cyan
 tracer_curv=1; %curvature for animations
-red=[1 0 0];
-
-% binding flag stuff
-% Take exponential of binding energy out of time loop, then pick a value
-% based on occupancy change.
-% expBE(1): unbinding expBE(2): no change expBE(3): binding
-if isinf( paramlist.be )
-  bindFlag = 0;
-else
-  bindFlag = 1;
-  expBE = [ exp(bind_energy) 1 exp(-bind_energy) ];
-end
 
 % Assign internal variables
 n = const;
@@ -89,7 +82,7 @@ if animate && n.dim == 2
   figure()
 end
 
-% Square lattice definition 
+% Square lattice definition
 if n.dim == 2
   lattice.moves=[1 0; -1 0; 0 1; 0 -1];
 elseif n.dim == 3
@@ -103,13 +96,67 @@ if verbose
   fprintf('Placing obstacles\n');
   tic
 end
-obst = place_obstacles( paramlist.ffo, paramlist.so, n.grid, modelopt.obst_excl );
-obst.color = obst_color;
-obst.curvature = obst_curv;
-obst.bindFlag = bindFlag;
-obst.be = bind_energy;
-obst.expBE = [ exp(bind_energy) 1 exp(-bind_energy) ];
-obst.ffrac = obst.ffActual;
+
+% place some obstacles
+filledObstSites = [];
+% scramble the order. No favorites!!!
+obstOrder = randperm( num_obst_types );
+% rescale filling fractions if they are too high
+fillFracScale = max(  1 / ( sum(paramlist.ffo) ), 1 );
+% allocate a vector of actuall fffrac for placing tracers later
+ffoAct = zeros( num_obst_types, 1 );
+% First initialize the last obstacle for allocation
+ind = obstOrder(end);
+ffoWant = paramlist.ffo(ind) * fillFracScale;
+obst{ind} = place_obstacles( ...
+  ffoWant, paramlist.so(ind), ...
+  n.grid, modelopt.obst_excl, filledObstSites );
+obst{ind}.color = obst_color(end,:);
+obst{ind}.curvature = obst_curv;
+obst{ind}.be = bind_energy(ind);
+obst{ind}.ffrac = obst{ind}.ffActual;
+ffoAct(ind) = obst{ind}.ffrac;
+
+% binding flag stuff
+% Take exponential of binding energy based on occupcany change
+% expBE(1): unbinding expBE(2): no change expBE(3): binding
+if isinf( obst{ind}.be )
+  obst{ind}.bindFlag = 0;
+else
+  bobst{ind}.indFlag = 1;
+  obst{ind}.expBE = ...
+    [ exp( bind_energy(ind) ) 1 exp( -bind_energy(ind) ) ];
+end
+obst{ind}.edgePlace = modelopt.edges_place{ind};
+obst{ind}.tracersOccNum = 0;
+obst{ind}.tracerOccFrac = 0;
+% update forbidden sites
+forbidden_sites = [ obst{ind}.allpts ] ;
+% Loop over obstacle types to initialize
+for ii = 1:num_obst_types-1
+  ind = obstOrder(ii);
+  obst{ind} = place_obstacles( paramlist.ffo(ind), paramlist.so(ind), ...
+    n.grid, modelopt.obst_excl, forbidden_sites );
+  obst{ind}.color = obst_color(ind,:);
+  obst{ind}.curvature = obst_curv;
+  obst{ind}.be = bind_energy(ind);
+  obst{ind}.ffrac = obst{ind}.ffActual;
+  % binding flag stuff
+  % Take exponential of binding energy based on occupcany change
+  % expBE(1): unbinding expBE(2): no change expBE(3): binding
+  if isinf( obst{ind}.be )
+    obst{ind}.bindFlag = 0;
+  else
+    obst{ind}.bindFlag = 1;
+    obst{ind}.expBE = [ exp( bind_energy(ind) ) 1 exp( -bind_energy(ind) ) ];
+  end
+  ffoAct(ind) = obst{ind}.ffrac;
+  obst{ind}.edgePlace = modelopt.edges_place{ind};
+  obst{ind}.tracersOccNum = 0;
+  obst{ind}.tracerOccFrac = 0;
+  % update forbidden sites
+  filledObstSites = [ filledObstSites; obst{ind}.allpts ] ;
+end
 
 if verbose
   tOut = toc;
@@ -127,20 +174,18 @@ end
 % place tracers
 % Handle exclusion
 if modelopt.obst_trace_excl == 1
-  be4place = Inf;
+  be4place = -Inf * ones( num_obst_types, 1 );
 else
   be4place = paramlist.be;
 end
-% handle edges
-if modelopt.edges_place
-  ffTemp = obst.numEdges ./ ( n.numSites - obst.numFilledSite + obst.numEdges );
-  tracer = place_tracers( paramlist.num_tracer, obst.edgeInds, obst.allpts,...
-    ffTemp, be4place, n.grid);
-else
-  tracer = place_tracers( paramlist.num_tracer, obst.allpts, obst.allpts,...
-    obst.ffActual, be4place, n.grid);
+% place 'em!
+tracer = place_tracers( paramlist.num_tracer, obst, be4place, ffoAct, n.grid );
+% update obstacles
+for ii = 1:num_obst_types
+  obst{ii}.tracersOccNum = tracer.occNum(ii);
+  obst{ii}.tracerOccFrac = tracer.occFrac(ii);
 end
-
+ keyboard 
 if verbose
   tOut = toc;
   fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
@@ -150,7 +195,6 @@ tracer.color = tracer_color;
 tracer.curvature = tracer_curv;
 tracer.pmove_unb = tr_diff_unb;
 tracer.pmove_bnd = tr_diff_bnd;
-tracer.state = ismember(tracer.allpts, obst.allpts);
 tracer.probmov = zeros(num_tracer,1);
 
 % Derived parameters and store
@@ -158,7 +202,7 @@ n.num_obst = obst.num; %square lattice
 n.num_tracer = tracer.num;
 
 % Derived parameters and store
-paramlist.ffo_act = obst.ffActual; 
+paramlist.ffo_act = obst.ffActual;
 
 % Set up things for recording
 tracer.cen_nomod=tracer.center;
@@ -205,11 +249,13 @@ if animate && n.dim == 2
   ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
   ax.YTick=ax.XTick;
   ax.XLabel.String='x position';ax.YLabel.String='y position';
-  ax.FontSize=14; 
- for kObst=1:n.num_obst
-    obst=update_rectangle(obst,kObst,obst.length,n.n_gridpoints,...
-      obst.color,obst.curvature);
-    pause(tpause);
+  ax.FontSize=14;
+  for obstType = 1:num_obst_types
+    for kObst=1:n.num_obst
+      obst{ii}=update_rectangle(obst{ii},kObst,obst{ii}.length,n.n_gridpoints,...
+       obst{ii}.color,obst{ii}.curvature);
+      pause(tpause);
+    end
   end
   for kTracer=1:n.num_tracer
     tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
@@ -218,6 +264,7 @@ if animate && n.dim == 2
   end
 end
 
+keyboard
 % preallocate some things to prevent errors
 center_new = ones( n.num_tracer, 3 );
 % loop over time points
@@ -228,7 +275,7 @@ for m=1:n.ntimesteps
   % Attempt new tracer positions
   center_old=tracer.center;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
-
+  
   % Enforcing periodic boundary conditions
   center_new(:,1:n.dim) = mod( center_temp - onesNt2 , NgsNt2 ) + onesNt2;
   sites_new = ...
@@ -361,7 +408,7 @@ end
 % rm obst field in 3d. Way too much data
 if n.dim == 3
   fields2go = {'allpts', 'center', 'centerInds',...
-     'corner' ,'cornerInds','cen_nomod','edgeInds'};
+    'corner' ,'cornerInds','cen_nomod','edgeInds'};
   obst = rmfield( obst, fields2go );
 end
 

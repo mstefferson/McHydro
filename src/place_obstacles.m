@@ -1,6 +1,6 @@
 %place obstacles on seperate lattice sites can handle size effects
 
-function obst = place_obstacles( ff, lobst, gridSize, excludeVol )
+function obst = place_obstacles( ff, lobst, gridSize, excludeVol, forbiddenSites )
 % make sure length of obstacle is at least one
 tic
 lobst = max( lobst, 1 );
@@ -10,7 +10,9 @@ gridTemp = ones(1,3);
 gridTemp(1:dim) = gridSize;
 gridSize = gridTemp;
 % number of sites to fill
-numSites = prod( gridSize );
+numSites = prod( gridSize ) - length(forbiddenSites);
+allSitesOpen = 1:numSites;
+allSitesOpen = setdiff( 1:prod( gridSize ), forbiddenSites );
 deltaL1 = round( lobst-1 );
 deltaL2 = round( (lobst-1) .* min( floor( dim/2 ), 1 ) );
 deltaL3 = round( (lobst-1) .* min( floor( dim/3 ), 1 ) );
@@ -24,12 +26,10 @@ else
   maxFilledSites = maxFilledCorners .* lobst^dim;
 end
 minFilledSites = lobst^dim;
-% all Sites
-allSitesOpen = 1:numSites;
 availCorners = allSitesOpen;
 numCornersAvail = length( availCorners );
 % number of filled
-allSitesFilled = [];
+allSitesFilled = forbiddenSites;
 if excludeVol
   diInner = 1;
   djInner = min( floor( dim/2 ), 1 );
