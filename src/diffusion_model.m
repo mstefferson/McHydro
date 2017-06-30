@@ -43,8 +43,9 @@ paramlist.so = size_obst;
 % verbose
 verbose = const.verbose;
 % Animation features
-% Colors
+fig = figure(randi(1000));
 colorArray = colormap(['lines(' num2str(num_obst_types) ')']);
+close(fig);
 obst_color = colorArray;
 obst_curv=0.2; %curvature for animations
 tracer_color=[0 1 1]; %cyan
@@ -53,6 +54,8 @@ tracer_curv=1; %curvature for animations
 % Assign internal variables
 n = const;
 n.numSites = n.n_gridpoints .^ n.dim;
+n.num_obst_types = num_obst_types;
+n.num_obst = zeros( num_obst_types );
 if n.dim == 2
   n.grid = [ n.n_gridpoints n.n_gridpoints ];
 elseif n.dim == 3
@@ -94,76 +97,95 @@ end
 % obstacle fields
 if verbose
   fprintf('Placing obstacles\n');
-  tic
+  tFill = zeros( num_obst_types, 1);
 end
 
 % place some obstacles
 filledObstSites = [];
-% scramble the order. No favorites!!!
-obstOrder = randperm( num_obst_types );
+% scramble the order unless there are bigger obstacles. No favorites!!!
+obstOrder = zeros( 1, num_obst_types);
+% [~, obstOrder] = sort( paramlist.so ); 
+uniqueSizes = fliplr( unique(paramlist.so,'sorted') );
+holder = 1;
+for ii = 1:length(uniqueSizes)
+  inds = find( paramlist.so == uniqueSizes(ii) );
+  numInds = length(inds);
+  obstOrder(holder:holder+numInds-1) = inds( randperm( numInds ) );
+%   paramlist.so( uniqueSizes(ii) );
+  holder = holder+numInds;
+end
 % rescale filling fractions if they are too high
-fillFracScale = max(  1 / ( sum(paramlist.ffo) ), 1 );
+fillFracScale = min(  1 / ( sum(paramlist.ffo) ), 1 );
 % allocate a vector of actuall fffrac for placing tracers later
 ffoAct = zeros( num_obst_types, 1 );
-% First initialize the last obstacle for allocation
-ind = obstOrder(end);
-ffoWant = paramlist.ffo(ind) * fillFracScale;
-obst{ind} = place_obstacles( ...
-  ffoWant, paramlist.so(ind), ...
-  n.grid, modelopt.obst_excl, filledObstSites );
-obst{ind}.color = obst_color(end,:);
-obst{ind}.curvature = obst_curv;
-obst{ind}.be = bind_energy(ind);
-obst{ind}.ffrac = obst{ind}.ffActual;
-ffoAct(ind) = obst{ind}.ffrac;
-
-% binding flag stuff
-% Take exponential of binding energy based on occupcany change
-% expBE(1): unbinding expBE(2): no change expBE(3): binding
-if isinf( obst{ind}.be )
-  obst{ind}.bindFlag = 0;
-else
-  bobst{ind}.indFlag = 1;
-  obst{ind}.expBE = ...
-    [ exp( bind_energy(ind) ) 1 exp( -bind_energy(ind) ) ];
-end
-obst{ind}.edgePlace = modelopt.edges_place{ind};
-obst{ind}.tracersOccNum = 0;
-obst{ind}.tracerOccFrac = 0;
+% First initialize the empty 'obstactle' for allocation
+ind = num_obst_types+1;
+obst{ind}.ffoWant = 1 - sum( paramlist.ffo );
+obst{ind}.ffrac = 0;
+obst{ind}.allpts = 0;
+obst{ind}.num = 0;
+obst{ind}.be = 0;
+obst{ind}.color = [0 0 0];
+obst{ind}.curvature = 0;
+obst{ind}.edgePlace = 0;
+obst{ind}.tracersOccNum = 0; % reset later
+obst{ind}.tracerOccFrac = 0; % reset later
+ffoAct(ind) = 0;
+n.num_obst(ind) = obst{ind}.num;
 % update forbidden sites
-forbidden_sites = [ obst{ind}.allpts ] ;
+filledObstSites = [] ;
 % Loop over obstacle types to initialize
-for ii = 1:num_obst_types-1
+for ii = 1:num_obst_types
+  if verbose
+    tic
+  end
   ind = obstOrder(ii);
-  obst{ind} = place_obstacles( paramlist.ffo(ind), paramlist.so(ind), ...
-    n.grid, modelopt.obst_excl, forbidden_sites );
+  ffWant = fillFracScale .* paramlist.ffo(ind);
+  obst{ind} = place_obstacles( ffWant, paramlist.so(ind), ...
+    n.grid, modelopt.obst_excl, filledObstSites );
+  obst{ind}.be = bind_energy(ind);
   obst{ind}.color = obst_color(ind,:);
   obst{ind}.curvature = obst_curv;
-  obst{ind}.be = bind_energy(ind);
-  obst{ind}.ffrac = obst{ind}.ffActual;
-  % binding flag stuff
-  % Take exponential of binding energy based on occupcany change
-  % expBE(1): unbinding expBE(2): no change expBE(3): binding
-  if isinf( obst{ind}.be )
-    obst{ind}.bindFlag = 0;
-  else
-    obst{ind}.bindFlag = 1;
-    obst{ind}.expBE = [ exp( bind_energy(ind) ) 1 exp( -bind_energy(ind) ) ];
-  end
-  ffoAct(ind) = obst{ind}.ffrac;
   obst{ind}.edgePlace = modelopt.edges_place{ind};
-  obst{ind}.tracersOccNum = 0;
-  obst{ind}.tracerOccFrac = 0;
+  obst{ind}.tracersOccNum = 0; % reset later
+  obst{ind}.tracerOccFrac = 0; % reset later
+  n.num_obst(ind) = obst{ind}.num;
+  ffoAct(ind) = obst{ind}.ffrac;
   % update forbidden sites
   filledObstSites = [ filledObstSites; obst{ind}.allpts ] ;
+  if verbose
+    tFill(ii) = toc;
+  end
 end
 
+% Fix empty sites
+emptySites = setdiff( 1:n.numSites, filledObstSites );
+numEmpty = length(emptySites);
+ind = num_obst_types + 1;
+obst{ind}.ffrac = numEmpty / n.numSites;
+obst{ind}.allpts = emptySites';
+obst{ind}.numobst = numEmpty;
+
 if verbose
-  tOut = toc;
-  fprintf('Overlap = %d\n', ~modelopt.obst_excl );
-  fprintf('Placed %d obstacles in %d tries is %f sec\n', obst.num, obst.trys2fill, tOut);
-  fprintf('ff want: %f ff actual: %f \n', obst.ffWant, obst.ffActual);
+  for ii = 1:num_obst_types
+    fprintf('Overlap = %d\n', ~modelopt.obst_excl );
+    fprintf('Placed %d obstacles in %d tries is %f sec\n', ...
+      obst{ii}.num, obst{ii}.trys2fill, tFill(ii));
+    fprintf('ff want: %f ff actual: %f \n', obst{ii}.ffWant, obst{ii}.ffrac);
+  end
 end
+
+% create binding transition matrix bindT(f,i) ( row/col = obst 1, 2, ..., n, empty )
+% treate empty as N + 1 obstacle
+deltaG = [paramlist.be 0]' - [paramlist.be 0];
+bindT = exp( -deltaG );
+bindT( bindT > 1 ) = 1;
+tSize = size(bindT);
+% Probability to move
+hopProb = [tr_diff_bnd tr_diff_unb];
+hopT = repmat( hopProb, [num_obst_types+1, 1] ) ;
+% accept probability
+acceptT = hopT .* bindT;
 
 % tracer fields
 if verbose
@@ -180,17 +202,19 @@ else
 end
 % place 'em!
 tracer = place_tracers( paramlist.num_tracer, obst, be4place, ffoAct, n.grid );
-% update obstacles
-for ii = 1:num_obst_types
+% reset empty state 0 to # obst types + 1
+tracer.state( tracer.state == 0 ) = num_obst_types + 1;
+% update obstacles to say how many tracer should be on them
+for ii = 1:num_obst_types + 1
   obst{ii}.tracersOccNum = tracer.occNum(ii);
   obst{ii}.tracerOccFrac = tracer.occFrac(ii);
 end
- keyboard 
+
 if verbose
   tOut = toc;
   fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
 end
-
+% the rest of the tracer fields
 tracer.color = tracer_color;
 tracer.curvature = tracer_curv;
 tracer.pmove_unb = tr_diff_unb;
@@ -198,11 +222,7 @@ tracer.pmove_bnd = tr_diff_bnd;
 tracer.probmov = zeros(num_tracer,1);
 
 % Derived parameters and store
-n.num_obst = obst.num; %square lattice
 n.num_tracer = tracer.num;
-
-% Derived parameters and store
-paramlist.ffo_act = obst.ffActual;
 
 % Set up things for recording
 tracer.cen_nomod=tracer.center;
@@ -226,16 +246,16 @@ if n.trStateRecFlag
   fileObj.tracer_state_rec = zeros( n.num_tracer, 2 );
 end
 if n.trackOcc
-  occupancy_temp = zeros( 1, n.NrecChunk );
+  occupancy_temp = zeros( num_obst_types, n.NrecChunk );
 end
 % obstacles temp records
 if n.obsPosRecModFlag
-  obst_cen_rec_temp = zeros( n.num_obst, n.dim, n.NrecChunk );
-  fileObj.obst_cen_rec = zeros( n.num_obst, n.dim, 2 );
+  obst_cen_rec_temp = zeros( n.num_obst, n.dim, n.NrecChunk, n.num_obst_types );
+  fileObj.obst_cen_rec = zeros( n.num_obst, n.dim, 2, n.num_obst_types );
 end
 if n.obsPosRecNoModFlag
-  obst_cen_rec_nomod_temp = zeros( n.num_obst,n.dim, n.NrecChunk );
-  fileObj.obst_cen_rec_nomod = zeros( n.num_obst, n.dim, 2);
+  obst_cen_rec_nomod_temp = zeros( n.num_obst,n.dim, n.NrecChunk, n.num_obst_types  );
+  fileObj.obst_cen_rec_nomod = zeros( n.num_obst, n.dim, 2, n.num_obst_types );
 end
 
 % Pre-Allocate some commonly used matrices
@@ -250,23 +270,26 @@ if animate && n.dim == 2
   ax.YTick=ax.XTick;
   ax.XLabel.String='x position';ax.YLabel.String='y position';
   ax.FontSize=14;
-  for obstType = 1:num_obst_types
-    for kObst=1:n.num_obst
+  for ii = 1:num_obst_types
+    for kObst=1:obst{ii}.num
       obst{ii}=update_rectangle(obst{ii},kObst,obst{ii}.length,n.n_gridpoints,...
        obst{ii}.color,obst{ii}.curvature);
-      pause(tpause);
     end
   end
   for kTracer=1:n.num_tracer
     tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
       tracer.color,tracer.curvature);
-    pause(tpause);
   end
+  pause(2);
+end
+if any( ismember( obst{1}.allpts, obst{2}.allpts ) )
+  error('differect obstacles are overlapping')
 end
 
-keyboard
 % preallocate some things to prevent errors
 center_new = ones( n.num_tracer, 3 );
+all_tracer_inds = 1:n.num_tracer;
+occ_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
 % loop over time points
 if verbose; fprintf('Starting time loop\n'); tic; end
 for m=1:n.ntimesteps
@@ -282,37 +305,17 @@ for m=1:n.ntimesteps
     sub2ind(n.grid, center_new(:,1), center_new(:,2), center_new(:,3) );
   
   % Find old and new occupancy, i.e, when tracer and obs on same site
-  occ_old=tracer.state;
-  occ_new=ismember(sites_new, obst.allpts);
-  sum_occ = occ_old + occ_new;
-  
-  % Make a vector and try and move see what we can move based on hop prob
   rvec=rand(n.num_tracer,1);
-  tracer.probmov( sum_occ == 2  ) = tracer.pmove_bnd;
-  tracer.probmov( sum_occ == 1  ) = 1;
-  tracer.probmov( sum_occ == 0  ) = tracer.pmove_unb;
-  list.attempt=find(rvec<tracer.probmov);
-  
-  % Accept moves based on binding energetics
-  if ~isempty( list.attempt )
-    if obst.bindFlag
-      % Accept or not due to binding.
-      % taccept in (1, numAttempts);  accept in (1, numTracer)
-      % Generate random vector, if it's less than exp( \DeltaBE ) accept
-      rvec2=rand(length(list.attempt),1);
-      % Calc change in occupancy +2 to give index of expBE (-1,0,1)->(1,2,3)
-      deltaOcc = occ_new(list.attempt) - occ_old(list.attempt) + 2;
-      ProbAcceptBind = obst.expBE( deltaOcc )';
-      list.taccept=find( rvec2 <= ProbAcceptBind );
-    else
-      % accept unbinding, obs-obs movement, free movement
-      list.taccept = occ_new(list.attempt) - occ_old(list.attempt) < 1;
-    end
-    list.accept=list.attempt(list.taccept);
-  else
-    list.accept = [];
+  occ_old = tracer.state;
+  occ_new = occ_new_save;
+  for ii = 1:num_obst_types
+    occ_new( ismember(sites_new, obst{ii}.allpts ) ) = ii;
   end
-  
+  transInds = sub2ind( tSize, occ_new, occ_old);
+  tracer.probmov = acceptT( transInds );
+  list.accept = find(rvec<tracer.probmov); 
+  list.reject = setdiff( all_tracer_inds,list.accept );
+
   % Move all accepted changes
   tracer.center(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
   tracer.cen_nomod(list.accept,1:n.dim) = tracer.cen_nomod(list.accept,1:n.dim)+...
@@ -321,16 +324,13 @@ for m=1:n.ntimesteps
   tracer.allpts(list.accept)=sites_new(list.accept); %update other sites
   tracer.state(list.accept)=occ_new(list.accept);
   
-  % Track reject changes
-  list.reject=setdiff(list.attempt,list.accept);
-  
   % Animations
   if animate && n.dim == 2
     for kTracer=1:n.num_tracer
       tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
         tracer.color,tracer.curvature);
-      pause(tpause);
     end
+    pause(tpause);
   end
   
   % Recording
@@ -348,15 +348,22 @@ for m=1:n.ntimesteps
           tracer_state_rec_temp(1:n.num_tracer,jrectemp) = tracer.state;
         end
         if n.trackOcc
-          occupancy_temp(jrectemp) = ...
-            length( find( tracer.state == 1 )) ./ length(tracer.state);
+          for ii = 1:num_obst_types
+            occupancy_temp(ii,jrectemp) = ...
+              length( find( tracer.state == ii )) ./ tracer.num;
+          end
         end
         % obstacles temp records
         if n.obsPosRecModFlag
-          obst_cen_rec_temp(1:n.num_obst,1:n.dim,jrectemp) = obst.center;
+          for ii = 1:n.num_obst_types
+            obst_cen_rec_temp(1:obst{ii}.num,1:n.dim,jrectemp,ii) = obst{ii}.center;
+          end
         end
         if n.obsPosRecNoModFlag
-          obst_cen_rec_nomod_temp(1:n.num_obst,1:n.dim,jrectemp) = obst.center;
+          for ii = 1:n.num_obst_types
+            obst_cen_rec_nomod_temp(1:obst{ii}.num,1:n.dim,jrectemp,ii) = ...
+              obst{ii}.center;
+          end
         end
         
         if mod( m, const.write_interval  ) == 0

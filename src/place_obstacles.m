@@ -10,12 +10,12 @@ gridTemp = ones(1,3);
 gridTemp(1:dim) = gridSize;
 gridSize = gridTemp;
 % number of sites to fill
-numSites = prod( gridSize ) - length(forbiddenSites);
-allSitesOpen = 1:numSites;
+numSites = prod( gridSize );
 allSitesOpen = setdiff( 1:prod( gridSize ), forbiddenSites );
 deltaL1 = round( lobst-1 );
 deltaL2 = round( (lobst-1) .* min( floor( dim/2 ), 1 ) );
 deltaL3 = round( (lobst-1) .* min( floor( dim/3 ), 1 ) );
+
 if ~excludeVol
   % if you can overlap, floor your max corners
   maxFilledCorners = floor( ff * numSites / (lobst^dim) );
@@ -157,9 +157,9 @@ end
 % save it in obst
 % allocate
 obst.num = length( obstCorners );
-obst.ffWant = ff;
-obst.ffActual = numSitesFilled ./ numSites;
+obst.ffrac= numSitesFilled ./ numSites;
 obst.length = lobst;
+obst.ffWant = ff;
 obst.exclude = excludeVol;
 obst.trys2fill = numTrys;
 obst.corner = zeros( obst.num, 3 ); obst.center = zeros( obst.num, 3 );
