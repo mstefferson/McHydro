@@ -43,10 +43,6 @@ paramlist.so = size_obst;
 % verbose
 verbose = const.verbose;
 % Animation features
-fig = figure(randi(1000));
-colorArray = colormap(['lines(' num2str(num_obst_types) ')']);
-close(fig);
-obst_color = colorArray;
 obst_curv=0.2; %curvature for animations
 tracer_color=[0 1 1]; %cyan
 tracer_curv=1; %curvature for animations
@@ -82,7 +78,9 @@ tpause=modelopt.tpause;      %pause time in animation
 
 %define box for plotting
 if animate && n.dim == 2
-  figure()
+  colorArray = colormap(['lines(' num2str(num_obst_types) ')']);
+else
+  colorArray = rand( num_obst_types, 3 );
 end
 
 % Square lattice definition
@@ -104,14 +102,14 @@ end
 filledObstSites = [];
 % scramble the order unless there are bigger obstacles. No favorites!!!
 obstOrder = zeros( 1, num_obst_types);
-% [~, obstOrder] = sort( paramlist.so ); 
+% [~, obstOrder] = sort( paramlist.so );
 uniqueSizes = fliplr( unique(paramlist.so,'sorted') );
 holder = 1;
 for ii = 1:length(uniqueSizes)
   inds = find( paramlist.so == uniqueSizes(ii) );
   numInds = length(inds);
   obstOrder(holder:holder+numInds-1) = inds( randperm( numInds ) );
-%   paramlist.so( uniqueSizes(ii) );
+  %   paramlist.so( uniqueSizes(ii) );
   holder = holder+numInds;
 end
 % rescale filling fractions if they are too high
@@ -144,7 +142,7 @@ for ii = 1:num_obst_types
   obst{ind} = place_obstacles( ffWant, paramlist.so(ind), ...
     n.grid, modelopt.obst_excl, filledObstSites );
   obst{ind}.be = bind_energy(ind);
-  obst{ind}.color = obst_color(ind,:);
+  obst{ind}.color = colorArray(ind,:);
   obst{ind}.curvature = obst_curv;
   obst{ind}.edgePlace = modelopt.edges_place{ind};
   obst{ind}.tracersOccNum = 0; % reset later
@@ -231,31 +229,34 @@ fileObj = matfile(filename,'Writable',true);
 
 % Allocate memory for recording. for matfile---fileobj---just let it know
 % what some of it's fields is 3d. You don't need to allocate space for
-% everything though
+% everything though. Let the fileObj field to at least be the size of the temp
 % tracer temp records
 if n.trPosRecModFlag
   tracer_cen_rec_temp = zeros( n.num_tracer, n.dim, n.NrecChunk );
-  fileObj.tracer_cen_rec = zeros( n.num_tracer, n.dim, 2 );
+  fileObj.tracer_cen_rec = zeros( n.num_tracer, n.dim, n.NrecChunk );
 end
 if n.trPosRecNoModFlag
   tracer_cen_rec_nomod_temp = zeros( n.num_tracer, n.dim, n.NrecChunk );
-  fileObj.tracer_cen_rec_nomod = zeros( n.num_tracer, n.dim, 2 );
+  fileObj.tracer_cen_rec_nomod = zeros( n.num_tracer, n.dim, n.NrecChunk);
 end
 if n.trStateRecFlag
   tracer_state_rec_temp = zeros( n.num_tracer, n.NrecChunk );
-  fileObj.tracer_state_rec = zeros( n.num_tracer, 2 );
+  fileObj.tracer_state_rec = zeros( n.num_tracer, n.NrecChunk );
 end
 if n.trackOcc
   occupancy_temp = zeros( num_obst_types, n.NrecChunk );
+  fileObj.occupancy = zeros( num_obst_types, n.NrecChunk );
 end
 % obstacles temp records
 if n.obsPosRecModFlag
-  obst_cen_rec_temp = zeros( n.num_obst, n.dim, n.NrecChunk, n.num_obst_types );
-  fileObj.obst_cen_rec = zeros( n.num_obst, n.dim, 2, n.num_obst_types );
+  error('Not written for multiple obstacles. However, they do not move! Position saved in obst');
+  %   obst_cen_rec_temp = zeros( n.num_obst, n.dim, n.NrecChunk, n.num_obst_types );
+  %   fileObj.obst_cen_rec = zeros( n.num_obst, n.dim, 2, n.num_obst_types );
 end
 if n.obsPosRecNoModFlag
-  obst_cen_rec_nomod_temp = zeros( n.num_obst,n.dim, n.NrecChunk, n.num_obst_types  );
-  fileObj.obst_cen_rec_nomod = zeros( n.num_obst, n.dim, 2, n.num_obst_types );
+  error('Not written for multiple obstacles. However, they do not move! Position saved in obst');
+  %   obst_cen_rec_nomod_temp = zeros( n.num_obst,n.dim, n.NrecChunk, n.num_obst_types  );
+  %   fileObj.obst_cen_rec_nomod = zeros( n.num_obst, n.dim, 2, n.num_obst_types );
 end
 
 % Pre-Allocate some commonly used matrices
@@ -273,7 +274,7 @@ if animate && n.dim == 2
   for ii = 1:num_obst_types
     for kObst=1:obst{ii}.num
       obst{ii}=update_rectangle(obst{ii},kObst,obst{ii}.length,n.n_gridpoints,...
-       obst{ii}.color,obst{ii}.curvature);
+        obst{ii}.color,obst{ii}.curvature);
     end
   end
   for kTracer=1:n.num_tracer
@@ -313,9 +314,9 @@ for m=1:n.ntimesteps
   end
   transInds = sub2ind( tSize, occ_new, occ_old);
   tracer.probmov = acceptT( transInds );
-  list.accept = find(rvec<tracer.probmov); 
+  list.accept = find(rvec<tracer.probmov);
   list.reject = setdiff( all_tracer_inds,list.accept );
-
+  
   % Move all accepted changes
   tracer.center(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
   tracer.cen_nomod(list.accept,1:n.dim) = tracer.cen_nomod(list.accept,1:n.dim)+...
@@ -332,7 +333,6 @@ for m=1:n.ntimesteps
     end
     pause(tpause);
   end
-  
   % Recording
   if n.Rec > 0
     if m >= n.twait
@@ -353,19 +353,6 @@ for m=1:n.ntimesteps
               length( find( tracer.state == ii )) ./ tracer.num;
           end
         end
-        % obstacles temp records
-        if n.obsPosRecModFlag
-          for ii = 1:n.num_obst_types
-            obst_cen_rec_temp(1:obst{ii}.num,1:n.dim,jrectemp,ii) = obst{ii}.center;
-          end
-        end
-        if n.obsPosRecNoModFlag
-          for ii = 1:n.num_obst_types
-            obst_cen_rec_nomod_temp(1:obst{ii}.num,1:n.dim,jrectemp,ii) = ...
-              obst{ii}.center;
-          end
-        end
-        
         if mod( m, const.write_interval  ) == 0
           RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
           % tracer write to file
@@ -373,6 +360,7 @@ for m=1:n.ntimesteps
             fileObj.tracer_cen_rec(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
               tracer_cen_rec_temp;
           end
+          
           if n.trPosRecNoModFlag
             fileObj.tracer_cen_rec_nomod(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
               tracer_cen_rec_nomod_temp;
@@ -382,19 +370,10 @@ for m=1:n.ntimesteps
               tracer_state_rec_temp;
           end
           if n.trackOcc
-            fileObj.occupancy(1,RecIndTemp) = occupancy_temp;
+            fileObj.occupancy(1:num_obst_types,RecIndTemp) = occupancy_temp;
           end
-          % obstacles temp records
-          if n.obsPosRecModFlag
-            fileObj.obst_cen_rec(1:n.num_obst,1:n.dim,RecIndTemp) = ...
-              obst_cen_rec_temp;
-          end
-          if n.obsPosRecNoModFlag
-            fileObj.obst_cen_rec_nomod(1:n.num_obst,1:n.dim,RecIndTemp) = ...
-              obst_cen_rec_nomod_temp;
-          end
-          jrectemp = 0;
           jchunk = jchunk + 1;
+          jrectemp = 0;
           if verbose
             fprintf('%d done\n', round(100 * m ./ n.ntimesteps ) )
           end

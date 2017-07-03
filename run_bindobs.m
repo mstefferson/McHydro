@@ -19,27 +19,22 @@ try
   const = struct();
   modelopt = struct();
   
-  % Check run status
-  if exist('StatusRunning.txt','file') ~= 0
-    %     error('Code is already running in directory');
-  elseif exist('StatusFinished.txt','file') ~= 0
-    movefile('StatusFinished.txt','StatusRunning.txt');
-  else
-    fopen('StatusRunning.txt','w');
-  end
+  %  Run status
+  !touch StatusRunning.txt
   
   %make output directories if they don't exist
-  if exist('./runfiles','dir') == 0; mkdir('./runfiles') ;end;
+  if exist('./runfiles','dir') == 0; mkdir('./runfiles') ;end
   
   %load params. check if it exists, if not, run it, then delete it
   %initparams on tracked, so make it if it's not there
-  if exist('Params.mat','file') == 0
-    if exist('initparams.m','file') == 0
+  if exist('Params','file') == 0
+    if exist('initParams','file') == 0
       cpmatparams
     end
     initParams
   end
   load Params.mat;
+  movefile('Params.mat','ParamsRunning.mat');
   
   % Scramble and shift the seed
   % first, paused base on input seed, then scramble
@@ -63,32 +58,44 @@ try
   param_mat  = combvec(runVec, params.bind_energy_vec{1},...
     params.ffrac_obst_vec{1}, params.size_obst{1}, params.tr_bnd_diff{1} );
   numVariedParams =  size(param_mat,1);
-  for ii = 2:params.numObstType
+  for ii = 2:params.num_obst_types
     tempParam  = combvec(runVec, params.bind_energy_vec{ii},...
       params.ffrac_obst_vec{ii}, params.size_obst{ii},...
       params.tr_bnd_diff{ii});
     param_mat = combvec( param_mat, tempParam);
   end
   [~,nparams] = size(param_mat);
-  
+
   %resize for multiple obstacles and get indices
-  param_mat = reshape( param_mat, [numVariedParams, nparams*params.numObstType] );
-  paraObstInds = 1:nparams:( (params.numObstType-1)*nparams+1 );
+  param_mat = reshape( param_mat, [numVariedParams, nparams*params.num_obst_types] );
   % For some reason, param_mat gets "sliced". Create vectors to get arround
   param_RunID   = param_mat(1,:);
   param_bind     = param_mat(2,:);
   param_ffo      = param_mat(3,:);
   param_sizeobs = param_mat(4,:);
   param_tracer_bnd_diff = param_mat(5,:);
-  % reshape mult obst ones
-  param_bind = reshape( param_bind, [nparams, params.numObstType] );
-  param_ffo = reshape( param_ffo, [nparams, params.numObstType] );
-  param_sizeobs = reshape( param_sizeobs, [nparams, params.numObstType] );
-  param_tracer_bnd_diff = reshape( param_tracer_bnd_diff, [nparams, params.numObstType] );
-  
+  % reshape mult obst ones, each row is trial, each column an obstacle type
+  param_bind = reshape( param_bind, [params.num_obst_types, nparams] ).';
+  param_ffo = reshape( param_ffo, [params.num_obst_types, nparams] ).';
+  param_sizeobs = reshape( param_sizeobs, [params.num_obst_types,nparams] ).';
+  param_tracer_bnd_diff = reshape( param_tracer_bnd_diff, [params.num_obst_types,nparams] ).';
+  % turn off animations if n>1
+  if nparams > 1
+    modelopt.animate = 0;
+  end
   fprintf('Starting paramloop \n')
   fprintf('nparams = %d\n', nparams)
   RunTimeID = tic;
+ 
+  % make sure your number of obst types are 
+  if (length( params.bind_energy_vec ) ~= params.num_obst_types ||...
+      length( params.ffrac_obst_vec ) ~= params.num_obst_types ||...
+      length( params.size_obst ) ~= params.num_obst_types ||...
+      length( params.tr_bnd_diff ) ~= params.num_obst_types ||...
+      length( modelopt.edges_place ) ~= params.num_obst_types )
+   fprintf('error: varying number of obstacles\n')
+   error('varying number of obstacles')
+  end
   
   % eliminate broadcast warning
   num_tracer = params.num_tracer;
@@ -100,7 +107,7 @@ try
   ntimesteps =  const.ntimesteps;
   NrecTot = const.NrecTot;
   tind = trialmaster.tind;
-  numObstType = params.numObstType;
+  numObstType = params.num_obst_types;
   % run it based on nparams
   if nparams > 1
     fprintf('Using parfor to run diffusion model\n');
@@ -141,15 +148,19 @@ try
       size_obst   = param_sizeobs(j,:);
       tr_bnd_diff = param_tracer_bnd_diff(j,:);
       
-     %parameter cell
-     pvec= {num_tracer, ...
+      %parameter cell
+      pvec= {num_tracer, ...
         numObstType, tr_unbnd_diff, tr_bnd_diff,...
         ffrac_obst, bind_energy, size_obst};
-      
+      % file string 
+      bndDStr = num2str(tr_bnd_diff,'-%.2f'); bndDStr = bndDStr(2:end);
+      beStr = num2str(bind_energy,'-%.2f'); beStr = beStr(2:end);
+      ffoStr = num2str(ffrac_obst,'-%.2f'); ffoStr = ffoStr (2:end);
+      soStr = num2str(size_obst,'-%d'); soStr  = soStr (2:end);
       filestring=['unD',num2str(tr_unbnd_diff),...
-        '_bD',num2str(tr_bnd_diff,'%.2f'),...
-        '_bind',num2str(bind_energy),...
-        '_fo',num2str(ffrac_obst,'%.2f'),'_so',num2str(size_obst,'%.2d'),...
+        '_bD', bndDStr,...
+        '_bind',beStr,...
+        '_fo',ffoStr,'_so',soStr,...
         '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
         '_oe',num2str(obst_excl),'_ng',num2str(n_gridpoints),...
         '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
@@ -185,14 +196,18 @@ try
     pvec={num_tracer, ...
       numObstType,tr_unbnd_diff, tr_bnd_diff,...
       ffrac_obst, bind_energy, size_obst}; %parameter vector
-    
+    % file string 
+    bndDStr = num2str(tr_bnd_diff,'-%.2f'); bndDStr = bndDStr(2:end);
+    beStr = num2str(bind_energy,'-%.2f'); beStr = beStr(2:end);
+    ffoStr = num2str(ffrac_obst,'-%.2f'); ffoStr  =ffoStr (2:end);
+    soStr = num2str(size_obst,'-%d'); soStr  = soStr (2:end);
     filestring=['unD',num2str(tr_unbnd_diff),...
-      '_bD',num2str(tr_bnd_diff,'%.2f'),...
-      '_bind',num2str(bind_energy),...
-      '_fo',num2str(ffrac_obst,'%.2f'),'_so',num2str(size_obst,'%.2d'),...
+      '_bD', bndDStr,...
+      '_bind',beStr,...
+      '_fo',ffoStr,'_so',soStr,...
       '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
       '_oe',num2str(obst_excl),'_ng',num2str(n_gridpoints),...
-      '_dim', num2str(dim), '_nt',num2str(ntimesteps),...
+      '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
       '_nrec', num2str(NrecTot),...
       '_t', num2str(tind,'%.2d'),'.',num2str(RunID,'%.2d') ];
     
@@ -213,7 +228,7 @@ try
   fprintf('Completed run: %s\n',EndTime);
   fclose('all');
   movefile('StatusRunning.txt','StatusFinished.txt')
-  movefile('Params.mat','ParamsLastRun.mat');
+  movefile('ParamsRunning.mat','ParamsLastRun.mat');
 catch err
   fprintf('%s',err.getReport('extended') );
 end % try catch

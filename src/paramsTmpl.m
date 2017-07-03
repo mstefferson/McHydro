@@ -15,11 +15,9 @@ trialmaster.verbose = 0; % print things
 params.bind_energy_vec = { [0] }; % binding_energy
 params.ffrac_obst_vec= { [ 0.1 ] }; %filling fraction of obstacles
 params.size_obst = { [1] }; % size of obst. prgm forces it ot be odd
+params.tr_bnd_diff = { 0 }; %bound diffusion
 params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion
-params.tr_bnd_diff = { 0 }; %bound diffusion
-% save number of obstacle type
-params.numObstType = length( params.ffrac_obst_vec );
 
 %grid stuff
 const.dim = 2; % system dimension
@@ -43,24 +41,32 @@ const.maxpts_msd = 100; % Flag for calculating quad
 const.useStart = 1; % Using t=1 to start windows instead of t=end
 
 %model stuff
-modelopt.animate=0;          %1 to show animation, 0 for no animation
-modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
-modelopt.movie=0;           %1 to record movie
+modelopt.edges_place={0};   %1 if place tracers on obstacle edges
 modelopt.obst_excl=0;       %1 if obstacles sterically exclude each other, 0 if not
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
 modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude
-modelopt.edges_place={0};   %1 if place tracers on obstacle edges
+modelopt.animate=0;          %1 to show animation, 0 for no animation
+modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
+modelopt.movie=0;           %1 to record movie
+
+% save something to const and modelopt 
+params.num_obst_types = length( params.ffrac_obst_vec );
+modelopt.dimension=const.dim; %system dimension
+const.obst_excl = modelopt.obst_excl; %system dimension
+const.obst_trace_excl = modelopt.obst_trace_excl; %system dimension
+
+% fix edges
+if length(modelopt.edges_place) ~= params.num_obst_types
+  modelopt.edges_place = num2cell( zeros( 1, params.num_obst_types ) );
+end
 % Dont place on edges if obstacles can overlap
 for ii = 1:length(params.tr_bnd_diff)
   if modelopt.obst_excl == 0
     modelopt.edges_place{ii}=0;   %1 if place tracers on obstacle edges
+  elseif params.tr_bnd_diff(ii) == 0
+    modelopt.edges_place{ii}=1;   %1 if place tracers on obstacle edges
   end
 end
-
-% save something to const and modelopt 
-modelopt.dimension=const.dim; %system dimension
-const.obst_excl = modelopt.obst_excl; %system dimension
-const.obst_trace_excl = modelopt.obst_trace_excl; %system dimension
 
 % Fix time stuff and add some calculated things
 if const.twait < 1; const.twait = 1; end
@@ -80,7 +86,7 @@ const.NchunkTot  = const.ntimesteps / const.write_interval - const.Nchunklost; %
 const.verbose = trialmaster.verbose;
 
 % Fix size issues
-for ii=1:params.numObstType
+for ii=1:params.num_obst_types
   sizeTemp = params.size_obst{ii};
   sizeTemp( ~mod(sizeTemp,2) ) = ...
     sizeTemp(~mod(sizeTemp,2) ) - 1; 
