@@ -44,6 +44,9 @@ const.useStart = 1; % Using t=1 to start windows instead of t=end
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie
+modelopt.movie_name='movieFile';  %file name
+modelopt.movie_framerate = 1; % number of step to record
+modelopt.movie_steps = 100; % number of step to record
 modelopt.obst_excl=0;       %1 if obstacles sterically exclude each other, 0 if not
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
 modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude

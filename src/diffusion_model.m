@@ -89,7 +89,7 @@ if animate && n.dim == 2
   figure()
 end
 
-% Square lattice definition 
+% Square lattice definition
 if n.dim == 2
   lattice.moves=[1 0; -1 0; 0 1; 0 -1];
 elseif n.dim == 3
@@ -158,7 +158,7 @@ n.num_obst = obst.num; %square lattice
 n.num_tracer = tracer.num;
 
 % Derived parameters and store
-paramlist.ffo_act = obst.ffActual; 
+paramlist.ffo_act = obst.ffActual;
 
 % Set up things for recording
 tracer.cen_nomod=tracer.center;
@@ -205,8 +205,8 @@ if animate && n.dim == 2
   ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
   ax.YTick=ax.XTick;
   ax.XLabel.String='x position';ax.YLabel.String='y position';
-  ax.FontSize=14; 
- for kObst=1:n.num_obst
+  ax.FontSize=14;
+  for kObst=1:n.num_obst
     obst=update_rectangle(obst,kObst,obst.length,n.n_gridpoints,...
       obst.color,obst.curvature);
     pause(tpause);
@@ -215,6 +215,16 @@ if animate && n.dim == 2
     tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
       tracer.color,tracer.curvature);
     pause(tpause);
+  end
+  if modelopt.movie
+    fprintf('Making movie\n')
+    Fig = gcf;
+    Fig.WindowStyle = 'normal';
+    movObj = VideoWriter(modelopt.movie_name);
+    movObj.FrameRate = modelopt.movie_framerate;
+    open(movObj);
+    numMovieRec = 1;
+    printFinish = 1;
   end
 end
 
@@ -228,7 +238,7 @@ for m=1:n.ntimesteps
   % Attempt new tracer positions
   center_old=tracer.center;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
-
+  
   % Enforcing periodic boundary conditions
   center_new(:,1:n.dim) = mod( center_temp - onesNt2 , NgsNt2 ) + onesNt2;
   sites_new = ...
@@ -283,6 +293,17 @@ for m=1:n.ntimesteps
       tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
         tracer.color,tracer.curvature);
       pause(tpause);
+    end
+    if modelopt.movie
+      numMovieRec = numMovieRec + 1;
+      if numMovieRec < modelopt.movie_steps
+        Fr = getframe(Fig);
+        writeVideo(movObj,Fr);
+      elseif printFinish == 1
+        printFinish = 0;
+        fprintf('Finished movie\n')
+        close(movObj)
+      end
     end
   end
   
@@ -361,7 +382,7 @@ end
 % rm obst field in 3d. Way too much data
 if n.dim == 3
   fields2go = {'allpts', 'center', 'centerInds',...
-     'corner' ,'cornerInds','cen_nomod','edgeInds'};
+    'corner' ,'cornerInds','cen_nomod','edgeInds'};
   obst = rmfield( obst, fields2go );
 end
 
@@ -371,9 +392,4 @@ fileObj.paramlist = paramlist;
 fileObj.obst = obst;
 fileObj.tracer = tracer;
 fileObj.modelopt = modelopt;
-
-if modelopt.movie
-  movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
-    const,n,modelopt.movie_timestep,modelopt.movie_filename);
-end
 
