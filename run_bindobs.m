@@ -52,33 +52,17 @@ try
   %display everything
   fprintf('parameters read in\n');
   disp(trialmaster); disp(params); disp(const); disp(modelopt);
-  
-  %build a parameter matrix
-  runVec = trialmaster.runstrtind + (0:trialmaster.nt-1);
-  param_mat  = combvec(runVec, params.bind_energy_vec{1},...
-    params.ffrac_obst_vec{1}, params.size_obst{1}, params.tr_bnd_diff{1} );
-  numVariedParams =  size(param_mat,1);
-  for ii = 2:params.num_obst_types
-    tempParam  = combvec(runVec, params.bind_energy_vec{ii},...
-      params.ffrac_obst_vec{ii}, params.size_obst{ii},...
-      params.tr_bnd_diff{ii});
-    param_mat = combvec( param_mat, tempParam);
-  end
-  [~,nparams] = size(param_mat);
+  disp(obst);
 
-  %resize for multiple obstacles and get indices
-  param_mat = reshape( param_mat, [numVariedParams, nparams*params.num_obst_types] );
-  % For some reason, param_mat gets "sliced". Create vectors to get arround
-  param_RunID   = param_mat(1,:);
-  param_bind     = param_mat(2,:);
-  param_ffo      = param_mat(3,:);
-  param_sizeobs = param_mat(4,:);
-  param_tracer_bnd_diff = param_mat(5,:);
-  % reshape mult obst ones, each row is trial, each column an obstacle type
-  param_bind = reshape( param_bind, [params.num_obst_types, nparams] ).';
-  param_ffo = reshape( param_ffo, [params.num_obst_types, nparams] ).';
-  param_sizeobs = reshape( param_sizeobs, [params.num_obst_types,nparams] ).';
-  param_tracer_bnd_diff = reshape( param_tracer_bnd_diff, [params.num_obst_types,nparams] ).';
+  % run obstacle manager
+ [obstObj] =  obstManager( obst, modelopt );
+
+ %build a parameter matrix
+  runVec = trialmaster.runstrtind + (0:trialmaster.nt-1);
+  param_mat = combvec( runVec, obstObj.inds);
+  [~,nparams] = size(param_mat);
+  paramRun = param_mat(1,:);
+  paramObst = param_mat(2,:);
   % turn off animations if n>1
   if nparams > 1
     modelopt.animate = 0;
@@ -86,17 +70,7 @@ try
   fprintf('Starting paramloop \n')
   fprintf('nparams = %d\n', nparams)
   RunTimeID = tic;
- 
-  % make sure your number of obst types are 
-  if (length( params.bind_energy_vec ) ~= params.num_obst_types ||...
-      length( params.ffrac_obst_vec ) ~= params.num_obst_types ||...
-      length( params.size_obst ) ~= params.num_obst_types ||...
-      length( params.tr_bnd_diff ) ~= params.num_obst_types ||...
-      length( modelopt.edges_place ) ~= params.num_obst_types )
-   fprintf('error: varying number of obstacles\n')
-   error('varying number of obstacles')
-  end
-  
+
   % eliminate broadcast warning
   num_tracer = params.num_tracer;
   tr_unbnd_diff = params.tr_unbnd_diff;
@@ -108,7 +82,9 @@ try
   NrecTot = const.NrecTot;
   tind = trialmaster.tind;
   numObstType = params.num_obst_types;
-  % run it based on nparams
+  obstParam = obstObj.param;
+  obstStr = obstObj.str;
+% run it based on nparams
   if nparams > 1
     fprintf('Using parfor to run diffusion model\n');
     % Set-up a parpool that's cluster safe
@@ -142,35 +118,22 @@ try
       fprintf('Parfor j = %d Rand num = %f \n', j, rand() );
       
       % grab parameters
-      RunID       = param_RunID(j);
-      bind_energy = param_bind(j,:);
-      ffrac_obst  = param_ffo(j,:);
-      size_obst   = param_sizeobs(j,:);
-      tr_bnd_diff = param_tracer_bnd_diff(j,:);
-      
+      runIdTemp = paramRun(j);
+      paramObstTemp = paramObst(j);
       %parameter cell
-      pvec= {num_tracer, ...
-        numObstType, tr_unbnd_diff, tr_bnd_diff,...
-        ffrac_obst, bind_energy, size_obst};
+      pvec= [num_tracer, tr_unbnd_diff, paramObstTemp ];
       % file string 
-      bndDStr = num2str(tr_bnd_diff,'-%.2f'); bndDStr = bndDStr(2:end);
-      beStr = num2str(bind_energy,'-%.2f'); beStr = beStr(2:end);
-      ffoStr = num2str(ffrac_obst,'-%.2f'); ffoStr = ffoStr (2:end);
-      soStr = num2str(size_obst,'-%d'); soStr  = soStr (2:end);
       filestring=['unD',num2str(tr_unbnd_diff),...
-        '_bD', bndDStr,...
-        '_bind',beStr,...
-        '_fo',ffoStr,'_so',soStr,...
+        obstStr{1}, ...
         '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
         '_oe',num2str(obst_excl),'_ng',num2str(n_gridpoints),...
         '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
         '_nrec', num2str(NrecTot),...
-        '_t', num2str(tind,'%.2d'),'.',num2str(RunID,'%.2d') ];
+        '_t', num2str(tind,'%.2d'),'.',num2str(runIdTemp,'%.2d') ];
       filename=['data_',filestring,'.mat'];
       fprintf('%s\n',filename);
-      
       %run the model!
-      [~,~] = diffusion_model(pvec,const,modelopt,filename);
+      [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},filename);
       movefile(filename,'./runfiles');
     end
     % Clean up tmp
@@ -185,38 +148,24 @@ try
     rmdir(clustdir);
   else
     fprintf('Running diffusion model once\n');
-    
+    j = 1;
     % grab parameters
-    RunID       = param_RunID(1);
-    % put multi obstacle values in one vector
-    bind_energy = param_bind(1,:);
-    ffrac_obst  = param_ffo(1,:);
-    size_obst   = param_sizeobs(1,:);
-    tr_bnd_diff = param_tracer_bnd_diff(1,:);
-    pvec={num_tracer, ...
-      numObstType,tr_unbnd_diff, tr_bnd_diff,...
-      ffrac_obst, bind_energy, size_obst}; %parameter vector
+    runIdTemp = paramRun(j);
+    paramObstTemp = paramObst(j);
+    %parameter cell
+    pvec= [num_tracer, tr_unbnd_diff, paramObstTemp ];
     % file string 
-    bndDStr = num2str(tr_bnd_diff,'-%.2f'); bndDStr = bndDStr(2:end);
-    beStr = num2str(bind_energy,'-%.2f'); beStr = beStr(2:end);
-    ffoStr = num2str(ffrac_obst,'-%.2f'); ffoStr  =ffoStr (2:end);
-    soStr = num2str(size_obst,'-%d'); soStr  = soStr (2:end);
     filestring=['unD',num2str(tr_unbnd_diff),...
-      '_bD', bndDStr,...
-      '_bind',beStr,...
-      '_fo',ffoStr,'_so',soStr,...
+      obstStr{1}, ...
       '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
       '_oe',num2str(obst_excl),'_ng',num2str(n_gridpoints),...
       '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
       '_nrec', num2str(NrecTot),...
-      '_t', num2str(tind,'%.2d'),'.',num2str(RunID,'%.2d') ];
-    
+      '_t', num2str(tind,'%.2d'),'.',num2str(runIdTemp,'%.2d') ];
     filename=['data_',filestring,'.mat'];
     fprintf('%s\n',filename);
-    
     %run the model!
-    [~,~] = diffusion_model(pvec,const,modelopt,filename);
-    fprintf('Finished %s \n', filename);
+    [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},filename);
     movefile(filename,'./runfiles');
   end %if nparams > 1
   runTime = toc(RunTimeID);

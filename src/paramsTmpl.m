@@ -11,11 +11,10 @@ trialmaster.nt = 1; % number of trials
 trialmaster.seedShift = 1; % seed shifter resolve cluster issues
 trialmaster.verbose = 0; % print things
 
-%key parameters and constants
-params.bind_energy_vec = { [0] }; % binding_energy
-params.ffrac_obst_vec= { [ 0.1 ] }; %filling fraction of obstacles
-params.size_obst = { [1] }; % size of obst. prgm forces it ot be odd
-params.tr_bnd_diff = { 0 }; %bound diffusion
+% obstacles cell of cells:
+% {'rand', bndDiff, be, ffo, so,  edgesPlace};
+% {'wall', bndDiff, be, thickness, gapWidth};
+obst = { {'rand', 0, 1, 0.1, 1, 0} }'
 params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion
 
@@ -50,23 +49,23 @@ modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slo
 modelopt.movie=0;           %1 to record movie
 
 % save something to const and modelopt 
-params.num_obst_types = length( params.ffrac_obst_vec );
+params.num_obst_types = length( obst );
 modelopt.dimension=const.dim; %system dimension
 const.obst_excl = modelopt.obst_excl; %system dimension
 const.obst_trace_excl = modelopt.obst_trace_excl; %system dimension
 
-% fix edges
-if length(modelopt.edges_place) ~= params.num_obst_types
-  modelopt.edges_place = num2cell( zeros( 1, params.num_obst_types ) );
-end
-% Dont place on edges if obstacles can overlap
-for ii = 1:length(params.tr_bnd_diff)
-  if modelopt.obst_excl == 0
-    modelopt.edges_place{ii}=0;   %1 if place tracers on obstacle edges
-  elseif params.tr_bnd_diff(ii) == 0
-    modelopt.edges_place{ii}=1;   %1 if place tracers on obstacle edges
-  end
-end
+%{% fix edges%}
+%if length(modelopt.edges_place) ~= params.num_obst_types
+  %modelopt.edges_place = num2cell( zeros( 1, params.num_obst_types ) );
+%end
+%% Dont place on edges if obstacles can overlap
+%for ii = 1:length(params.tr_bnd_diff)
+  %if modelopt.obst_excl == 0
+    %modelopt.edges_place{ii}=0;   %1 if place tracers on obstacle edges
+  %elseif params.tr_bnd_diff(ii) == 0
+    %modelopt.edges_place{ii}=1;   %1 if place tracers on obstacle edges
+  %end
+%{end%}
 
 % Fix time stuff and add some calculated things
 if const.twait < 1; const.twait = 1; end
@@ -86,22 +85,22 @@ const.NchunkTot  = const.ntimesteps / const.write_interval - const.Nchunklost; %
 const.verbose = trialmaster.verbose;
 
 % Fix size issues
-for ii=1:params.num_obst_types
-  sizeTemp = params.size_obst{ii};
-  sizeTemp( ~mod(sizeTemp,2) ) = ...
-    sizeTemp(~mod(sizeTemp,2) ) - 1; 
-  sizeTemp = unique(sizeTemp);
-  sizeTemp = sizeTemp( sizeTemp <= ...
-    round( max(params.ffrac_obst_vec{ii}) ^ (1/const.dim) * const.n_gridpoints ) );
-  if isempty(sizeTemp); sizeTemp = 1; end
-  params.size_obst{ii} = sizeTemp;
-end
+%for ii=1:params.num_obst_types
+  %sizeTemp = params.size_obst{ii};
+  %sizeTemp( ~mod(sizeTemp,2) ) = ...
+    %sizeTemp(~mod(sizeTemp,2) ) - 1; 
+  %sizeTemp = unique(sizeTemp);
+  %sizeTemp = sizeTemp( sizeTemp <= ...
+    %round( max(params.ffrac_obst_vec{ii}) ^ (1/const.dim) * const.n_gridpoints ) );
+  %if isempty(sizeTemp); sizeTemp = 1; end
+  %params.size_obst{ii} = sizeTemp;
+%end
 
-const.size_tracer( ~mod(const.size_tracer,2) ) = ...
-  const.size_tracer(~mod(const.size_tracer,2) ) - 1; 
-const.size_tracer = unique(const.size_tracer);
-if isempty(const.size_tracer); const.size_tracer = 1; end
+%const.size_tracer( ~mod(const.size_tracer,2) ) = ...
+  %const.size_tracer(~mod(const.size_tracer,2) ) - 1; 
+%const.size_tracer = unique(const.size_tracer);
+%if isempty(const.size_tracer); const.size_tracer = 1; end
 
 
 % Save it
-save('Params', 'const','params','trialmaster','modelopt');
+save('Params', 'obst', 'const','params','trialmaster','modelopt');
