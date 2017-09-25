@@ -90,7 +90,7 @@ if verbose
 end
 
 % place some obstacles
-[obst, hopInfo] =  buildObstMaster( obstCell, tr_diff_unb, n.grid, colorArray );
+[obst, obstInfo] =  buildObstMaster( obstCell, tr_diff_unb, n.grid, colorArray );
 
 %filledObstSites = [];
 %% scramble the order unless there are bigger obstacles. No favorites!!!
@@ -184,37 +184,33 @@ if verbose
   tic
 end
 
-keyboard
 
 % place tracers
 % Handle exclusion
-be4place = paramlist.be;
-% place 'em!
-tracer = place_tracers( paramlist.num_tracer, obst, be4place, ffoAct, n.grid );
-% reset empty state 0 to # obst types + 1
-tracer.state( tracer.state == 0 ) = num_obst_types + 1;
-% update obstacles to say how many tracer should be on them
-for ii = 1:num_obst_types + 1
-  obst{ii}.tracersOccNum = tracer.occNum(ii);
-  obst{ii}.tracerOccFrac = tracer.occFrac(ii);
-end
+%{be4place = paramlist.be;%}
+%% place 'em!
+%tracer = place_tracers( paramlist.num_tracer, obst, be4place, ffoAct, n.grid );
+%% reset empty state 0 to # obst types + 1
+%tracer.state( tracer.state == 0 ) = num_obst_types + 1;
+%% update obstacles to say how many tracer should be on them
+%for ii = 1:num_obst_types + 1
+  %obst{ii}.tracersOccNum = tracer.occNum(ii);
+  %obst{ii}.tracerOccFrac = tracer.occFrac(ii);
+%end
 
-if verbose
-  tOut = toc;
-  fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
-end
-% the rest of the tracer fields
-tracer.color = tracer_color;
-tracer.curvature = tracer_curv;
-tracer.pmove_unb = tr_diff_unb;
-tracer.pmove_bnd = tr_diff_bnd;
-tracer.probmov = zeros(num_tracer,1);
-
+%if verbose
+  %tOut = toc;
+  %fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
+%end
+%% the rest of the tracer fields
+%tracer.color = tracer_color;
+%tracer.curvature = tracer_curv;
+%tracer.pmove_unb = tr_diff_unb;
+%tracer.pmove_bnd = tr_diff_bnd;
+%{tracer.probmov = zeros(num_tracer,1);%}
+tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, n.grid );
 % Derived parameters and store
-n.num_tracer = tracer.num;
-
-% Set up things for recording
-tracer.cen_nomod=tracer.center;
+n.num_tracer = tracer.Num;
 % Open file for incremental writing
 fileObj = matfile(filename,'Writable',true);
 
@@ -253,9 +249,10 @@ end
 % Pre-Allocate some commonly used matrices
 onesNt2 = ones( n.num_tracer, n.dim ); % matrix of ones ( Ntracer x 2 ) used for mod
 NgsNt2 = repmat( n.grid, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
-
 % Animate first position
 if animate && n.dim == 2
+  obstRectangle = cell( 1, num_obst_types );
+  tracerRectangle = cell( 1, 1 );
   ax=gca;axis square;ax.XGrid='on';ax.YGrid='on';
   ax.XLim=[0.5 n.n_gridpoints+0.5];ax.YLim=[0.5 n.n_gridpoints+0.5];
   ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
@@ -263,32 +260,35 @@ if animate && n.dim == 2
   ax.XLabel.String='x position';ax.YLabel.String='y position';
   ax.FontSize=14;
   for ii = 1:num_obst_types
-    for kObst=1:obst{ii}.num
-      obst{ii}=update_rectangle(obst{ii},kObst,obst{ii}.length,n.n_gridpoints,...
-        obst{ii}.color,obst{ii}.curvature);
+    for kObst=1:obst{ii}.Num
+      obstRectangle{ii}=update_rectangle(obst{ii}.Corners,obstRectangle{ii},...
+      kObst,obst{ii}.Length,n.n_gridpoints,...
+        obst{ii}.Color,obst{ii}.Curvature);
     end
   end
-  for kTracer=1:n.num_tracer
-    tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
-      tracer.color,tracer.curvature);
+  for kTracer=1:tracer.Num
+    tracerRectangle{1}=update_rectangle(tracer.Corners, tracerRectangle{1}, ...
+      kTracer,tracer.Length,n.n_gridpoints,...
+      tracer.Color,tracer.Curvature);
   end
   pause(2);
 end
-if any( ismember( obst{1}.allpts, obst{2}.allpts ) )
+if any( ismember( obst{1}.AllPts, obst{2}.AllPts ) )
   error('differect obstacles are overlapping')
 end
 
 % preallocate some things to prevent errors
-center_new = ones( n.num_tracer, 3 );
+center_new = ones( tracer.Num, 3 );
 all_tracer_inds = 1:n.num_tracer;
 occ_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
+keyboard
 % loop over time points
 if verbose; fprintf('Starting time loop\n'); tic; end
 for m=1:n.ntimesteps
   % Try and move everything
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);
   % Attempt new tracer positions
-  center_old=tracer.center;
+  center_old=tracer.AllPts;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
   
   % Enforcing periodic boundary conditions
@@ -309,8 +309,8 @@ for m=1:n.ntimesteps
   list.reject = setdiff( all_tracer_inds,list.accept );
   
   % Move all accepted changes
-  tracer.center(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
-  tracer.cen_nomod(list.accept,1:n.dim) = tracer.cen_nomod(list.accept,1:n.dim)+...
+  tracer.AllPts(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
+  tracer.PosNoMod(list.accept,1:n.dim) = tracer.PosNoMod(list.accept,1:n.dim)+...
     lattice.moves(list.tracerdir(list.accept),1:n.dim); %center, no periodic wrapping
   
   tracer.allpts(list.accept)=sites_new(list.accept); %update other sites
@@ -330,10 +330,10 @@ for m=1:n.ntimesteps
       if mod( m, n.rec_interval  ) == 0
         % tracer temp records
         if n.trPosRecModFlag
-          tracer_cen_rec_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.center;
+          tracer_cen_rec_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.AllPts;
         end
         if n.trPosRecNoModFlag
-          tracer_cen_rec_nomod_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.cen_nomod;
+          tracer_cen_rec_nomod_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.PosNoMod;
         end
         if n.trStateRecFlag
           tracer_state_rec_temp(1:n.num_tracer,jrectemp) = tracer.state;

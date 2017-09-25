@@ -6,13 +6,16 @@ classdef WallObstClass
     Ff = 0;
     Thickness = 0;
     GapWidth = 0;
+    Length = 1;
     Color = [0 0 0];
     Curvature = 0.2;
+    EdgePlaceFlag = 0;
     TracerOccNum = 0;
     TracerOccFrac = 0;
     AllPts = 0;
     Corners = 0;
     NumFilledSites = 0;
+    Num = 0;
   end % properties
   
   methods
@@ -39,6 +42,7 @@ classdef WallObstClass
       obj.Corners = [ tempInds(1,:)', tempInds(2,:)' ];
       obj.AllPts = sub2ind( gridSize, obj.Corners(:,1), obj.Corners(:,2) );
       obj.NumFilledSites = length( obj.AllPts );
+      obj.Num = obj.NumFilledSites;
       obj.Ff = obj.NumFilledSites / prod( gridSize );
     end % place_obst
   end % methods

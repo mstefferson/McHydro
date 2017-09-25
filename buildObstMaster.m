@@ -66,5 +66,5 @@ bindT = exp( -deltaG );
 hopT = repmat( hopProb, [num_obst_types+1, 1] ) ;
 % accept probability
 hopInfo.acceptT = hopT .* bindT;
-hopInfo.deltaG = be;
+hopInfo.be = be;
 hopInfo.ff = ff;
