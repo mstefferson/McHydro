@@ -12,7 +12,7 @@ trialmaster.seedShift = 1; % seed shifter resolve cluster issues
 trialmaster.verbose = 0; % print things
 
 % obstacles cell of cells:
-% {'rand', bndDiff, be, ffo, so,  edgesPlace};
+% {'rand', bndDiff, be, ffo, so, obstExclude, edgesPlace};
 % {'wall', bndDiff, be, thickness, gapWidth};
 obst = { {'rand', 0, 1, 0.1, 1, 0} }'
 params.num_tracer = 100; %filling fraction of tracers
@@ -41,9 +41,7 @@ const.useStart = 1; % Using t=1 to start windows instead of t=end
 
 %model stuff
 modelopt.edges_place={0};   %1 if place tracers on obstacle edges
-modelopt.obst_excl=0;       %1 if obstacles sterically exclude each other, 0 if not
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
-modelopt.obst_trace_excl=0;  %1 if obstacles and tracers mutually exclude
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie

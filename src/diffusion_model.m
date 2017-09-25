@@ -1,4 +1,4 @@
-function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
+function [tracer,obst] = diffusion_model(paramvec,const,modelopt,obstCell,filename)
 % DIFFUSION_MODEL run model of tracers diffusing through obstacles
 %   inputs are:
 %   pvec = parameter vector containing
@@ -16,29 +16,17 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,filename)
 
 % initialize everythin
 % Parameters from pvec
-totParams = 7;
-
-if (length(paramvec)<totParams)
-  error('diffusion_model: parameter vector too short');
-elseif (length(paramvec)==totParams)
-  num_tracer = paramvec{1};
-  num_obst_types = paramvec{2};
-  tr_diff_unb = paramvec{3};
-  tr_diff_bnd = paramvec{4};
-  ffrac_obst = paramvec{5};
-  bind_energy = paramvec{6};
-  size_obst = paramvec{7};
-elseif (length(paramvec)>totParams)
-  error('diffusion_model: parameter vector too long');
+totParams = 2;
+if length(paramvec) ~= totParams
+  error('diffusion_model: incorrect parameter vector length');
+else 
+  num_tracer = paramvec(1);
+  tr_diff_unb = paramvec(2);
 end
 
 % Paramvec as a struct
 paramlist.num_tracer = num_tracer; %filling frac tracer
 paramlist.tr_diff_unb = tr_diff_unb; %unbound hop energy
-paramlist.tr_diff_bnd = tr_diff_bnd ; % bound hop energy
-paramlist.ffo = ffrac_obst; %filling frac obs
-paramlist.be = bind_energy; % bind energy
-paramlist.so = size_obst;
 
 % verbose
 verbose = const.verbose;
@@ -46,6 +34,9 @@ verbose = const.verbose;
 obst_curv=0.2; %curvature for animations
 tracer_color=[0 1 1]; %cyan
 tracer_curv=1; %curvature for animations
+
+% get number of obstacles
+num_obst_types = length( obstCell );
 
 % Assign internal variables
 n = const;
@@ -99,91 +90,93 @@ if verbose
 end
 
 % place some obstacles
-filledObstSites = [];
-% scramble the order unless there are bigger obstacles. No favorites!!!
-obstOrder = zeros( 1, num_obst_types);
-% [~, obstOrder] = sort( paramlist.so );
-uniqueSizes = fliplr( unique(paramlist.so,'sorted') );
-holder = 1;
-for ii = 1:length(uniqueSizes)
-  inds = find( paramlist.so == uniqueSizes(ii) );
-  numInds = length(inds);
-  obstOrder(holder:holder+numInds-1) = inds( randperm( numInds ) );
-  %   paramlist.so( uniqueSizes(ii) );
-  holder = holder+numInds;
-end
-% rescale filling fractions if they are too high
-fillFracScale = min(  1 / ( sum(paramlist.ffo) ), 1 );
-% allocate a vector of actuall fffrac for placing tracers later
-ffoAct = zeros( num_obst_types, 1 );
-% First initialize the empty 'obstactle' for allocation
-ind = num_obst_types+1;
-obst{ind}.ffoWant = 1 - sum( paramlist.ffo );
-obst{ind}.ffrac = 0;
-obst{ind}.allpts = 0;
-obst{ind}.num = 0;
-obst{ind}.be = 0;
-obst{ind}.color = [0 0 0];
-obst{ind}.curvature = 0;
-obst{ind}.edgePlace = 0;
-obst{ind}.tracersOccNum = 0; % reset later
-obst{ind}.tracerOccFrac = 0; % reset later
-ffoAct(ind) = 0;
-n.num_obst(ind) = obst{ind}.num;
-% update forbidden sites
-filledObstSites = [] ;
-% Loop over obstacle types to initialize
-for ii = 1:num_obst_types
-  if verbose
-    tic
-  end
-  ind = obstOrder(ii);
-  ffWant = fillFracScale .* paramlist.ffo(ind);
-  obst{ind} = place_obstacles( ffWant, paramlist.so(ind), ...
-    n.grid, modelopt.obst_excl, filledObstSites );
-  obst{ind}.be = bind_energy(ind);
-  obst{ind}.color = colorArray(ind,:);
-  obst{ind}.curvature = obst_curv;
-  obst{ind}.edgePlace = modelopt.edges_place{ind};
-  obst{ind}.tracersOccNum = 0; % reset later
-  obst{ind}.tracerOccFrac = 0; % reset later
-  n.num_obst(ind) = obst{ind}.num;
-  ffoAct(ind) = obst{ind}.ffrac;
-  % update forbidden sites
-  filledObstSites = [ filledObstSites; obst{ind}.allpts ] ;
-  if verbose
-    tFill(ii) = toc;
-  end
-end
+[obst, hopInfo] =  buildObstMaster( obstCell, tr_diff_unb, n.grid, colorArray );
 
-% Fix empty sites
-emptySites = setdiff( 1:n.numSites, filledObstSites );
-numEmpty = length(emptySites);
-ind = num_obst_types + 1;
-obst{ind}.ffrac = numEmpty / n.numSites;
-obst{ind}.allpts = emptySites';
-obst{ind}.numobst = numEmpty;
+%filledObstSites = [];
+%% scramble the order unless there are bigger obstacles. No favorites!!!
+%obstOrder = zeros( 1, num_obst_types);
+%% [~, obstOrder] = sort( paramlist.so );
+%uniqueSizes = fliplr( unique(paramlist.so,'sorted') );
+%holder = 1;
+%for ii = 1:length(uniqueSizes)
+  %inds = find( paramlist.so == uniqueSizes(ii) );
+  %numInds = length(inds);
+  %obstOrder(holder:holder+numInds-1) = inds( randperm( numInds ) );
+  %%   paramlist.so( uniqueSizes(ii) );
+  %holder = holder+numInds;
+%end
+%% rescale filling fractions if they are too high
+%fillFracScale = min(  1 / ( sum(paramlist.ffo) ), 1 );
+%% allocate a vector of actuall fffrac for placing tracers later
+%ffoAct = zeros( num_obst_types, 1 );
+%% First initialize the empty 'obstactle' for allocation
+%ind = num_obst_types+1;
+%obst{ind}.ffoWant = 1 - sum( paramlist.ffo );
+%obst{ind}.ffrac = 0;
+%obst{ind}.allpts = 0;
+%obst{ind}.num = 0;
+%obst{ind}.be = 0;
+%obst{ind}.color = [0 0 0];
+%obst{ind}.curvature = 0;
+%obst{ind}.edgePlace = 0;
+%obst{ind}.tracersOccNum = 0; % reset later
+%obst{ind}.tracerOccFrac = 0; % reset later
+%ffoAct(ind) = 0;
+%n.num_obst(ind) = obst{ind}.num;
+%% update forbidden sites
+%filledObstSites = [] ;
+%% Loop over obstacle types to initialize
+%for ii = 1:num_obst_types
+  %if verbose
+    %tic
+  %end
+  %ind = obstOrder(ii);
+  %ffWant = fillFracScale .* paramlist.ffo(ind);
+  %obst{ind} = place_obstacles( ffWant, paramlist.so(ind), ...
+    %n.grid, modelopt.obst_excl, filledObstSites );
+  %obst{ind}.be = bind_energy(ind);
+  %obst{ind}.color = colorArray(ind,:);
+  %obst{ind}.curvature = obst_curv;
+  %obst{ind}.edgePlace = modelopt.edges_place{ind};
+  %obst{ind}.tracersOccNum = 0; % reset later
+  %obst{ind}.tracerOccFrac = 0; % reset later
+  %n.num_obst(ind) = obst{ind}.num;
+  %ffoAct(ind) = obst{ind}.ffrac;
+  %% update forbidden sites
+  %filledObstSites = [ filledObstSites; obst{ind}.allpts ] ;
+  %if verbose
+    %tFill(ii) = toc;
+  %end
+%end
 
-if verbose
-  for ii = 1:num_obst_types
-    fprintf('Overlap = %d\n', ~modelopt.obst_excl );
-    fprintf('Placed %d obstacles in %d tries is %f sec\n', ...
-      obst{ii}.num, obst{ii}.trys2fill, tFill(ii));
-    fprintf('ff want: %f ff actual: %f \n', obst{ii}.ffWant, obst{ii}.ffrac);
-  end
-end
+%% Fix empty sites
+%emptySites = setdiff( 1:n.numSites, filledObstSites );
+%numEmpty = length(emptySites);
+%ind = num_obst_types + 1;
+%obst{ind}.ffrac = numEmpty / n.numSites;
+%obst{ind}.allpts = emptySites';
+%obst{ind}.numobst = numEmpty;
 
-% create binding transition matrix bindT(f,i) ( row/col = obst 1, 2, ..., n, empty )
-% treate empty as N + 1 obstacle
-deltaG = [paramlist.be 0]' - [paramlist.be 0];
-bindT = exp( -deltaG );
-bindT( bindT > 1 ) = 1;
-tSize = size(bindT);
-% Probability to move
-hopProb = [tr_diff_bnd tr_diff_unb];
-hopT = repmat( hopProb, [num_obst_types+1, 1] ) ;
-% accept probability
-acceptT = hopT .* bindT;
+%if verbose
+  %for ii = 1:num_obst_types
+    %fprintf('Overlap = %d\n', ~modelopt.obst_excl );
+    %fprintf('Placed %d obstacles in %d tries is %f sec\n', ...
+      %obst{ii}.num, obst{ii}.trys2fill, tFill(ii));
+    %fprintf('ff want: %f ff actual: %f \n', obst{ii}.ffWant, obst{ii}.ffrac);
+  %end
+%end
+
+%% create binding transition matrix bindT(f,i) ( row/col = obst 1, 2, ..., n, empty )
+%% treate empty as N + 1 obstacle
+%deltaG = [paramlist.be 0]' - [paramlist.be 0];
+%bindT = exp( -deltaG );
+%bindT( bindT > 1 ) = 1;
+%tSize = size(bindT);
+%% Probability to move
+%hopProb = [tr_diff_bnd tr_diff_unb];
+%hopT = repmat( hopProb, [num_obst_types+1, 1] ) ;
+%% accept probability
+%acceptT = hopT .* bindT;
 
 % tracer fields
 if verbose
@@ -191,13 +184,11 @@ if verbose
   tic
 end
 
+keyboard
+
 % place tracers
 % Handle exclusion
-if modelopt.obst_trace_excl == 1
-  be4place = -Inf * ones( num_obst_types, 1 );
-else
-  be4place = paramlist.be;
-end
+be4place = paramlist.be;
 % place 'em!
 tracer = place_tracers( paramlist.num_tracer, obst, be4place, ffoAct, n.grid );
 % reset empty state 0 to # obst types + 1
@@ -409,4 +400,3 @@ if modelopt.movie
   movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
     const,n,modelopt.movie_timestep,modelopt.movie_filename);
 end
-

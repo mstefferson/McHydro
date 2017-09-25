@@ -62,26 +62,31 @@ end
 % random
 function [obst, obstStr] = checkObstRand( obst, modelopt )
 % check inputs
-if length(obst{1,2}) ~= 5
+if length(obst{1,2}) ~= 6
   fprintf('Incorrect number of random obstacle parameters\n')
   error('Incorrect number of random obstacle parameters\n')
 end
-% fix edge place
-% Dont place on edges if obstacles can overlap
-if modelopt.obst_excl == 0
-  obst{1,2}(5)=0;   %1 if place tracers on obstacle edges
-% if bound diffusion = 0, place on edges
-elseif obst{1,2}(1) == 0
-  obst{1,2}(5)=1;   %1 if place tracers on obstacle edges
-end
+
 % check size
 obst{1,2}(4) = max( obst{1,2}(4), 1 );
+
+% fix edge place
+% Dont place on edges if obstacles can overlap
+if obst{1,2}(5) == 0
+  obst{1,2}(6)=0; 
+% if length is one, there are not edges
+elseif obst{1,2}(4) == 1
+  obst{1,2}(6)=0;
+% if bound diffusion = 0, place on edges
+elseif obst{1,2}(1) == 0
+  obst{1,2}(6)=1;
+end
 
 % make string
 obstParams = obst{1,2};
 obstStr = [ '_rand_bD' num2str(obstParams(1),'%.2f')  ...
 '_be' num2str(obstParams(2),'%.2f') '_fo' num2str(obstParams(3),'%.2f')  ...
-'_so' num2str(obstParams(4),'%d') ]; 
+'_so' num2str(obstParams(4),'%d') '_oe', num2str( obstParams(5), '%d' ) ]; 
 end
 
 % wall
