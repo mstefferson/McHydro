@@ -31,7 +31,7 @@ classdef WallObstClass
       obj.Color = color;
       % now place
       obj = obj.placeObst( gridSize, placeLocation );
-      % temporary centers
+      % set centers. (usefule for animate)
       obj.Centers = obj.Corners;
     end
     

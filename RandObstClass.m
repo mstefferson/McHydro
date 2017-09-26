@@ -36,7 +36,7 @@ classdef RandObstClass
       obj.Color = color;
       % now place
       obj = obj.placeObst( gridSize, forbiddenSites );
-      % temporary: set centers
+      % set centers (useful for animate)
       deltaCen = floor( ( obj.Length - 1 ) / 2 );
       obj.Centers = zeros( obj.Num, 2 );
       obj.Centers(:,1) = mod( obj.Corners(:,1) + deltaCen - 1, gridSize(1) ) + 1;

@@ -194,8 +194,8 @@ for m=1:n.ntimesteps
   for ii = 1:num_obst_types
     occ_new( ismember(sites_new, obst{ii}.allpts ) ) = ii;
   end
-  transInds = sub2ind( tSize, occ_new, occ_old);
-  tracer.probmov = acceptT( transInds );
+  transInds = sub2ind( obstInfo.sizeT, occ_new, occ_old);
+  tracer.probmov = obstInfo.acceptT( transInds );
   list.accept = find(rvec<tracer.probmov);
   list.reject = setdiff( all_tracer_inds,list.accept );
   
