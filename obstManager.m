@@ -36,9 +36,9 @@ if numObst
     for jj = 1:numObst
       obstTemp = { names{jj}, paramSepCell{ii,jj} };
       % check runs
-      if names{jj} == 'rand'
-        [obstTemp, strAdd] = checkObstRand( obstTemp, modelopt );
-      elseif names{jj} == 'wall'
+      if strcmp( names{jj}, 'rand' )
+        [obstTemp, strAdd] = checkObstRand( obstTemp );
+      elseif strcmp( names{jj}, 'wall' )
         [obstTemp, strAdd] = checkObstWall( obstTemp );
       end
       obstParams{jj} = obstTemp;
@@ -60,7 +60,7 @@ obstObj.inds = obstInds;
 end
 
 % random
-function [obst, obstStr] = checkObstRand( obst, modelopt )
+function [obst, obstStr] = checkObstRand( obst )
 % check inputs
 if length(obst{1,2}) ~= 6
   fprintf('Incorrect number of random obstacle parameters\n')

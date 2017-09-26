@@ -15,17 +15,17 @@ classdef TracerClass
   
   methods
     % constructor
-    function obj =  TracerClass( nTracer, obst, be, gridSize, allowObstPlacement )
+    function obj =  TracerClass( nTracer, obst, be, grid, allowObstPlacement )
       % set inputs
       obj.Num = nTracer;
       % now place
-      totSites = prod( gridSize );
-      dim = length( gridSize );
+      totSites = grid.totPnts;
+      dim = grid.dim;
       obj = obj.place( obst, be, totSites, allowObstPlacement );
       % initialize some vectors to be used later
       centerNoMod = zeros( nTracer, 3 );
       [centerNoMod(:,1), centerNoMod(:,2),centerNoMod(:,3) ] = ...
-        ind2sub( gridSize, obj.AllPts );
+        ind2sub( grid.sizeV, obj.AllPts );
       obj.PosNoMod = centerNoMod(:,1:dim);
       obj.Centers = obj.PosNoMod;
     end

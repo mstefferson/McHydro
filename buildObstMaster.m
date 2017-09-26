@@ -1,4 +1,4 @@
-function [obst, hopInfo] = buildObstMaster( obstCell, freeDiff, gridSize, colorArray )
+function [obst, hopInfo] = buildObstMaster( obstCell, freeDiff, grid, colorArray )
 
 % get place order. place walls first
 num_obst_types = length( obstCell );
@@ -28,8 +28,7 @@ placeInds( numTypes(1)+1 : numTypes(1)+numTypes(2) ) = sizeVecInd(sortInd);
 % have obstacle as a cell of obst structures
 obst = cell(1, num_obst_types+1);
 filledSites = [];
-filledSitesPrev = [];
-wallStartLoc = gridSize( 2 );
+wallStartLoc = grid.sizeV( 2 );
 % build vectors for transition matrix
 be = zeros(1,num_obst_types+1);
 hopProb = zeros(1,num_obst_types+1);
@@ -40,16 +39,14 @@ for ii = 1:num_obst_types
   if strcmp( obstCellInput{1}, 'wall' )
      out = WallObstClass( obstCellInput{2}(1),obstCellInput{2}(2),  ...
        obstCellInput{2}(3),obstCellInput{2}(4),...
-       colorArray(ii,:), gridSize, wallStartLoc );
+       colorArray(ii,:), grid, wallStartLoc );
      wallStartLoc = wallStartLoc-out.GapWidth+1;
-     filledSitesPrev = filledSites;
      filledSites = [ filledSites; out.AllPts ];
   end
   if strcmp( obstCellInput{1}, 'rand' )
     out = RandObstClass( obstCellInput{2}(1), obstCellInput{2}(2),  ...
       obstCellInput{2}(3), obstCellInput{2}(4),...
-      obstCellInput{2}(5), obstCellInput{2}(6), colorArray(ii,:), gridSize, filledSites );
-    filledSitesPrev = filledSites;
+      obstCellInput{2}(5), obstCellInput{2}(6), colorArray(ii,:), grid, filledSites );
     filledSites = [ filledSites; out.AllPts ];
   end
   obst{ii} = out;
@@ -58,7 +55,7 @@ for ii = 1:num_obst_types
   ff(ii) = out.Ff;
 end
 % fill out empty obstacl
-out = EmptyObstClass( freeDiff, filledSites, prod(gridSize) );
+out = EmptyObstClass( freeDiff, filledSites, grid.totPnts );
 obst{num_obst_types+1} = out;
 be(num_obst_types+1) = out.Be;
 hopProb(num_obst_types+1) = out.SiteDiff;

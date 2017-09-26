@@ -12,7 +12,7 @@ classdef FluxCounterClass < handle
   methods
     % constructor
     function obj = FluxCounterClass( fluxCell, grid )
-      dim = length( grid );
+      dim = grid.dim;
       % set inputs
       obj.Counts = 0;
       if fluxCell{2} == 3 && dim == 2
@@ -22,8 +22,8 @@ classdef FluxCounterClass < handle
       if fluxCell{1} == 1
         obj.Flag = 1;
         obj.IndsCheck = fluxCell{2};
-        obj.IndWantI = mod( fluxCell{3} - 1, grid(obj.IndsCheck) ) + 1;
-        obj.IndWantF = mod( fluxCell{3} + 1 - 1, grid(obj.IndsCheck) ) + 1;
+        obj.IndWantI = mod( fluxCell{3} - 1, grid.sizeV(obj.IndsCheck) ) + 1;
+        obj.IndWantF = mod( fluxCell{3} + 1 - 1, grid.sizeV(obj.IndsCheck) ) + 1;
       end
     end
     

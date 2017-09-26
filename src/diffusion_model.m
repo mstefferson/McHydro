@@ -19,7 +19,7 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,obstCell, fluxC
 totParams = 2;
 if length(paramvec) ~= totParams
   error('diffusion_model: incorrect parameter vector length');
-else 
+else
   num_tracer = paramvec(1);
   tr_diff_unb = paramvec(2);
 end
@@ -30,10 +30,6 @@ paramlist.tr_diff_unb = tr_diff_unb; %unbound hop energy
 
 % verbose
 verbose = const.verbose;
-% Animation features
-obst_curv=0.2; %curvature for animations
-tracer_color=[0 1 1]; %cyan
-tracer_curv=1; %curvature for animations
 
 % get number of obstacles
 num_obst_types = length( obstCell );
@@ -43,14 +39,11 @@ n = const;
 n.numSites = n.n_gridpoints .^ n.dim;
 n.num_obst_types = num_obst_types;
 n.num_obst = zeros( num_obst_types );
-if n.dim == 2
-  n.grid = [ n.n_gridpoints n.n_gridpoints ];
-elseif n.dim == 3
-  n.grid = [ n.n_gridpoints n.n_gridpoints n.n_gridpoints ];
-else
-  fprintf('Error!!! Cannot handle this dimension. Must be 2 or 3')
-  error('Error!!! Cannot handle this dimension. Must be 2 or 3')
-end
+
+% set up grid
+grid.sizeV = repmat( n.n_gridpoints, [1 n.dim] );
+grid.dim = n.dim;
+grid.totPnts = n.numSites;
 
 % Records
 if n.trPosRecNoModFlag || n.trPosRecModFlag ||  n.obsPosRecNoModFlag ||...
@@ -90,7 +83,7 @@ if verbose
 end
 
 % place some obstacles
-[obst, obstInfo] =  buildObstMaster( obstCell, tr_diff_unb, n.grid, colorArray );
+[obst, obstInfo] =  buildObstMaster( obstCell, tr_diff_unb, grid, colorArray );
 
 % tracer fields
 if verbose
@@ -98,7 +91,7 @@ if verbose
   tic
 end
 % set-up tracers
-tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, n.grid, ...
+tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, grid, ...
   modelopt.place_tracers_obst);
 % Derived parameters and store
 n.num_tracer = tracer.Num;
@@ -111,19 +104,19 @@ fileObj = matfile(filename,'Writable',true);
 % tracer temp records
 if n.trPosRecModFlag
   tracer_cen_rec_temp = zeros( n.num_tracer, n.dim, n.NrecChunk );
-  fileObj.tracer_cen_rec = zeros( n.num_tracer, n.dim, n.NrecChunk );
+  fileObj.tracer_cen_rec = zeros( n.num_tracer, n.dim, n.NrecTot );
 end
 if n.trPosRecNoModFlag
   tracer_cen_rec_nomod_temp = zeros( n.num_tracer, n.dim, n.NrecChunk );
-  fileObj.tracer_cen_rec_nomod = zeros( n.num_tracer, n.dim, n.NrecChunk);
+  fileObj.tracer_cen_rec_nomod = zeros( n.num_tracer, n.dim, n.NrecTot );
 end
 if n.trStateRecFlag
   tracer_state_rec_temp = zeros( n.num_tracer, n.NrecChunk );
-  fileObj.tracer_state_rec = zeros( n.num_tracer, n.NrecChunk );
+  fileObj.tracer_state_rec = zeros( n.num_tracer, n.NrecTot  );
 end
 if n.trackOcc
   occupancy_temp = zeros( num_obst_types, n.NrecChunk );
-  fileObj.occupancy = zeros( num_obst_types, n.NrecChunk );
+  fileObj.occupancy = zeros( num_obst_types, n.NrecTot  );
 end
 % obstacles temp records
 if n.obsPosRecModFlag
@@ -139,7 +132,7 @@ end
 
 % Pre-Allocate some commonly used matrices
 onesNt2 = ones( n.num_tracer, n.dim ); % matrix of ones ( Ntracer x 2 ) used for mod
-NgsNt2 = repmat( n.grid, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
+NgsNt2 = repmat( grid.sizeV, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
 % Animate first position
 if animate && n.dim == 2
   clf
@@ -154,7 +147,7 @@ if animate && n.dim == 2
   for ii = 1:num_obst_types
     for kObst=1:obst{ii}.Num
       obstRectangle{ii}=update_rectangle(obst{ii}.Centers,obstRectangle{ii},...
-      kObst,obst{ii}.Length,n.n_gridpoints,...
+        kObst,obst{ii}.Length,n.n_gridpoints,...
         obst{ii}.Color,obst{ii}.Curvature);
     end
   end
@@ -172,33 +165,39 @@ end
 % preallocate some things to prevent errors
 center_new = ones( tracer.Num, 3 );
 all_tracer_inds = 1:n.num_tracer;
-occ_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
+state_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
 
 % set-up flux Counter
-fluxCounter = FluxCounterClass( fluxCell, n.grid );
+fluxCounter = FluxCounterClass( fluxCell, grid );
 
 % loop over time points
 if verbose; fprintf('Starting time loop\n'); tic; end
-for m=1:n.ntimesteps
+for m=0:n.ntimesteps
   % Try and move everything
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);
-  % Attempt new tracer positions
+  
+  % get current positions, called old
   center_old=tracer.Centers;
+  sites_old = tracer.AllPts;
+  state_old = tracer.State;
+  
+  % Attempt new tracer positions
+
   center_temp= center_old+lattice.moves(list.tracerdir,:);
   
   % Enforcing periodic boundary conditions
   center_new(:,1:n.dim) = mod( center_temp - onesNt2 , NgsNt2 ) + onesNt2;
+  
   sites_new = ...
-    sub2ind(n.grid, center_new(:,1), center_new(:,2), center_new(:,3) );
+    sub2ind(grid.sizeV, center_new(:,1), center_new(:,2), center_new(:,3) );
   
   % Find old and new occupancy, i.e, when tracer and obs on same site
   rvec=rand(n.num_tracer,1);
-  occ_old = tracer.State;
-  occ_new = occ_new_save;
+  state_new = state_new_save;
   for ii = 1:num_obst_types
-    occ_new( ismember(sites_new, obst{ii}.AllPts ) ) = ii;
+    state_new( ismember(sites_new, obst{ii}.AllPts ) ) = ii;
   end
-  transInds = sub2ind( obstInfo.sizeT, occ_new, occ_old);
+  transInds = sub2ind( obstInfo.sizeT, state_new, state_old);
   probmov = obstInfo.acceptT( transInds );
   list.accept = find(rvec<probmov);
   list.reject = setdiff( all_tracer_inds,list.accept );
@@ -209,7 +208,7 @@ for m=1:n.ntimesteps
     lattice.moves(list.tracerdir(list.accept),1:n.dim); %center, no periodic wrapping
   
   tracer.AllPts(list.accept)=sites_new(list.accept); %update other sites
-  tracer.State(list.accept)=occ_new(list.accept);
+  tracer.State(list.accept)=state_new(list.accept);
   
   % Animations
   if animate && n.dim == 2
@@ -221,33 +220,57 @@ for m=1:n.ntimesteps
     pause(tpause);
   end
   
-   % Flux counting
+  % Flux counting
   if fluxCounter.Flag == 1
     fluxCounter.updateFlux( tracer.Centers, center_old );
   end
   
   % Recording
   if n.Rec > 0
-    if m >= n.twait
-      if mod( m, n.rec_interval  ) == 0
+    if m == n.twait
+      % tracer write to file
+      if n.trPosRecModFlag
+        fileObj.tracer_cen_rec(1:n.num_tracer,1:n.dim,1) = sites_old;
+      end
+      if n.trPosRecNoModFlag
+        fileObj.tracer_cen_rec_nomod(1:n.num_tracer,1:n.dim,1) = center_old;
+      end
+      if n.trStateRecFlag
+        fileObj.tracer_state_rec(1:n.num_tracer,1) = state_old;
+      end
+      if n.trackOcc
+        for ii = 1:num_obst_types
+          occupancy_temp(ii,1) = ...
+            length( find( state_old == ii )) ./ tracer.Num;
+        end
+        fileObj.occupancy(1:num_obst_types,1) = length( find( state_old == ii )) ./ tracer.Num;
+      end
+      jrectemp = 1;
+      jrec = 2;
+    elseif m > n.twait
+      % store first point
+      if mod( m - n.twait, n.rec_interval  ) == 0
         % tracer temp records
         if n.trPosRecModFlag
           tracer_cen_rec_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.AllPts;
         end
         if n.trPosRecNoModFlag
-          tracer_cen_rec_nomod_temp(1:n.num_tracer,1:n.dim,jrectemp) = tracer.PosNoMod;
+          tracer_cen_rec_nomod_temp(1:n.num_tracer,1:n.dim,jrectemp) = center_old;
         end
         if n.trStateRecFlag
-          tracer_state_rec_temp(1:n.num_tracer,jrectemp) = tracer.state;
+          tracer_state_rec_temp(1:n.num_tracer,jrectemp) = state_old;
         end
         if n.trackOcc
           for ii = 1:num_obst_types
             occupancy_temp(ii,jrectemp) = ...
-              length( find( tracer.State == ii )) ./ tracer.Num;
+              length( find( state_old == ii )) ./ tracer.Num;
           end
         end
-        if mod( m, const.write_interval  ) == 0
-          RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
+        if mod( m-n.twait, const.write_interval  ) == 0
+          %RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
+          jrecEnd = jrec + const.NrecChunk - 1;
+          recIndTemp = jrec:jrecEnd;
+          RecIndTemp = recIndTemp;
           % tracer write to file
           if n.trPosRecModFlag
             fileObj.tracer_cen_rec(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
@@ -264,14 +287,15 @@ for m=1:n.ntimesteps
           if n.trackOcc
             fileObj.occupancy(1:num_obst_types,RecIndTemp) = occupancy_temp;
           end
-          jchunk = jchunk + 1;
+          %jchunk = jchunk + 1;
+          jrec = jrecEnd + 1;
           jrectemp = 0;
           if verbose
             fprintf('%d done\n', round(100 * m ./ n.ntimesteps ) )
           end
         end % write mod(m, chuck)
         jrectemp = jrectemp + 1;
-        jrec = jrec + 1;
+        %jrec = jrec + 1;
       end % rec mod(m,trec)
     end % m > twait
   end % record

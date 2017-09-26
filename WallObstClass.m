@@ -22,7 +22,7 @@ classdef WallObstClass
   methods
     % constructor
     function obj =  WallObstClass( bndDiff, be, thickness, gapWidth, ...
-        color, gridSize, placeLocation )
+        color, grid, placeLocation )
       % set inputs
       obj.SiteDiff = bndDiff;
       obj.Be = be;
@@ -30,23 +30,23 @@ classdef WallObstClass
       obj.GapWidth = gapWidth;
       obj.Color = color;
       % now place
-      obj = obj.placeObst( gridSize, placeLocation );
+      obj = obj.placeObst( grid, placeLocation );
       % set centers. (usefule for animate)
       obj.Centers = obj.Corners;
     end
     
     % methods
-    function [obj] = placeObst( obj, gridSize, placeLocation )
-      center = floor( ( gridSize(2) + 1 ) / 2 );
+    function [obj] = placeObst( obj, grid, placeLocation )
+      center = floor( ( grid.sizeV(2) + 1 ) / 2 );
       top = center - floor( ( obj.GapWidth - 1 ) / 2 );
       cols2fill = placeLocation-obj.Thickness+1:placeLocation;
-      rows2fill =  [1:top-1  top+obj.GapWidth:gridSize(1)];
+      rows2fill =  [1:top-1  top+obj.GapWidth:grid.sizeV(1)];
       tempInds = combvec( rows2fill, cols2fill );
       obj.Corners = [ tempInds(1,:)', tempInds(2,:)' ];
-      obj.AllPts = sub2ind( gridSize, obj.Corners(:,1), obj.Corners(:,2) );
+      obj.AllPts = sub2ind( grid.sizeV, obj.Corners(:,1), obj.Corners(:,2) );
       obj.NumFilledSites = length( obj.AllPts );
       obj.Num = obj.NumFilledSites;
-      obj.Ff = obj.NumFilledSites / prod( gridSize );
+      obj.Ff = obj.NumFilledSites / grid.totPnts;
     end % place_obst
   end % methods
 end % class
