@@ -28,6 +28,7 @@ placeInds( numTypes(1)+1 : numTypes(1)+numTypes(2) ) = sizeVecInd(sortInd);
 % have obstacle as a cell of obst structures
 obst = cell(1, num_obst_types+1);
 filledSites = [];
+filledSitesPrev = [];
 wallStartLoc = gridSize( 2 );
 % build vectors for transition matrix
 be = zeros(1,num_obst_types+1);
@@ -41,12 +42,14 @@ for ii = 1:num_obst_types
        obstCellInput{2}(3),obstCellInput{2}(4),...
        colorArray(ii,:), gridSize, wallStartLoc );
      wallStartLoc = wallStartLoc-out.GapWidth+1;
+     filledSitesPrev = filledSites;
      filledSites = [ filledSites; out.AllPts ];
   end
   if strcmp( obstCellInput{1}, 'rand' )
     out = RandObstClass( obstCellInput{2}(1), obstCellInput{2}(2),  ...
       obstCellInput{2}(3), obstCellInput{2}(4),...
       obstCellInput{2}(5), obstCellInput{2}(6), colorArray(ii,:), gridSize, filledSites );
+    filledSitesPrev = filledSites;
     filledSites = [ filledSites; out.AllPts ];
   end
   obst{ii} = out;
@@ -61,10 +64,14 @@ be(num_obst_types+1) = out.Be;
 hopProb(num_obst_types+1) = out.SiteDiff;
 ff(num_obst_types+1) = 1 - sum( ff(1:num_obst_types) );
 % Build transition matrix
+% T(i,j): i-final state, j-initial stae
 deltaG = be' - be;
 bindT = exp( -deltaG );
+bindT(bindT>1) = 1;
 hopT = repmat( hopProb, [num_obst_types+1, 1] ) ;
+hopT(end,:) = 1; % can always hop to empty
 % accept probability
 hopInfo.acceptT = hopT .* bindT;
+hopInfo.sizeT = size( hopT );
 hopInfo.be = be;
 hopInfo.ff = ff;

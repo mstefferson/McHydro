@@ -14,7 +14,7 @@ trialmaster.verbose = 0; % print things
 % obstacles cell of cells:
 % {'rand', bndDiff, be, ffo, so, obstExclude, edgesPlace};
 % {'wall', bndDiff, be, thickness, gapWidth};
-obst = { {'rand', 0, 1, 0.1, 1, 0} }'
+obst = { {'rand', 0, 1, 0.1, 1, 0} };
 params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion
 
@@ -40,8 +40,8 @@ const.maxpts_msd = 100; % Flag for calculating quad
 const.useStart = 1; % Using t=1 to start windows instead of t=end
 
 %model stuff
-modelopt.edges_place={0};   %1 if place tracers on obstacle edges
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
+modelopt.place_tracers_obst=1; % If 0, don't place any tracers on obstacles
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie
@@ -49,8 +49,7 @@ modelopt.movie=0;           %1 to record movie
 % save something to const and modelopt 
 params.num_obst_types = length( obst );
 modelopt.dimension=const.dim; %system dimension
-const.obst_excl = modelopt.obst_excl; %system dimension
-const.obst_trace_excl = modelopt.obst_trace_excl; %system dimension
+const.place_tracers_obst = modelopt.place_tracers_obst; %system dimension
 
 %{% fix edges%}
 %if length(modelopt.edges_place) ~= params.num_obst_types

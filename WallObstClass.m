@@ -14,6 +14,7 @@ classdef WallObstClass
     TracerOccFrac = 0;
     AllPts = 0;
     Corners = 0;
+    Centers = 0;
     NumFilledSites = 0;
     Num = 0;
   end % properties
@@ -30,6 +31,8 @@ classdef WallObstClass
       obj.Color = color;
       % now place
       obj = obj.placeObst( gridSize, placeLocation );
+      % temporary centers
+      obj.Centers = obj.Corners;
     end
     
     % methods

@@ -208,7 +208,8 @@ end
 %tracer.pmove_unb = tr_diff_unb;
 %tracer.pmove_bnd = tr_diff_bnd;
 %{tracer.probmov = zeros(num_tracer,1);%}
-tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, n.grid );
+tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, n.grid, ...
+  modelopt.place_tracers_obst);
 % Derived parameters and store
 n.num_tracer = tracer.Num;
 % Open file for incremental writing
@@ -261,7 +262,7 @@ if animate && n.dim == 2
   ax.FontSize=14;
   for ii = 1:num_obst_types
     for kObst=1:obst{ii}.Num
-      obstRectangle{ii}=update_rectangle(obst{ii}.Corners,obstRectangle{ii},...
+      obstRectangle{ii}=update_rectangle(obst{ii}.Centers,obstRectangle{ii},...
       kObst,obst{ii}.Length,n.n_gridpoints,...
         obst{ii}.Color,obst{ii}.Curvature);
     end
