@@ -142,6 +142,7 @@ onesNt2 = ones( n.num_tracer, n.dim ); % matrix of ones ( Ntracer x 2 ) used for
 NgsNt2 = repmat( n.grid, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
 % Animate first position
 if animate && n.dim == 2
+  clf
   obstRectangle = cell( 1, num_obst_types );
   tracerRectangle = struct;
   ax=gca;axis square;ax.XGrid='on';ax.YGrid='on';
@@ -162,7 +163,6 @@ if animate && n.dim == 2
       kTracer,tracer.Length,n.n_gridpoints,...
       tracer.Color,tracer.Curvature);
   end
-  keyboard
   pause(2);
 end
 if any( ismember( obst{1}.AllPts, obst{2}.AllPts ) )
@@ -215,7 +215,6 @@ for m=1:n.ntimesteps
         kTracer,tracer.Length,n.n_gridpoints,...
         tracer.Color,tracer.Curvature);
     end
-    keyboard
     pause(tpause);
   end
   % Recording
