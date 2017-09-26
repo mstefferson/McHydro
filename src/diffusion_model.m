@@ -143,7 +143,7 @@ NgsNt2 = repmat( n.grid, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % m
 % Animate first position
 if animate && n.dim == 2
   obstRectangle = cell( 1, num_obst_types );
-  tracerRectangle = cell( 1, 1 );
+  tracerRectangle = struct;
   ax=gca;axis square;ax.XGrid='on';ax.YGrid='on';
   ax.XLim=[0.5 n.n_gridpoints+0.5];ax.YLim=[0.5 n.n_gridpoints+0.5];
   ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
@@ -158,10 +158,11 @@ if animate && n.dim == 2
     end
   end
   for kTracer=1:tracer.Num
-    tracerRectangle{1}=update_rectangle(tracer.Corners, tracerRectangle{1}, ...
+    tracerRectangle=update_rectangle(tracer.Centers, tracerRectangle, ...
       kTracer,tracer.Length,n.n_gridpoints,...
       tracer.Color,tracer.Curvature);
   end
+  keyboard
   pause(2);
 end
 if any( ismember( obst{1}.AllPts, obst{2}.AllPts ) )
@@ -172,14 +173,14 @@ end
 center_new = ones( tracer.Num, 3 );
 all_tracer_inds = 1:n.num_tracer;
 occ_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
-keyboard
+
 % loop over time points
 if verbose; fprintf('Starting time loop\n'); tic; end
 for m=1:n.ntimesteps
   % Try and move everything
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);
   % Attempt new tracer positions
-  center_old=tracer.AllPts;
+  center_old=tracer.Centers;
   center_temp= center_old+lattice.moves(list.tracerdir,:);
   
   % Enforcing periodic boundary conditions
@@ -189,30 +190,32 @@ for m=1:n.ntimesteps
   
   % Find old and new occupancy, i.e, when tracer and obs on same site
   rvec=rand(n.num_tracer,1);
-  occ_old = tracer.state;
+  occ_old = tracer.State;
   occ_new = occ_new_save;
   for ii = 1:num_obst_types
-    occ_new( ismember(sites_new, obst{ii}.allpts ) ) = ii;
+    occ_new( ismember(sites_new, obst{ii}.AllPts ) ) = ii;
   end
   transInds = sub2ind( obstInfo.sizeT, occ_new, occ_old);
-  tracer.probmov = obstInfo.acceptT( transInds );
-  list.accept = find(rvec<tracer.probmov);
+  probmov = obstInfo.acceptT( transInds );
+  list.accept = find(rvec<probmov);
   list.reject = setdiff( all_tracer_inds,list.accept );
   
   % Move all accepted changes
-  tracer.AllPts(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
+  tracer.Centers(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
   tracer.PosNoMod(list.accept,1:n.dim) = tracer.PosNoMod(list.accept,1:n.dim)+...
     lattice.moves(list.tracerdir(list.accept),1:n.dim); %center, no periodic wrapping
   
-  tracer.allpts(list.accept)=sites_new(list.accept); %update other sites
-  tracer.state(list.accept)=occ_new(list.accept);
+  tracer.AllPts(list.accept)=sites_new(list.accept); %update other sites
+  tracer.State(list.accept)=occ_new(list.accept);
   
   % Animations
   if animate && n.dim == 2
     for kTracer=1:n.num_tracer
-      tracer=update_rectangle(tracer,kTracer,n.size_tracer,n.n_gridpoints,...
-        tracer.color,tracer.curvature);
+      tracerRectangle=update_rectangle(tracer.Centers, tracerRectangle, ...
+        kTracer,tracer.Length,n.n_gridpoints,...
+        tracer.Color,tracer.Curvature);
     end
+    keyboard
     pause(tpause);
   end
   % Recording
@@ -232,7 +235,7 @@ for m=1:n.ntimesteps
         if n.trackOcc
           for ii = 1:num_obst_types
             occupancy_temp(ii,jrectemp) = ...
-              length( find( tracer.state == ii )) ./ tracer.num;
+              length( find( tracer.State == ii )) ./ tracer.Num;
           end
         end
         if mod( m, const.write_interval  ) == 0

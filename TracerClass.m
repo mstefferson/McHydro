@@ -10,7 +10,7 @@ classdef TracerClass
     State = 0;
     Num = 0;
     PosNoMod = 0;
-    Corners = 0;
+    Centers = 0;
   end % properties
   
   methods
@@ -27,7 +27,7 @@ classdef TracerClass
       [centerNoMod(:,1), centerNoMod(:,2),centerNoMod(:,3) ] = ...
         ind2sub( gridSize, obj.AllPts );
       obj.PosNoMod = centerNoMod(:,1:dim);
-      obj.Corners = obj.PosNoMod;
+      obj.Centers = obj.PosNoMod;
     end
     
     % methods
