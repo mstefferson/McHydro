@@ -39,6 +39,9 @@ const.calcQuad = 0; % Flag for calculating quad
 const.maxpts_msd = 100; % Flag for calculating quad
 const.useStart = 1; % Using t=1 to start windows instead of t=end
 
+% flux count { on/off, dim (1/2/3) , value }
+fluxCount = { 0, 1,  const.n_gridpoints };
+
 %model stuff
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
 modelopt.place_tracers_obst=1; % If 0, don't place any tracers on obstacles

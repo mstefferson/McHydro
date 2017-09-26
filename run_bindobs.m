@@ -133,7 +133,7 @@ try
       filename=['data_',filestring,'.mat'];
       fprintf('%s\n',filename);
       %run the model!
-      [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},filename);
+      [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},fluxCount,filename);
       movefile(filename,'./runfiles');
     end
     % Clean up tmp
@@ -166,7 +166,7 @@ try
     filename=['data_',filestring,'.mat'];
     fprintf('%s\n',filename);
     %run the model!
-    [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},filename);
+    [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},fluxCount,filename);
     movefile(filename,'./runfiles');
   end %if nparams > 1
   runTime = toc(RunTimeID);

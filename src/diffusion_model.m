@@ -1,4 +1,4 @@
-function [tracer,obst] = diffusion_model(paramvec,const,modelopt,obstCell,filename)
+function [tracer,obst] = diffusion_model(paramvec,const,modelopt,obstCell, fluxCell, filename)
 % DIFFUSION_MODEL run model of tracers diffusing through obstacles
 %   inputs are:
 %   pvec = parameter vector containing
@@ -174,6 +174,9 @@ center_new = ones( tracer.Num, 3 );
 all_tracer_inds = 1:n.num_tracer;
 occ_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
 
+% set-up flux Counter
+fluxCounter = FluxCounterClass( fluxCell, n.grid );
+
 % loop over time points
 if verbose; fprintf('Starting time loop\n'); tic; end
 for m=1:n.ntimesteps
@@ -217,6 +220,12 @@ for m=1:n.ntimesteps
     end
     pause(tpause);
   end
+  
+   % Flux counting
+  if fluxCounter.Flag == 1
+    fluxCounter.updateFlux( tracer.Centers, center_old );
+  end
+  
   % Recording
   if n.Rec > 0
     if m >= n.twait
@@ -244,7 +253,6 @@ for m=1:n.ntimesteps
             fileObj.tracer_cen_rec(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
               tracer_cen_rec_temp;
           end
-          
           if n.trPosRecNoModFlag
             fileObj.tracer_cen_rec_nomod(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
               tracer_cen_rec_nomod_temp;
@@ -275,19 +283,12 @@ if verbose
   fprintf('\nFinished loop %f hours\n\n', tOut)
 end
 
-% rm obst field in 3d. Way too much data
-if n.dim == 3
-  fields2go = {'allpts', 'center', 'centerInds',...
-    'corner' ,'cornerInds','cen_nomod','edgeInds'};
-  obst = rmfield( obst, fields2go );
-end
-
 % save it
 fileObj.const = const;
 fileObj.paramlist = paramlist;
-fileObj.obst = obst;
-fileObj.tracer = tracer;
+fileObj.obst = obstCell;
 fileObj.modelopt = modelopt;
+fileObj.flux = fluxCounter.Counts;
 
 if modelopt.movie
   movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
