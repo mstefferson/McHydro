@@ -92,122 +92,12 @@ end
 % place some obstacles
 [obst, obstInfo] =  buildObstMaster( obstCell, tr_diff_unb, n.grid, colorArray );
 
-%filledObstSites = [];
-%% scramble the order unless there are bigger obstacles. No favorites!!!
-%obstOrder = zeros( 1, num_obst_types);
-%% [~, obstOrder] = sort( paramlist.so );
-%uniqueSizes = fliplr( unique(paramlist.so,'sorted') );
-%holder = 1;
-%for ii = 1:length(uniqueSizes)
-  %inds = find( paramlist.so == uniqueSizes(ii) );
-  %numInds = length(inds);
-  %obstOrder(holder:holder+numInds-1) = inds( randperm( numInds ) );
-  %%   paramlist.so( uniqueSizes(ii) );
-  %holder = holder+numInds;
-%end
-%% rescale filling fractions if they are too high
-%fillFracScale = min(  1 / ( sum(paramlist.ffo) ), 1 );
-%% allocate a vector of actuall fffrac for placing tracers later
-%ffoAct = zeros( num_obst_types, 1 );
-%% First initialize the empty 'obstactle' for allocation
-%ind = num_obst_types+1;
-%obst{ind}.ffoWant = 1 - sum( paramlist.ffo );
-%obst{ind}.ffrac = 0;
-%obst{ind}.allpts = 0;
-%obst{ind}.num = 0;
-%obst{ind}.be = 0;
-%obst{ind}.color = [0 0 0];
-%obst{ind}.curvature = 0;
-%obst{ind}.edgePlace = 0;
-%obst{ind}.tracersOccNum = 0; % reset later
-%obst{ind}.tracerOccFrac = 0; % reset later
-%ffoAct(ind) = 0;
-%n.num_obst(ind) = obst{ind}.num;
-%% update forbidden sites
-%filledObstSites = [] ;
-%% Loop over obstacle types to initialize
-%for ii = 1:num_obst_types
-  %if verbose
-    %tic
-  %end
-  %ind = obstOrder(ii);
-  %ffWant = fillFracScale .* paramlist.ffo(ind);
-  %obst{ind} = place_obstacles( ffWant, paramlist.so(ind), ...
-    %n.grid, modelopt.obst_excl, filledObstSites );
-  %obst{ind}.be = bind_energy(ind);
-  %obst{ind}.color = colorArray(ind,:);
-  %obst{ind}.curvature = obst_curv;
-  %obst{ind}.edgePlace = modelopt.edges_place{ind};
-  %obst{ind}.tracersOccNum = 0; % reset later
-  %obst{ind}.tracerOccFrac = 0; % reset later
-  %n.num_obst(ind) = obst{ind}.num;
-  %ffoAct(ind) = obst{ind}.ffrac;
-  %% update forbidden sites
-  %filledObstSites = [ filledObstSites; obst{ind}.allpts ] ;
-  %if verbose
-    %tFill(ii) = toc;
-  %end
-%end
-
-%% Fix empty sites
-%emptySites = setdiff( 1:n.numSites, filledObstSites );
-%numEmpty = length(emptySites);
-%ind = num_obst_types + 1;
-%obst{ind}.ffrac = numEmpty / n.numSites;
-%obst{ind}.allpts = emptySites';
-%obst{ind}.numobst = numEmpty;
-
-%if verbose
-  %for ii = 1:num_obst_types
-    %fprintf('Overlap = %d\n', ~modelopt.obst_excl );
-    %fprintf('Placed %d obstacles in %d tries is %f sec\n', ...
-      %obst{ii}.num, obst{ii}.trys2fill, tFill(ii));
-    %fprintf('ff want: %f ff actual: %f \n', obst{ii}.ffWant, obst{ii}.ffrac);
-  %end
-%end
-
-%% create binding transition matrix bindT(f,i) ( row/col = obst 1, 2, ..., n, empty )
-%% treate empty as N + 1 obstacle
-%deltaG = [paramlist.be 0]' - [paramlist.be 0];
-%bindT = exp( -deltaG );
-%bindT( bindT > 1 ) = 1;
-%tSize = size(bindT);
-%% Probability to move
-%hopProb = [tr_diff_bnd tr_diff_unb];
-%hopT = repmat( hopProb, [num_obst_types+1, 1] ) ;
-%% accept probability
-%acceptT = hopT .* bindT;
-
 % tracer fields
 if verbose
   fprintf('Placing tracers\n');
   tic
 end
-
-
-% place tracers
-% Handle exclusion
-%{be4place = paramlist.be;%}
-%% place 'em!
-%tracer = place_tracers( paramlist.num_tracer, obst, be4place, ffoAct, n.grid );
-%% reset empty state 0 to # obst types + 1
-%tracer.state( tracer.state == 0 ) = num_obst_types + 1;
-%% update obstacles to say how many tracer should be on them
-%for ii = 1:num_obst_types + 1
-  %obst{ii}.tracersOccNum = tracer.occNum(ii);
-  %obst{ii}.tracerOccFrac = tracer.occFrac(ii);
-%end
-
-%if verbose
-  %tOut = toc;
-  %fprintf('Placed %d tracers %f sec\n', tracer.num, tOut);
-%end
-%% the rest of the tracer fields
-%tracer.color = tracer_color;
-%tracer.curvature = tracer_curv;
-%tracer.pmove_unb = tr_diff_unb;
-%tracer.pmove_bnd = tr_diff_bnd;
-%{tracer.probmov = zeros(num_tracer,1);%}
+% set-up tracers
 tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, n.grid, ...
   modelopt.place_tracers_obst);
 % Derived parameters and store
