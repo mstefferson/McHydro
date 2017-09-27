@@ -40,7 +40,7 @@ for ii = 1:num_obst_types
      out = WallObstClass( obstCellInput{2}(1),obstCellInput{2}(2),  ...
        obstCellInput{2}(3),obstCellInput{2}(4),...
        colorArray(ii,:), grid, wallStartLoc );
-     wallStartLoc = wallStartLoc-out.GapWidth+1;
+     wallStartLoc = wallStartLoc-out.Thickness;
      filledSites = [ filledSites; out.AllPts ];
   end
   if strcmp( obstCellInput{1}, 'rand' )
