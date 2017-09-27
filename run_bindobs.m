@@ -77,7 +77,11 @@ try
   NrecTot = const.NrecTot;
   tind = trialmaster.tind;
   obstParam = obstObj.param;
-  obstStr = obstObj.str;
+  % set-up str
+  obstStr = cell(1, nparams);
+  for ii = 1:nparams
+    obstStr{ii} = obstObj.str{ paramObst(ii) };
+  end
   allowPlaceTracerObst = modelopt.place_tracers_obst;
   if nparams > 1 && trialmaster.parforFlag
     parforFlag = 1;
@@ -106,14 +110,11 @@ try
       clustdir = parobj.Cluster.JobStorageLocation;
       mkdir(clustdir);
     end
-  else
-    parforFlag = 0;
-  end
-  if parforFlag
     fprintf('I have hired %d workers\n',parobj.NumWorkers);
     fprintf('Temp cluster dir: %s\n', clustdir);
     numWorkers = parobj.NumWorkers;
   else
+    parforFlag = 0;
     fprintf('Not using parfor\n')
     numWorkers = 0;
   end
