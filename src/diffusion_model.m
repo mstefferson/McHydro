@@ -58,7 +58,7 @@ jrec     = 1;
 jchunk   = 1;
 
 % Model options
-animate=modelopt.animate;    %1 to show animation, 0 for no animation
+animate=modelopt.animate && n.dim == 2;    %1 to show animation, 0 for no animation
 tpause=modelopt.tpause;      %pause time in animation
 
 %define box for plotting
@@ -85,6 +85,12 @@ end
 
 % place some obstacles
 [obst, obstInfo] =  buildObstMaster( obstInpt, tr_diff_unb, grid, colorArray );
+% rough check for errors
+for ii = 1:num_obst_types-1
+  if any( ismember( obst{ii}.AllPts, obst{ii+1}.AllPts ) )
+    error('differect obstacles are overlapping')
+  end
+end
 
 % tracer fields
 if verbose
@@ -96,6 +102,39 @@ tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, grid, ...
   modelopt.place_tracers_obst);
 % Derived parameters and store
 n.num_tracer = tracer.Num;
+% Animate first position
+if animate 
+  % init
+  ax = initAnimation(grid);
+  obstRectangle = cell( 1, num_obst_types );
+  tracerRectangle = struct;
+  % update positions
+  for ii = 1:num_obst_types
+    for kObst=1:obst{ii}.Num
+      obstRectangle{ii}=update_rectangle(obst{ii}.Centers,obstRectangle{ii},...
+        kObst,obst{ii}.Length,n.n_gridpoints,...
+        obst{ii}.Color,obst{ii}.Curvature);
+    end
+  end
+  for kTracer=1:tracer.Num
+    tracerRectangle=update_rectangle(tracer.Centers, tracerRectangle, ...
+      kTracer,tracer.Length,n.n_gridpoints,...
+      tracer.Color,tracer.Curvature);
+  end
+pause(2);
+end
+% set-up movie
+if modelopt.movie
+  fprintf('Making movie\n')
+  Fig = gcf;
+  Fig.WindowStyle = 'normal';
+  movObj = VideoWriter(modelopt.movie_name);
+  movObj.FrameRate = modelopt.movie_framerate;
+  open(movObj);
+  numMovieRec = 1;
+  printFinish = 1;
+end
+
 % Open file for incremental writing
 fileObj = matfile(filename,'Writable',true);
 
@@ -134,44 +173,6 @@ end
 % Pre-Allocate some commonly used matrices
 onesNt2 = ones( n.num_tracer, n.dim ); % matrix of ones ( Ntracer x 2 ) used for mod
 NgsNt2 = repmat( grid.sizeV, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
-% Animate first position
-if animate && n.dim == 2
-  clf
-  obstRectangle = cell( 1, num_obst_types );
-  tracerRectangle = struct;
-  ax=gca;axis square;ax.XGrid='on';ax.YGrid='on';
-  ax.XLim=[0.5 n.n_gridpoints+0.5];ax.YLim=[0.5 n.n_gridpoints+0.5];
-  ax.XTick=[0:ceil(n.n_gridpoints/20):n.n_gridpoints];
-  ax.YTick=ax.XTick;
-  ax.XLabel.String='x position';ax.YLabel.String='y position';
-  ax.FontSize=14;
-  for ii = 1:num_obst_types
-    for kObst=1:obst{ii}.Num
-      obstRectangle{ii}=update_rectangle(obst{ii}.Centers,obstRectangle{ii},...
-        kObst,obst{ii}.Length,n.n_gridpoints,...
-        obst{ii}.Color,obst{ii}.Curvature);
-    end
-  end
-  for kTracer=1:tracer.Num
-    tracerRectangle=update_rectangle(tracer.Centers, tracerRectangle, ...
-      kTracer,tracer.Length,n.n_gridpoints,...
-      tracer.Color,tracer.Curvature);
-  end
-  pause(2);
-end
-if any( ismember( obst{1}.AllPts, obst{2}.AllPts ) )
-  error('differect obstacles are overlapping')
-end
-if modelopt.movie
-  fprintf('Making movie\n')
-  Fig = gcf;
-  Fig.WindowStyle = 'normal';
-  movObj = VideoWriter(modelopt.movie_name);
-  movObj.FrameRate = modelopt.movie_framerate;
-  open(movObj);
-  numMovieRec = 1;
-  printFinish = 1;
-end
 
 % preallocate some things to prevent errors
 center_new = ones( tracer.Num, 3 );
@@ -221,7 +222,7 @@ for m=0:n.ntimesteps
   tracer.State(list.accept)=state_new(list.accept);
   
   % Animations
-  if animate && n.dim == 2
+  if animate 
     for kTracer=1:n.num_tracer
       tracerRectangle=update_rectangle(tracer.Centers, tracerRectangle, ...
         kTracer,tracer.Length,n.n_gridpoints,...
