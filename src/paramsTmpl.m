@@ -5,6 +5,7 @@
 % initparams_bindobs should not be tracked.
 
 %trial master
+trialmaster.parforFlag = 0; % flag to use parfor or not
 trialmaster.tind = 1; % trial indicator
 trialmaster.runstrtind = 1; % run indicator
 trialmaster.nt = 1; % number of trials
@@ -14,7 +15,7 @@ trialmaster.verbose = 0; % print things
 % obstacles cell of cells:
 % {'rand', bndDiff, be, ffo, so, obstExclude, edgesPlace};
 % {'wall', bndDiff, be, thickness, gapWidth};
-obst = { {'rand', 0, 1, 0.1, 1, 1, 0} };
+params.obst = { {'rand', 0, 1, 0.1, 1, 1, 0} };
 params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion
 
@@ -40,7 +41,7 @@ const.maxpts_msd = 100; % Flag for calculating quad
 const.useStart = 1; % Using t=1 to start windows instead of t=end
 
 % flux count { on/off, dim (1/2/3) , value }
-fluxCount = { 0, 1,  const.n_gridpoints };
+const.fluxCountInpt = { 0, 1,  const.n_gridpoints };
 
 %model stuff
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
@@ -48,9 +49,12 @@ modelopt.place_tracers_obst=1; % If 0, don't place any tracers on obstacles
 modelopt.animate=0;          %1 to show animation, 0 for no animation
 modelopt.tpause=0.0;         %pause time in animation, 0.1 s is fast, 1 s is slow
 modelopt.movie=0;           %1 to record movie
+modelopt.movie_name='movieFile';  %file name
+modelopt.movie_framerate = 1; % number of step to record
+modelopt.movie_steps = 100; % number of step to record
 
 % save something to const and modelopt 
-params.num_obst_types = length( obst );
+params.num_obst_types = length( params.obst );
 modelopt.dimension=const.dim; %system dimension
 const.place_tracers_obst = modelopt.place_tracers_obst; %system dimension
 
@@ -67,4 +71,4 @@ const.NrecTot    = const.ntimesteps / const.rec_interval - const.NrecLost + 1; %
 % Store verbose
 const.verbose = trialmaster.verbose;
 % Save it
-save('Params', 'obst', 'const','params','trialmaster','modelopt');
+save('Params', 'const','params','trialmaster','modelopt');

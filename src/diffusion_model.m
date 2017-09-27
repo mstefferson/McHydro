@@ -1,4 +1,4 @@
-function [tracer,obst] = diffusion_model(paramvec,const,modelopt,obstCell, fluxCell, filename)
+function [tracer,obst] = diffusion_model(paramvec,const,modelopt,obstParamAll, filename)
 % DIFFUSION_MODEL run model of tracers diffusing through obstacles
 %   inputs are:
 %   pvec = parameter vector containing
@@ -16,12 +16,13 @@ function [tracer,obst] = diffusion_model(paramvec,const,modelopt,obstCell, fluxC
 
 % initialize everythin
 % Parameters from pvec
-totParams = 2;
+totParams = 3;
 if length(paramvec) ~= totParams
   error('diffusion_model: incorrect parameter vector length');
 else
   num_tracer = paramvec(1);
   tr_diff_unb = paramvec(2);
+  obstInpt = obstParamAll{ paramvec(3) };
 end
 
 % Paramvec as a struct
@@ -32,7 +33,7 @@ paramlist.tr_diff_unb = tr_diff_unb; %unbound hop energy
 verbose = const.verbose;
 
 % get number of obstacles
-num_obst_types = length( obstCell );
+num_obst_types = length( obstInpt );
 
 % Assign internal variables
 n = const;
@@ -83,7 +84,7 @@ if verbose
 end
 
 % place some obstacles
-[obst, obstInfo] =  buildObstMaster( obstCell, tr_diff_unb, grid, colorArray );
+[obst, obstInfo] =  buildObstMaster( obstInpt, tr_diff_unb, grid, colorArray );
 
 % tracer fields
 if verbose
@@ -161,6 +162,16 @@ end
 if any( ismember( obst{1}.AllPts, obst{2}.AllPts ) )
   error('differect obstacles are overlapping')
 end
+if modelopt.movie
+  fprintf('Making movie\n')
+  Fig = gcf;
+  Fig.WindowStyle = 'normal';
+  movObj = VideoWriter(modelopt.movie_name);
+  movObj.FrameRate = modelopt.movie_framerate;
+  open(movObj);
+  numMovieRec = 1;
+  printFinish = 1;
+end
 
 % preallocate some things to prevent errors
 center_new = ones( tracer.Num, 3 );
@@ -168,7 +179,7 @@ all_tracer_inds = 1:n.num_tracer;
 state_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
 
 % set-up flux Counter
-fluxCounter = FluxCounterClass( fluxCell, grid );
+fluxCounter = FluxCounterClass( const.fluxCountInpt, grid );
 
 % loop over time points
 if verbose; fprintf('Starting time loop\n'); tic; end
@@ -182,7 +193,6 @@ for m=0:n.ntimesteps
   state_old = tracer.State;
   
   % Attempt new tracer positions
-
   center_temp= center_old+lattice.moves(list.tracerdir,:);
   
   % Enforcing periodic boundary conditions
@@ -223,6 +233,17 @@ for m=0:n.ntimesteps
   % Flux counting
   if fluxCounter.Flag == 1
     fluxCounter.updateFlux( tracer.Centers, center_old );
+  end
+    if modelopt.movie
+      numMovieRec = numMovieRec + 1;
+      if numMovieRec < modelopt.movie_steps
+        Fr = getframe(Fig);
+        writeVideo(movObj,Fr);
+      elseif printFinish == 1
+        printFinish = 0;
+        fprintf('Finished movie\n')
+        close(movObj)
+      end
   end
   
   % Recording
@@ -267,27 +288,24 @@ for m=0:n.ntimesteps
           end
         end
         if mod( m-n.twait, const.write_interval  ) == 0
-          %RecIndTemp = (jchunk-1) *  const.NrecChunk + 1 : jchunk * const.NrecChunk;
           jrecEnd = jrec + const.NrecChunk - 1;
           recIndTemp = jrec:jrecEnd;
-          RecIndTemp = recIndTemp;
           % tracer write to file
           if n.trPosRecModFlag
-            fileObj.tracer_cen_rec(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
+            fileObj.tracer_cen_rec(1:n.num_tracer,1:n.dim,recIndTemp) = ...
               tracer_cen_rec_temp;
           end
           if n.trPosRecNoModFlag
-            fileObj.tracer_cen_rec_nomod(1:n.num_tracer,1:n.dim,RecIndTemp) = ...
+            fileObj.tracer_cen_rec_nomod(1:n.num_tracer,1:n.dim,recIndTemp) = ...
               tracer_cen_rec_nomod_temp;
           end
           if n.trStateRecFlag
-            fileObj.tracer_state_rec(1:n.num_tracer,RecIndTemp) = ...
+            fileObj.tracer_state_rec(1:n.num_tracer,recIndTemp) = ...
               tracer_state_rec_temp;
           end
           if n.trackOcc
-            fileObj.occupancy(1:num_obst_types,RecIndTemp) = occupancy_temp;
+            fileObj.occupancy(1:num_obst_types,recIndTemp) = occupancy_temp;
           end
-          %jchunk = jchunk + 1;
           jrec = jrecEnd + 1;
           jrectemp = 0;
           if verbose
@@ -295,7 +313,6 @@ for m=0:n.ntimesteps
           end
         end % write mod(m, chuck)
         jrectemp = jrectemp + 1;
-        %jrec = jrec + 1;
       end % rec mod(m,trec)
     end % m > twait
   end % record
@@ -310,11 +327,6 @@ end
 % save it
 fileObj.const = const;
 fileObj.paramlist = paramlist;
-fileObj.obst = obstCell;
+fileObj.obst = obstInpt;
 fileObj.modelopt = modelopt;
 fileObj.flux = fluxCounter.Counts;
-
-if modelopt.movie
-  movie_diffusion(obst,fileObj.obst_cen_rec,tracer,fileObj.tracer_cen_rec,...
-    const,n,modelopt.movie_timestep,modelopt.movie_filename);
-end

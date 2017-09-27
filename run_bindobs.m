@@ -38,39 +38,35 @@ try
   
   % Scramble and shift the seed
   % first, paused base on input seed, then scramble
-  rng( trialmaster.seedShift );
-  rand1 = rand();
-  tpause = 10 .* rand1;
-  pause( tpause );
-  fprintf('Pausing for %f before shuffling\n', tpause );
-  rng('shuffle');
-  rand2 = rand();
-  const.rand1 = rand1;
-  const.rand2 = rand2;
-  fprintf('rand1 = %f rand2 = %f (before after shuffle)\n', rand1, rand2 );
+  if trialmaster.parforFlag
+    rng( trialmaster.seedShift );
+    rand1 = rand();
+    tpause = 10 .* rand1;
+    pause( tpause );
+    fprintf('Pausing for %f before shuffling\n', tpause );
+    rng('shuffle');
+    rand2 = rand();
+    const.rand1 = rand1;
+    const.rand2 = rand2;
+    fprintf('rand1 = %f rand2 = %f (before after shuffle)\n', rand1, rand2 );
+  end
   
   %display everything
   fprintf('parameters read in\n');
   disp(trialmaster); disp(params); disp(const); disp(modelopt);
-  disp(obst);
-
+  
   % run obstacle manager
- [obstObj] =  obstManager( obst, modelopt );
-
- %build a parameter matrix
+  [obstObj] =  obstManager( params.obst, modelopt );
+  params.obst = obstObj.param;
+  %build a parameter matrix
   runVec = trialmaster.runstrtind + (0:trialmaster.nt-1);
   param_mat = combvec( runVec, obstObj.inds);
   [~,nparams] = size(param_mat);
   paramRun = param_mat(1,:);
   paramObst = param_mat(2,:);
-  % turn off animations if n>1
-  if nparams > 1
-    modelopt.animate = 0;
-  end
   fprintf('Starting paramloop \n')
   fprintf('nparams = %d\n', nparams)
-  RunTimeID = tic;
-
+  runTimeID = tic;
   % eliminate broadcast warning
   num_tracer = params.num_tracer;
   tr_unbnd_diff = params.tr_unbnd_diff;
@@ -83,9 +79,12 @@ try
   obstParam = obstObj.param;
   obstStr = obstObj.str;
   allowPlaceTracerObst = modelopt.place_tracers_obst;
-% run it based on nparams
-  if nparams > 1
+  if nparams > 1 && trialmaster.parforFlag
+    parforFlag = 1;
     fprintf('Using parfor to run diffusion model\n');
+    % turn off animation and movie
+    modelopt.animate = 0;
+    modelopt.movie = 0;
     % Set-up a parpool that's cluster safe
     % No pool yet
     if isempty(gcp('nocreate') )
@@ -107,36 +106,47 @@ try
       clustdir = parobj.Cluster.JobStorageLocation;
       mkdir(clustdir);
     end
-    
+  else
+    parforFlag = 0;
+  end
+  if parforFlag
     fprintf('I have hired %d workers\n',parobj.NumWorkers);
     fprintf('Temp cluster dir: %s\n', clustdir);
-    parfor j=1:nparams
-      % scramble rng in parfor! It's rng is indepedent on ML's current state
+    numWorkers = parobj.NumWorkers;
+  else
+    fprintf('Not using parfor\n')
+    numWorkers = 0;
+  end
+  parfor (j=1:nparams, numWorkers)
+    %   for j=1:nparams
+    % scramble rng in parfor! It's rng is indepedent on ML's current state
+    if parforFlag
       pause(j);
       rng('shuffle');
       fprintf('Parfor j = %d Rand num = %f \n', j, rand() );
-      
-      % grab parameters
-      runIdTemp = paramRun(j);
-      paramObstTemp = paramObst(j);
-      %parameter cell
-      pvec= [num_tracer, tr_unbnd_diff ];
-      % file string 
-      filestring=['unD',num2str(tr_unbnd_diff),...
-        obstStr{j}, ...
-        '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
-        '_pto', num2str( allowPlaceTracerObst, '%d' ),...
-        '_ng',num2str(n_gridpoints),...
-        '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
-        '_nrec', num2str(NrecTot),...
-        '_t', num2str(tind,'%.2d'),'.',num2str(runIdTemp,'%.2d') ];
-      filename=['data_',filestring,'.mat'];
-      fprintf('%s\n',filename);
-      %run the model!
-      [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},fluxCount,filename);
-      movefile(filename,'./runfiles');
     end
-    % Clean up tmp
+    % grab parameters
+    runIdTemp = paramRun(j);
+    paramObstTemp = paramObst(j);
+    %parameter cell
+    pvec= [num_tracer, tr_unbnd_diff paramObstTemp ];
+    % file string
+    filestring=['unD',num2str(tr_unbnd_diff),...
+      obstStr{j}, ...
+      '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
+      '_pto', num2str( allowPlaceTracerObst, '%d' ),...
+      '_ng',num2str(n_gridpoints),...
+      '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
+      '_nrec', num2str(NrecTot),...
+      '_t', num2str(tind,'%.2d'),'.',num2str(runIdTemp,'%.2d') ];
+    filename=['data_',filestring,'.mat'];
+    fprintf('%s\n',filename);
+    %run the model!
+    [~,~] = diffusion_model(pvec, const, modelopt, obstParam, filename);
+    movefile(filename,'./runfiles');
+  end
+  % Clean up tmp
+  if parforFlag
     delete( [clustdir '/*.mat' ] );
     delete( [clustdir '/*.txt' ] );
     if ~isempty( ls(clustdir) )
@@ -146,30 +156,8 @@ try
       rmdir( [clustdir '/' tempDir ] );
     end
     rmdir(clustdir);
-  else
-    fprintf('Running diffusion model once\n');
-    j = 1;
-    % grab parameters
-    runIdTemp = paramRun(j);
-    paramObstTemp = paramObst(j);
-    %parameter cell
-    pvec= [num_tracer, tr_unbnd_diff];
-    % file string 
-   filestring=['unD',num2str(tr_unbnd_diff),...
-        obstStr{j}, ...
-        '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
-        '_pto', num2str( allowPlaceTracerObst, '%d' ),...
-        '_ng',num2str(n_gridpoints),...
-        '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
-        '_nrec', num2str(NrecTot),...
-        '_t', num2str(tind,'%.2d'),'.',num2str(runIdTemp,'%.2d') ];
-    filename=['data_',filestring,'.mat'];
-    fprintf('%s\n',filename);
-    %run the model!
-    [~,~] = diffusion_model(pvec,const,modelopt,obstParam{paramObstTemp},fluxCount,filename);
-    movefile(filename,'./runfiles');
-  end %if nparams > 1
-  runTime = toc(RunTimeID);
+  end
+  runTime = toc(runTimeID);
   runHr = floor( runTime / 3600); runTime = runTime - runHr*3600;
   runMin = floor( runTime / 60);  runTime = runTime - runMin*60;
   runSec = floor(runTime);
