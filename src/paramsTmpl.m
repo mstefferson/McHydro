@@ -4,6 +4,10 @@
 % file that is called, initparams_bindobs, should be a copy of this.
 % initparams_bindobs should not be tracked.
 
+%grid stuff
+const.dim = 2; % system dimension
+const.n_gridpoints = 100; % number of grid points, same in x and y
+
 %trial master
 trialmaster.parforFlag = 0; % flag to use parfor or not
 trialmaster.tind = 1; % trial indicator
@@ -14,15 +18,12 @@ trialmaster.verbose = 0; % print things
 
 % obstacles cell of cells:
 % {'rand', bndDiff, be, ffo, so, obstExclude, edgesPlace};
-% {'wall', bndDiff, be, thickness, gapWidth};
+% {'wall', bndDiff, be, thickness, gapWidth, dim, loc};
 params.obst = { {'rand', 0, 1, 0.1, 1, 1, 0} };
 params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion
 
-%grid stuff
-const.dim = 2; % system dimension
-const.n_trials = trialmaster.nt; % number of trials
-const.n_gridpoints = 100; % number of grid points, same in x and y
+% time
 const.ntimesteps = round( 10 ^ ( 3.0 ) ); % number of timesteps Note 1e5 gives errors on my laptop.
 const.rec_interval = round( 10 ^ ( 1.0 ) ); % time elapsed before recording
 const.write_interval = round( 10 ^ ( 2.0 ) ); % time elapsed before writing to file

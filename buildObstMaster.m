@@ -28,7 +28,7 @@ placeInds( numTypes(1)+1 : numTypes(1)+numTypes(2) ) = sizeVecInd(sortInd);
 % have obstacle as a cell of obst structures
 obst = cell(1, num_obst_types+1);
 filledSites = [];
-wallStartLoc = grid.sizeV( 2 );
+forbiddenWallStart = [];
 % build vectors for transition matrix
 be = zeros(1,num_obst_types+1);
 hopProb = zeros(1,num_obst_types+1);
@@ -37,10 +37,26 @@ ff = zeros(1,num_obst_types+1);
 for ii = 1:num_obst_types
   obstCellInput = obstCell{ placeInds(ii) };
   if strcmp( obstCellInput{1}, 'wall' )
-     out = WallObstClass( obstCellInput{2}(1),obstCellInput{2}(2),  ...
-       obstCellInput{2}(3),obstCellInput{2}(4),...
-       colorArray(ii,:), grid, wallStartLoc );
-     wallStartLoc = wallStartLoc-out.Thickness;
+     startLocation = obstCellInput{2}(6);
+     dim = obstCellInput{2}(5);
+     thickness = obstCellInput{2}(3);
+     desiredSites = (startLocation-thickness+1):startLocation;
+     locCounter = 0;
+     while ~isempty( intersect( desiredSites, forbiddenWallStart ) ) && locCounter < grid.sizeV( dim );
+       startLocation = mod( startLocation - 1 - 1, ...
+        grid.sizeV( dim ) ) + 1;
+        locCounter = locCounter + 1;
+       desiredSites = (startLocation-thickness+1):startLocation; 
+      end
+      if locCounter == grid.sizeV(dim)
+        fprintf('Error, could not place a wall at any start location\n')
+        error('Error, could not place a wall at any start location\n')
+      end
+     out = WallObstClass( obstCellInput{2}(1), obstCellInput{2}(2),  ...
+       obstCellInput{2}(3), obstCellInput{2}(4),...
+       dim, startLocation,...
+       colorArray(ii,:), grid);
+     forbiddenWallStart = [forbiddenWallStart (startLocation-out.Thickness+1):startLocation];
      filledSites = [ filledSites; out.AllPts ];
   end
   if strcmp( obstCellInput{1}, 'rand' )
