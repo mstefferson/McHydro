@@ -5,6 +5,7 @@
 % initparams_bindobs should not be tracked.
 
 %trial master
+trialmaster.parforFlag = 0; % flag to use parfor or not
 trialmaster.tind = 1; % trial indicator
 trialmaster.runstrtind = 1; % run indicator
 trialmaster.nt = 1; % number of trials

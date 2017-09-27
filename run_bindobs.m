@@ -85,7 +85,8 @@ try
   ntimesteps =  const.ntimesteps;
   NrecTot = const.NrecTot;
   tind = trialmaster.tind;
-  if nparams > 1
+  if nparams > 1 && trialmaster.parforFlag
+    parforFlag = 1;
     fprintf('Using parfor to run diffusion model\n');
     % Set-up a parpool that's cluster safe
     % No pool yet
@@ -108,56 +109,30 @@ try
       clustdir = parobj.Cluster.JobStorageLocation;
       mkdir(clustdir);
     end
-    
+  else
+    parforFlag = 0;
+  end
+  
+  if parforFlag
     fprintf('I have hired %d workers\n',parobj.NumWorkers);
     fprintf('Temp cluster dir: %s\n', clustdir);
-    parfor j=1:nparams
-      % scramble rng in parfor! It's rng is indepedent on ML's current state
+    numWorkers = parobj.NumWorkers;
+  else
+    fprintf('Not using parfor\n')
+    numWorkers = 0; 
+  end
+  parfor (j=1:nparams, numWorkers)
+    % scramble rng in parfor! It's rng is indepedent on ML's current state
+    if parforFlag
       pause(j);
       rng('shuffle');
       fprintf('Parfor j = %d Rand num = %f \n', j, rand() );
-      
-      RunID       = param_RunID(j);
-      bind_energy = param_bind(j);
-      ffrac_obst  = param_ffo(j);
-      size_obst   = param_sizeobs(j);
-      
-      pvec=[num_tracer, ...
-        tr_unbnd_diff, tr_bnd_diff,...
-        ffrac_obst, bind_energy, size_obst]; %parameter vector
-      
-      filestring=['unD',num2str(tr_unbnd_diff),...
-        '_bD',num2str(tr_bnd_diff,'%.2f'),...
-        '_bind',num2str(bind_energy),...
-        '_fo',num2str(ffrac_obst,'%.2f'),'_so',num2str(size_obst,'%.2d'),...
-        '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
-        '_oe',num2str(obst_excl),'_ng',num2str(n_gridpoints),...
-        '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
-        '_nrec', num2str(NrecTot),...
-        '_t', num2str(tind,'%.2d'),'.',num2str(RunID,'%.2d') ];
-      filename=['data_',filestring,'.mat'];
-      fprintf('%s\n',filename);
-      
-      %run the model!
-      [~,~] = diffusion_model(pvec,const,modelopt,filename);
-      movefile(filename,'./runfiles');
     end
-    % Clean up tmp
-    delete( [clustdir '/*.mat' ] );
-    delete( [clustdir '/*.txt' ] );
-    if ~isempty( ls(clustdir) )
-      tempDir = ls(clustdir);
-      tempDir = tempDir( ~isspace( tempDir ) );
-      delete( [clustdir '/' tempDir '/*' ] );
-      rmdir( [clustdir '/' tempDir ] );
-    end
-    rmdir(clustdir);
-  else
-    fprintf('Running diffusion model once\n');
-    RunID       = param_RunID(1);
-    bind_energy = param_bind(1);
-    ffrac_obst  = param_ffo(1);
-    size_obst   = param_sizeobs(1);
+    
+    RunID       = param_RunID(j);
+    bind_energy = param_bind(j);
+    ffrac_obst  = param_ffo(j);
+    size_obst   = param_sizeobs(j);
     
     pvec=[num_tracer, ...
       tr_unbnd_diff, tr_bnd_diff,...
@@ -169,18 +144,28 @@ try
       '_fo',num2str(ffrac_obst,'%.2f'),'_so',num2str(size_obst,'%.2d'),...
       '_ntrcr',num2str(num_tracer,'%d'),'_st',num2str(size_tracer),...
       '_oe',num2str(obst_excl),'_ng',num2str(n_gridpoints),...
-      '_dim', num2str(dim), '_nt',num2str(ntimesteps),...
+      '_dim', num2str(dim),'_nt',num2str(ntimesteps),...
       '_nrec', num2str(NrecTot),...
       '_t', num2str(tind,'%.2d'),'.',num2str(RunID,'%.2d') ];
-    
     filename=['data_',filestring,'.mat'];
     fprintf('%s\n',filename);
     
     %run the model!
     [~,~] = diffusion_model(pvec,const,modelopt,filename);
-    fprintf('Finished %s \n', filename);
     movefile(filename,'./runfiles');
-  end %if nparams > 1
+  end
+  % Clean up tmp
+  if parforFlag
+    delete( [clustdir '/*.mat' ] );
+    delete( [clustdir '/*.txt' ] );
+    if ~isempty( ls(clustdir) )
+      tempDir = ls(clustdir);
+      tempDir = tempDir( ~isspace( tempDir ) );
+      delete( [clustdir '/' tempDir '/*' ] );
+      rmdir( [clustdir '/' tempDir ] );
+    end
+    rmdir(clustdir);
+  end
   runTime = toc(RunTimeID);
   runHr = floor( runTime / 3600); runTime = runTime - runHr*3600;
   runMin = floor( runTime / 60);  runTime = runTime - runMin*60;
