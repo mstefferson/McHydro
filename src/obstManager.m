@@ -40,6 +40,8 @@ if numObst
         [obstTemp, strAdd] = checkObstRand( obstTemp );
       elseif strcmp( names{jj}, 'wall' )
         [obstTemp, strAdd] = checkObstWall( obstTemp );
+      elseif strcmp( names{jj}, 'teleport' )
+        [obstTemp, strAdd] = checkObstTele( obstTemp );
       end
       obstParams{jj} = obstTemp;
       strTemp = [  strTemp strAdd];
@@ -66,10 +68,8 @@ if length(obst{1,2}) ~= 6
   fprintf('Incorrect number of random obstacle parameters\n')
   error('Incorrect number of random obstacle parameters\n')
 end
-
 % check size
 obst{1,2}(4) = max( obst{1,2}(4), 1 );
-
 % fix edge place
 % Dont place on edges if obstacles can overlap
 if obst{1,2}(5) == 0
@@ -81,7 +81,6 @@ elseif obst{1,2}(4) == 1
 elseif obst{1,2}(1) == 0
   obst{1,2}(6)=1;
 end
-
 % make string
 obstParams = obst{1,2};
 obstStr = [ '_rand_bD' num2str(obstParams(1),'%.2f')  ...
@@ -91,7 +90,6 @@ end
 
 % wall
 function [obst, obstStr] = checkObstWall( obst )
-
 % check inputs
 if length(obst{1,2}) ~= 6
   fprintf('Incorrect number of wall obstacle parameters\n')
@@ -102,4 +100,15 @@ obstParams = obst{1,2};
 obstStr = [ '_wall_bD' num2str(obstParams(1),'%.2f')  ...
 '_be' num2str(obstParams(2),'%.2f') '_t' num2str(obstParams(3),'%.2f')  ...
 '_gw' num2str(obstParams(4),'%d') ]; 
+end
+
+% teleport
+function [obst, obstStr] = checkObstTele( obst )
+% check inputs
+if length(obst{1,2}) ~= 3
+  fprintf('Incorrect number of teleport obstacle parameters\n')
+  error('Incorrect number of teleport obstacle parameters\n')
+end
+% make string
+obstStr = '_tp';
 end

@@ -40,7 +40,8 @@ classdef TracerClass
       if allowObstPlacement
         ffoPlace = zeros( 1, numObstTypes );
         % change ff is only placing on edges and get total filled sites
-        for ii = 1:numObstTypes
+        % scramble the order. No favorites!!!
+        for ii = randperm( numObstTypes )
           if obst{ii}.EdgePlaceFlag
             ffTemp = obst{ii}.NumEdges ./ ...
               ( totSites - obst{ii}.NumFilledSites + obst{ii}.NumEdges );
@@ -49,7 +50,6 @@ classdef TracerClass
             ffoPlace(ii) = obst{ii}.Ff;
           end
         end
-        % scramble the order. No favorites!!!
         emptySites = obst{numObstTypes+1}.AllPts;
         ind = 1:numObstTypes;
         numTracerEmpty = (1-sum(ffoPlace) );

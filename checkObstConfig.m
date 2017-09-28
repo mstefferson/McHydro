@@ -84,7 +84,6 @@ try
     fprintf('%s\n',filename);
     %run the model!
     [~,~] = setupAndAnimate(pvec, const, modelopt, obstParam, filename);
-    movefile(filename,'./runfiles');
   end
   runTime = toc(runTimeID);
   runHr = floor( runTime / 3600); runTime = runTime - runHr*3600;

@@ -2,6 +2,7 @@ classdef FluxCounterClass < handle
   properties
     Flag = 0;
     Counts = 0;
+    CountsPrev = 0;
     IndsCheck = 0;
     IndWantI = 0;
     IndWantF = 0;
@@ -32,7 +33,8 @@ classdef FluxCounterClass < handle
       fluxThrough  = obj.findIndsThrough( posNew, posOld );
       obj = obj.findPartilesThrough( fluxThrough );
       obj = obj.calcTotalThrough();
-      obj.Counts = obj.Counts + obj.TotalThrough;
+      obj.CountsPrev = obj.Counts;
+      obj.Counts = obj.CountsPrev + obj.TotalThrough;
     end % add2Countser
     
     % find flux through

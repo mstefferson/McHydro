@@ -6,10 +6,7 @@ classdef RandObstClass
     Ff = 0;
     FfWant = 0;
     Length = 0;
-    EdgePlaceFlag = 0;
-    ObstExcludeFlag = 0;
-    Color = [0 0 0];
-    Curvature = 0.2;
+    
     TracerOccNum = 0;
     TracerOccFrac = 0;
     AllPts = 0;
@@ -20,12 +17,16 @@ classdef RandObstClass
     CornerInds = 0;
     EdgeInds = 0;
     NumEdges = 0;
+    EdgePlaceFlag = 0;
+    ObstExcludeFlag = 0;
+    Color = [0 0 0];
+    Curvature = 0.2;
   end % properties
   
   methods
     % constructor
     function obj =  RandObstClass( bndDiff, be, ff, so, excludeFlag, edgePlace,...
-        color, grid, forbiddenSites )
+        color, gridObj, forbiddenSites )
       % set inputs
       obj.SiteDiff = bndDiff;
       obj.Be = be;
@@ -35,27 +36,27 @@ classdef RandObstClass
       obj.ObstExcludeFlag = excludeFlag;
       obj.Color = color;
       % now place
-      obj = obj.placeObst( grid, forbiddenSites );
+      obj = obj.placeObst( gridObj, forbiddenSites );
       % set centers (useful for animate)
       deltaCen = floor( ( obj.Length - 1 ) / 2 );
       obj.Centers = zeros( obj.Num, 2 );
-      obj.Centers(:,1) = mod( obj.Corners(:,1) + deltaCen - 1, grid.sizeV(1) ) + 1;
-      obj.Centers(:,2) = mod( obj.Corners(:,2) + deltaCen - 1, grid.sizeV(2) ) + 1;
+      obj.Centers(:,1) = mod( obj.Corners(:,1) + deltaCen - 1, gridObj.sizeV(1) ) + 1;
+      obj.Centers(:,2) = mod( obj.Corners(:,2) + deltaCen - 1, gridObj.sizeV(2) ) + 1;
     end
     
     % methods
-    function [obj] = placeObst( obj, grid, forbiddenSites )
+    function [obj] = placeObst( obj, gridObj, forbiddenSites )
       % set commonly used parameters
       lobst = obj.Length;
       excludeVol = obj.ObstExcludeFlag;
       ff = obj.FfWant;
       % get dimension and add ones for unused higher dimensions
-      dim = grid.dim;
+      dim = gridObj.dim;
       gridTemp = ones(1,3);
-      gridTemp(1:dim) = grid.sizeV;
+      gridTemp(1:dim) = gridObj.sizeV;
       gridSize = gridTemp;
       % number of sites to fill
-      numSites = grid.totPnts;
+      numSites = gridObj.totPnts;
       allSitesOpen = setdiff( 1:numSites, forbiddenSites );
       deltaL1 = round( lobst-1 );
       deltaL2 = round( (lobst-1) .* min( floor( dim/2 ), 1 ) );

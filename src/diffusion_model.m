@@ -42,9 +42,9 @@ n.num_obst_types = num_obst_types;
 n.num_obst = zeros( num_obst_types );
 
 % set up grid
-grid.sizeV = repmat( n.n_gridpoints, [1 n.dim] );
-grid.dim = n.dim;
-grid.totPnts = n.numSites;
+simGrid.sizeV = repmat( n.n_gridpoints, [1 n.dim] );
+simGrid.dim = n.dim;
+simGrid.totPnts = n.numSites;
 
 % Records
 if n.trPosRecNoModFlag || n.trPosRecModFlag ||  n.obsPosRecNoModFlag ||...
@@ -80,11 +80,10 @@ end
 % obstacle fields
 if verbose
   fprintf('Placing obstacles\n');
-  tFill = zeros( num_obst_types, 1);
 end
 
 % place some obstacles
-[obst, obstInfo] =  buildObstMaster( obstInpt, tr_diff_unb, grid, colorArray );
+[obst, obstInfo] =  buildObstMaster( obstInpt, tr_diff_unb, simGrid, colorArray );
 % rough check for errors
 for ii = 1:num_obst_types-1
   if any( ismember( obst{ii}.AllPts, obst{ii+1}.AllPts ) )
@@ -98,14 +97,14 @@ if verbose
   tic
 end
 % set-up tracers
-tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, grid, ...
+tracer = TracerClass(  paramlist.num_tracer, obst, obstInfo.be, simGrid, ...
   modelopt.place_tracers_obst);
 % Derived parameters and store
 n.num_tracer = tracer.Num;
 % Animate first position
-if animate 
+if animate
   % init
-  ax = initAnimation(grid);
+  initAnimation(simGrid);
   obstRectangle = cell( 1, num_obst_types );
   tracerRectangle = struct;
   % update positions
@@ -121,7 +120,7 @@ if animate
       kTracer,tracer.Length,n.n_gridpoints,...
       tracer.Color,tracer.Curvature);
   end
-pause(2);
+  pause(2);
 end
 % set-up movie
 if modelopt.movie
@@ -172,7 +171,7 @@ end
 
 % Pre-Allocate some commonly used matrices
 onesNt2 = ones( n.num_tracer, n.dim ); % matrix of ones ( Ntracer x 2 ) used for mod
-NgsNt2 = repmat( grid.sizeV, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
+NgsNt2 = repmat( simGrid.sizeV, [n.num_tracer, 1] ) .* ones( n.num_tracer, n.dim ); % matix of Ng ( Ntracer x n.dimension ) used for mod
 
 % preallocate some things to prevent errors
 center_new = ones( tracer.Num, 3 );
@@ -180,7 +179,22 @@ all_tracer_inds = 1:n.num_tracer;
 state_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
 
 % set-up flux Counter
-fluxCounter = FluxCounterClass( const.fluxCountInpt, grid );
+fluxCounter = FluxCounterClass( const.fluxCountInpt, simGrid );
+% fix flux if there is a teleport
+sinkLocs = [];
+sourceLocs = [];
+teleInds = [];
+teleFlag = 0;
+for ii = 1:num_obst_types
+  if strcmp( obst{ii}.Type, 'teleport' )
+    teleFlag = 1;
+    teleInds = [teleInds ii];
+    sinkLocs = [sinkLocs obst{ii}.SinkLocation];
+    sourceLocs = [sourceLocs obst{ii}.SourceLocation];
+  end
+end
+fluxCounter.IndWantF( fluxCounter.IndWantF == sinkLocs ) = ...
+  sourceLocs( fluxCounter.IndWantF == sinkLocs );
 
 % loop over time points
 if verbose; fprintf('Starting time loop\n'); tic; end
@@ -189,9 +203,9 @@ for m=0:n.ntimesteps
   list.tracerdir=randi(length(lattice.moves),n.num_tracer,1);
   
   % get current positions, called old
-  center_old=tracer.Centers;
-  sites_old = tracer.AllPts;
-  state_old = tracer.State;
+  center_old = tracer.Centers;
+  sites_old  = tracer.AllPts;
+  state_old  = tracer.State;
   
   % Attempt new tracer positions
   center_temp= center_old+lattice.moves(list.tracerdir,:);
@@ -200,29 +214,49 @@ for m=0:n.ntimesteps
   center_new(:,1:n.dim) = mod( center_temp - onesNt2 , NgsNt2 ) + onesNt2;
   
   sites_new = ...
-    sub2ind(grid.sizeV, center_new(:,1), center_new(:,2), center_new(:,3) );
+    sub2ind(simGrid.sizeV, center_new(:,1), center_new(:,2), center_new(:,3) );
   
   % Find old and new occupancy, i.e, when tracer and obs on same site
   rvec=rand(n.num_tracer,1);
   state_new = state_new_save;
+  % update state and teleport
   for ii = 1:num_obst_types
+    % teleport
+    if any(ii == teleInds)
+      [center_new, teleportedParticles] = obst{ii}.teleport( center_new );
+    end
+    sites_new = ...
+      sub2ind(simGrid.sizeV, center_new(:,1), center_new(:,2), center_new(:,3) );
     state_new( ismember(sites_new, obst{ii}.AllPts ) ) = ii;
   end
-  transInds = sub2ind( obstInfo.sizeT, state_new, state_old);
+  
+  transInds = sub2ind( obstInfo.sizeT, state_new, state_old );
   probmov = obstInfo.acceptT( transInds );
   list.accept = find(rvec<probmov);
-  list.reject = setdiff( all_tracer_inds,list.accept );
-  
+  % force accept teleport
+  if teleFlag
+   list.accept = [ list.accept; teleportedParticles ];
+  end
+
   % Move all accepted changes
   tracer.Centers(list.accept,1:n.dim) = center_new(list.accept,1:n.dim); %temporary update rule for drawing
   tracer.PosNoMod(list.accept,1:n.dim) = tracer.PosNoMod(list.accept,1:n.dim)+...
     lattice.moves(list.tracerdir(list.accept),1:n.dim); %center, no periodic wrapping
-  
   tracer.AllPts(list.accept)=sites_new(list.accept); %update other sites
   tracer.State(list.accept)=state_new(list.accept);
   
+  % Flux counting
+  if fluxCounter.Flag == 1
+    fluxCounter.updateFlux( tracer.Centers, center_old );
+  end
+ 
+  if fluxCounter.Counts ~= obst{2}.Counts
+    fprintf('Flux = %d Teleport = %d\n', fluxCounter.Counts, obst{2}.Counts);
+    keyboard
+  end
+  
   % Animations
-  if animate 
+  if animate
     for kTracer=1:n.num_tracer
       tracerRectangle=update_rectangle(tracer.Centers, tracerRectangle, ...
         kTracer,tracer.Length,n.n_gridpoints,...
@@ -231,20 +265,17 @@ for m=0:n.ntimesteps
     pause(tpause);
   end
   
-  % Flux counting
-  if fluxCounter.Flag == 1
-    fluxCounter.updateFlux( tracer.Centers, center_old );
-  end
-    if modelopt.movie
-      numMovieRec = numMovieRec + 1;
-      if numMovieRec < modelopt.movie_steps
-        Fr = getframe(Fig);
-        writeVideo(movObj,Fr);
-      elseif printFinish == 1
-        printFinish = 0;
-        fprintf('Finished movie\n')
-        close(movObj)
-      end
+  % movie
+  if modelopt.movie
+    numMovieRec = numMovieRec + 1;
+    if numMovieRec < modelopt.movie_steps
+      Fr = getframe(Fig);
+      writeVideo(movObj,Fr);
+    elseif printFinish == 1
+      printFinish = 0;
+      fprintf('Finished movie\n')
+      close(movObj)
+    end
   end
   
   % Recording
@@ -324,7 +355,6 @@ if verbose
   tOut =  tOut / 3600;
   fprintf('\nFinished loop %f hours\n\n', tOut)
 end
-
 % save it
 fileObj.const = const;
 fileObj.paramlist = paramlist;
