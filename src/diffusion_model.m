@@ -249,11 +249,6 @@ for m=0:n.ntimesteps
   if fluxCounter.Flag == 1
     fluxCounter.updateFlux( tracer.Centers, center_old );
   end
- 
-  if fluxCounter.Counts ~= obst{2}.Counts
-    fprintf('Flux = %d Teleport = %d\n', fluxCounter.Counts, obst{2}.Counts);
-    keyboard
-  end
   
   % Animations
   if animate
