@@ -94,9 +94,10 @@ ff(num_obst_types+1) = 1 - sum( ff(1:num_obst_types) );
 % T(i,j): i-final state, j-initial stae
 deltaG = be' - be;
 bindT = exp( -deltaG );
+bindT( isnan(bindT) ) = 1;
 bindT(bindT>1) = 1;
-hopT = repmat( hopProb, [num_obst_types+1, 1] ) ;
-hopT(end,:) = 1; % can always hop to empty
+hopT = ones( num_obst_types+1, num_obst_types+1 );
+hopT( logical( eye(num_obst_types+1) ) ) = hopProb;
 % accept probability
 hopInfo.acceptT = hopT .* bindT;
 hopInfo.sizeT = size( hopT );
