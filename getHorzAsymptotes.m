@@ -1,14 +1,36 @@
-function getHorzAsymptotes( x, y, w, numBins, threshold, binSpacingType )
+function [asymInfo, binInfo] = getHorzAsymptotes( x, y, errY, threshold, numBins,  ...
+  binSpacingType, plotFlag )
 
 % break x up uniformly number of points
 nPtns = length(x);
-% if no weights, set them to one
-if isempty(w)
-  w = ones(1, nPtns );
+% set some defaults
+if nargin == 2
+  errY = [];
+  threshold = 0.1;
+  numBins = 10;
+  binSpacingType = [];
+  plotFlag = 0;
+elseif nargin == 3
+  threshold = 0.1;
+  numBins = 10;
+  binSpacingType = [];
+  plotFlag = 0;
+elseif nargin == 4
+  numBins = 10;
+  binSpacingType = [];
+  plotFlag = 0;
+elseif nargin == 5
+  binSpacingType = [];
+  plotFlag = 0;
+elseif nargin == 6
+  plotFlag = 0;
 end
-% if no bin spacing selected, do equidistant bin spacing
-if nargin < 6
-  binSpacingType  = [];
+
+%if no weights, set them to one
+if isempty(errY)
+  w = ones(1, nPtns );
+else
+  w = 1 ./ errY .^ 2;
 end
 % make sure x,y,w are column vectors
 if isrow(x); x = x.'; end
@@ -86,7 +108,12 @@ deltaYValAsym = zeros(1, numAsymptotes);
 maxSlopeAsymIntercept =  zeros(1, numAsymptotes);
 asymBinEnd = zeros(1, numAsymptotes); 
 asymBinStart = zeros(1, numAsymptotes); 
+aveW = zeros(1, numAsymptotes); 
+stdW = zeros(1, numAsymptotes); 
+aveUw = zeros(1, numAsymptotes); 
+stdUw = zeros(1, numAsymptotes); 
 for ii = 1:numAsymptotes
+  % get data
   bins2count = flatInds{ii};
   indStart = dataBinInds( bins2count(1) );
   indEnd = dataBinInds( bins2count(end) + 1 );
@@ -94,18 +121,54 @@ for ii = 1:numAsymptotes
   asymBinStart(ii) = bins2count(1);
   xTemp = x( indStart:indEnd );
   yTemp = y( indStart:indEnd );
-  wTemp = ones(1, length(xTemp) );
+  wTemp = w( indStart:indEnd );
+  nPntsTemp = length(xTemp);
+  % fit it
   pfit = fit( xTemp, yTemp, 'poly1', 'weights',  wTemp);
   slopeAsym(ii) = pfit.p1;
   yInterAsym(ii) =  pfit.p2;
+  % center and intercept values
   xCenterAsym(ii) = ( xTemp(end) + xTemp(1) ) / 2;
-  numPtnsAsym(ii) = length(xTemp);
+  numPtnsAsym(ii) = nPntsTemp ;
   centerYValAsym(ii) = pfit.p1 .* xCenterAsym(ii) + pfit.p2;
   deltaYValAsym(ii) = abs( pfit.p1 .* ( xTemp(end) - xTemp(1) ) );
   maxSlopeAsymIntercept(ii) = ( centerYValAsym(ii) - maxSlopeInterceptVal )...
     / maxSlopeSlopeVal;
+  % averages
+  sumVec = sum( yTemp .* wTemp );
+  sumW = sum( wTemp );
+  aveWtemp =  sumVec / sumW;
+  sumstd2num = sum( ( yTemp - aveWtemp ) .^ 2 .* wTemp );
+  stdWtemp  = sqrt( sumstd2num ./ ( ( nPntsTemp - 1 ) ./ (nPntsTemp) .*  sumW ) );
+  aveW(ii) = aveWtemp;
+  stdW(ii) = stdWtemp;
+  aveUw(ii) = mean( yTemp );
+  stdUw(ii) = std( yTemp );
 end
-
+% Store data
+% asymptote info
+asymInfo.numAsymptotes = numAsymptotes;
+asymInfo.flatInds = flatInds;
+asymInfo.aveW = aveW;
+asymInfo.stdW = stdW;
+asymInfo.aveUw = aveUw;
+asymInfo.stdUw = stdUw;
+asymInfo.slopeAsym = slopeAsym;
+asymInfo.xCenterAsym  = xCenterAsym;
+asymInfo.numPtnsAsym = numPtnsAsym;
+asymInfo.centerYValAsym = centerYValAsym;
+asymInfo.deltaYValAsym = deltaYValAsym;
+asymInfo.maxSlopeAsymXIntercept  = maxSlopeAsymIntercept;
+% bin info
+binInfo.numBins = numBins;
+binInfo.binSpacingType = binSpacingType;
+binInfo.slopeBin = slopeBin;
+binInfo.xCenterBin = xCenterBin;
+binInfo.centerYValBin = centerYValBin;
+binInfo.deltaYValBin = deltaYValBin;
+binInfo.acceptedFlatBins = acceptedFlatBins;
+%% Plotting %%
+if plotFlag
 % plot
 figure()
 plot( x, y );
@@ -141,3 +204,4 @@ end
 title('Asymptotes, bins, max slope, and intercepts!');
 ylabel('$$ y $$');
 xlabel('$$ x $$');
+end
