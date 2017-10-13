@@ -20,6 +20,7 @@ trialmaster.verbose = 0; % print things
 % {'rand', bndDiff, be, ffo, so, obstExclude, edgesPlace};
 % {'wall', bndDiff, be, thickness, gapWidth, dim, loc};
 % {'teleport', dim, loc, trackTeleNumFlag};
+% {'specloc', bndDiff, be, locations, so };
 params.obst = { {'rand', 0, 1, 0.1, 1, 1, 0} };
 params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion

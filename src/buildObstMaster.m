@@ -3,12 +3,13 @@ function [obst, hopInfo] = buildObstMaster( obstCell, freeDiff, gridObj, colorAr
 % get place order. place walls first
 num_obst_types = length( obstCell );
 % get a list of the obstacle types
-placeInds = zeros( 1, num_obst_types );
+obstPlaceOrder = zeros( 1, num_obst_types );
 sizeVec   = zeros( 1, num_obst_types );
 sizeVecInd = zeros( 1, num_obst_types );
 teleportInd = zeros( 1, num_obst_types );
+speclocInd = zeros( 1, num_obst_types );
 placeIndHolder = 1;
-numTypes = zeros( 1, 3); % 'walls, rand, teleport'
+numTypes = zeros( 1, 4); % 'walls, rand, teleport, placed'
 for ii = 1:num_obst_types
   % place walls first
   if  strcmp( obstCell{ii}{1}, 'rand' )
@@ -16,24 +17,33 @@ for ii = 1:num_obst_types
     sizeVecInd(ii) = ii;
     numTypes(1) = numTypes(1) + 1;
   elseif strcmp( obstCell{ii}{1}, 'wall' )
-    placeInds( placeIndHolder ) = ii;
+    obstPlaceOrder( placeIndHolder ) = ii;
     placeIndHolder = placeIndHolder + 1;
     numTypes(2) = numTypes(2) + 1;
     % get sizes of random for their place order
-  else
+  elseif strcmp( obstCell{ii}{1}, 'teleport' )
     teleportInd(ii) = ii;
     numTypes(3) = numTypes(3) + 1;
+  elseif strcmp( obstCell{ii}{1}, 'specloc' )
+    speclocInd(ii) = ii;
+    numTypes(4) = numTypes(4) + 1;
   end
 end
 % get rid of zeros
 sizeVec = sizeVec( sizeVec ~= 0 );
 sizeVecInd = sizeVecInd( sizeVecInd ~= 0 );
 teleportInd = teleportInd( teleportInd ~= 0 );
+speclocInd = speclocInd( speclocInd ~= 0 );
 % place teleport after wall
-placeInds( numTypes(2)+1:(numTypes(2)+numTypes(3)) ) = teleportInd;
+totPlaced = numTypes(2);
+obstPlaceOrder( totPlaced+1:(totPlaced+numTypes(3)) ) = teleportInd;
+% place specloc afer teleport 
+totPlaced = totPlaced + numTypes(3);
+obstPlaceOrder( totPlaced+1:(totPlaced+numTypes(4)) ) = speclocInd;
 % sort by size size
+totPlaced = totPlaced + numTypes(4);
 [~, sortInd] = sort( sizeVec, 'descend' );
-placeInds( (numTypes(2)+numTypes(3)+1) : num_obst_types ) = sizeVecInd(sortInd);
+obstPlaceOrder( totPlaced+1: num_obst_types ) = sizeVecInd(sortInd);
 % have obstacle as a cell of obst structures
 obst = cell(1, num_obst_types+1);
 filledSites = [];
@@ -44,7 +54,7 @@ hopProb = zeros(1,num_obst_types+1);
 ff = zeros(1,num_obst_types+1);
 % place tracers
 for ii = 1:num_obst_types
-  obstCellInput = obstCell{ placeInds(ii) };
+  obstCellInput = obstCell{ obstPlaceOrder(ii) };
   if strcmp( obstCellInput{1}, 'wall' )
     startLocation = obstCellInput{2}(6);
     dim = obstCellInput{2}(5);
@@ -78,6 +88,11 @@ for ii = 1:num_obst_types
     out = TeleportObstClass( obstCellInput{2}(1), obstCellInput{2}(2), ...
        obstCellInput{2}(3), gridObj );
     filledSites = [ filledSites; out.AllPts; out.SinkInds ];
+  end
+  if strcmp( obstCellInput{1}, 'specloc' )
+    out = SpeclocObstClass( obstCellInput{2}(1), obstCellInput{2}(2), ...
+       obstCellInput{2}(3), obstCellInput{2}(4), colorArray(ii,:), gridObj, filledSites );
+    filledSites = [ filledSites; out.AllPts ];
   end
   obst{ii} = out;
   be(ii) = out.Be;

@@ -1,4 +1,4 @@
-function [obstObj] =  obstManager( obst, modelopt )
+function [obstObj] =  obstManager( obst )
 % Build obstObj
 numObst = length(obst);
 if numObst
@@ -42,6 +42,8 @@ if numObst
         [obstTemp, strAdd] = checkObstWall( obstTemp );
       elseif strcmp( names{jj}, 'teleport' )
         [obstTemp, strAdd] = checkObstTele( obstTemp );
+      elseif strcmp( names{jj}, 'specloc' )
+        [obstTemp, strAdd] = checkObstSpecloc( obstTemp );
       end
       obstParams{jj} = obstTemp;
       strTemp = [  strTemp strAdd];
@@ -111,4 +113,15 @@ if length(obst{1,2}) ~= 3
 end
 % make string
 obstStr = '_tp';
+end
+
+% specific location specloc
+function [obst, obstStr] = checkObstSpecloc( obst )
+% check inputs
+if length(obst{1,2}) ~= 4
+  fprintf('Incorrect number of specific location obstacle parameters\n')
+  error('Incorrect number of specific location obstacle parameters\n')
+end
+% make string
+obstStr = '_sp';
 end

@@ -56,7 +56,7 @@ try
   disp(trialmaster); disp(params); disp(const); disp(modelopt);
   
   % run obstacle manager
-  [obstObj] =  obstManager( params.obst, modelopt );
+  [obstObj] =  obstManager( params.obst );
   params.obst = obstObj.param;
   %build a parameter matrix
   runVec = trialmaster.runstrtind + (0:trialmaster.nt-1);
