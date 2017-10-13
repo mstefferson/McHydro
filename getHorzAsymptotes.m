@@ -149,6 +149,7 @@ end
 % asymptote info
 asymInfo.numAsymptotes = numAsymptotes;
 asymInfo.flatInds = flatInds;
+asymInfo.maxNegSlope = maxSlopeSlopeVal;
 asymInfo.aveW = aveW;
 asymInfo.stdW = stdW;
 asymInfo.aveUw = aveUw;
@@ -204,4 +205,5 @@ end
 title('Asymptotes, bins, max slope, and intercepts!');
 ylabel('$$ y $$');
 xlabel('$$ x $$');
+hold off
 end
