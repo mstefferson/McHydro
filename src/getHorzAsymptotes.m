@@ -1,3 +1,28 @@
+% [asymInfo, binInfo] = getHorzAsymptotes( x, y, errY, threshold, numBins,  ...
+%    binSpacingType, plotFlag )
+%
+% outputs:
+%   asymInfo: struct cantaining info on all the found horz. asymptotes
+%   binInfo: To calculate asymptotes, data is binned. This contains bin info
+%
+% inputs: 
+%   x: independent data
+%   y: dependent data
+%   errY: uncertainty in the dependent data
+%   threshold: threshold value for calling a bin as a horz. asymptote
+%   numBins: number of bins to divide data into
+%   binSpacingType: type of bin spacing. either equidistant in indice number or x value
+%   plotFlag: plotting flag
+%
+% plotinfo:
+%   blue solid: data
+%   black solid: max slope
+%   red solid: horizontal asymptotes
+%   green dash: anomalous time (intercept of max slope and asymptote)
+%   faint black dot: bin divider
+%   faint red dot: horizontal bin border
+%%
+
 function [asymInfo, binInfo] = getHorzAsymptotes( x, y, errY, threshold, numBins,  ...
   binSpacingType, plotFlag )
 

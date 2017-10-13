@@ -1,3 +1,33 @@
+% sampleCalcDscript( numBins, threshold )
+% Description: sample script that takes a sample data set, 
+% 'horztlAsympTestData' and calculate the diffusion coefficient. 
+%
+% sample call:
+% [diffInfo, asymInfo, binInfo] = sampleCalcDScript( 10, 0.1 )
+%
+% 
+% outputs:
+%   diffInfo: struct containing diffusion coefficient, standard deviation, 
+%     the minimum anomalous scaling coefficient, and the anomalous time
+%   asymInfo: struct cantaining info on all the found horz. asymptotes
+%   binInfo: To calculate asymptotes, data is binned. This contains bin info
+%
+% inputs: 
+%   numBins: number of bins to divide data into
+%   threshold: threshold value for calling a bin as a horz. asymptote
+%     If the relative change of the independent variable over a bin is 
+%     less than threshold, say that that bin is flat. 
+%     Smaller threshold == stricter asymptote criteria.
+% 
+
+function [diffInfo, asymInfo, binInfo] = sampleCalcDScript( numBins, threshold )
+
+if nargin == 0
+  numBins = 10;
+  threshold = 0.1;
+elseif nargin == 1
+  threshold = 0.1;
+end
 % load data
 load('horztlAsympTestData');
 
@@ -15,12 +45,6 @@ y = log( msd ./ dtime );
 errY = err ./ msd; 
 % (I think it should be this, but I dont have the data) errY = err ./ msd ./ sqrt(N)
 
-% Tuneable parameters
-% number of bins data is binned in;
-numBins = 20; 
-% flatness threshold. If the relative change of the independent variable 
-% over a bin is less than threshold, say that that bin is flat. Smaller threshold == stricter asymptote criteria.
-threshold = 0.05;
 % plotting flag. I'd turn this on to convince yourself that the code is working 
 % of if you think it's not.
 plotFlag = 1;
@@ -38,9 +62,9 @@ disp(asymInfo);
 % the diffusion coefficients after running getHorzAsymptotes. It basically does the above code
 numPntsMsd = ones( size(msd) ); % This should be the number of point recorded in average.
 plotFlag = 1; % plot option again
-verbose = 0; % verbose flag. print if it found a diffusion coeff or not
-[diffInfo] = getDfromMsdData( dtime, msd, err, numPntsMsd, ...
-  threshold, numBins, plotFlag );
-fprintf( 'Long time diffusion D = %f p/m %f \n', diffInfo.D, diffInfo.stdD) 
-fprintf('max anom. coeff alpha = %f \n' , diffInfo.alpha)
-fprintf('anomalous time tanom = %f \n', diffInfo.tAnom);
+verbose = 1; % verbose flag. print if it found a diffusion coeff or not
+errMean = err ./ sqrt( numPntsMsd );
+[diffInfo] = getDfromMsdData( dtime, msd, errMean, ...
+  threshold, numBins, plotFlag, verbose );
+% display it
+disp(diffInfo);
