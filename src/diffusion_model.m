@@ -46,6 +46,11 @@ simGrid.sizeV = repmat( n.n_gridpoints, [1 n.dim] );
 simGrid.dim = n.dim;
 simGrid.totPnts = n.numSites;
 
+% set-up flux Counter
+fluxCounter = FluxCounterClass( const.fluxCountInpt, simGrid );
+% set-up occ Counter
+occCounter = OccCounterClass( const.occCountInpt,  n.ntimesteps, simGrid);
+
 % Records
 if n.trPosRecNoModFlag || n.trPosRecModFlag ||  n.obsPosRecNoModFlag ||...
     n.obsPosRecModFlag ||  n.trStateRecFlag || n.trackOcc
@@ -120,6 +125,7 @@ if animate
       kTracer,tracer.Length,n.n_gridpoints,...
       tracer.Color,tracer.Curvature);
   end
+  occCounter.animate;
   pause(2);
 end
 % set-up movie
@@ -178,8 +184,7 @@ center_new = ones( tracer.Num, 3 );
 all_tracer_inds = 1:n.num_tracer;
 state_new_save = (num_obst_types+1) .* ones( n.num_tracer,1 );
 
-% set-up flux Counter
-fluxCounter = FluxCounterClass( const.fluxCountInpt, simGrid );
+
 % fix flux if there is a teleport
 sinkLocs = [];
 sourceLocs = [];
@@ -248,6 +253,11 @@ for m=0:n.ntimesteps
   % Flux counting
   if fluxCounter.Flag == 1
     fluxCounter.updateFlux( tracer.Centers, center_old );
+  end
+  
+    % Flux counting
+  if occCounter.Flag == 1
+    occCounter.updateOcc( m, tracer.AllPts );
   end
   
   % Animations
@@ -356,3 +366,4 @@ fileObj.paramlist = paramlist;
 fileObj.obst = obstInpt;
 fileObj.modelopt = modelopt;
 fileObj.flux = fluxCounter.Counts;
+fileObj.occ = occCounter.OccTot;

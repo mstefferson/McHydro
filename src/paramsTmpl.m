@@ -20,7 +20,7 @@ trialmaster.verbose = 0; % print things
 % {'rand', bndDiff, be, ffo, so, obstExclude, edgesPlace};
 % {'wall', bndDiff, be, thickness, gapWidth, dim, wallLoc, gapLoc};
 % {'teleport', dim, loc, trackTeleNumFlag};
-% {'specloc', bndDiff, be,  so, rowLoc, colLoc, heightLoc };
+% {'specloc', bndDiff, be,  sRow, sCol, sHeight, rowLoc, colLoc, heightLoc };
 params.obst = { {'rand', 0, 1, 0.1, 1, 1, 0} };
 params.num_tracer = 100; %filling fraction of tracers
 params.tr_unbnd_diff = 1; % unbound diffusion
@@ -45,6 +45,9 @@ const.useStart = 1; % Using t=1 to start windows instead of t=end
 
 % flux count { on/off, dim (1/2/3) , value }
 const.fluxCountInpt = { 0, 1,  const.n_gridpoints };
+
+% occ count { on/off, recInterval, { recSub [row1 col1], [row2, col2] } }
+const.occCountInpt = { 0, 1, { [1 1], [2 2] } };
 
 %model stuff
 modelopt.tracer_excl=0;     %MUST BE 0 so tracers don't interact (ghosts)
