@@ -118,9 +118,12 @@ end
 % specific location specloc
 function [obst, obstStr] = checkObstSpecloc( obst )
 % check inputs
-if length(obst{1,2}) ~= 4
+if length(obst{1,2}) < 5
   fprintf('Incorrect number of specific location obstacle parameters\n')
   error('Incorrect number of specific location obstacle parameters\n')
+end
+if length( obst{1,2} ) == 5 
+  obst{1,2}  = [obst{1,2} 1];
 end
 % make string
 obstStr = '_sp';

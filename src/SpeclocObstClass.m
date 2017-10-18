@@ -24,7 +24,7 @@ classdef SpeclocObstClass
   
   methods
     % constructor
-    function obj =  SpeclocObstClass( bndDiff, be, location, so, ...
+    function obj =  SpeclocObstClass( bndDiff, be,  so, locationSub, ...
         color, gridObj, forbiddenSites )
       % set inputs
       obj.SiteDiff = bndDiff;
@@ -32,7 +32,7 @@ classdef SpeclocObstClass
       obj.Length = so;
       obj.Color = color;
       % now place
-      obj = obj.placeObst( gridObj,  location, forbiddenSites );
+      obj = obj.placeObst( gridObj,  locationSub, forbiddenSites );
       % set centers (useful for animate)
       deltaCen = floor( ( obj.Length - 1 ) / 2 );
       obj.Centers = zeros( obj.Num, 2 );
@@ -41,8 +41,17 @@ classdef SpeclocObstClass
     end
     
     % methods
-    function [obj] = placeObst( obj, gridObj, locations, forbiddenSites )
-      num = 1;
+    function [obj] = placeObst( obj, gridObj, locationSub, forbiddenSites )
+      % get size
+      [locDim] = size(locationSub,2);
+      [num] = size( locationSub,1 );
+      % assign third dim if missing
+      if locDim == 2
+        locationSub = [ locationSub; ones(num, 1) ];
+      end
+      % turn subs to inds
+      locations = sub2ind( gridObj.sizeV, ...
+        locationSub(:,1), locationSub(:,2), locationSub(:,3) );
       % get delta ind
       deltaL1 = round( obj.Length-1 );
       deltaL2 = round( (obj.Length-1) .* min( floor( gridObj.dim/2 ), 1 ) );

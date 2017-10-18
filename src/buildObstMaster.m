@@ -91,7 +91,9 @@ for ii = 1:num_obst_types
   end
   if strcmp( obstCellInput{1}, 'specloc' )
     out = SpeclocObstClass( obstCellInput{2}(1), obstCellInput{2}(2), ...
-       obstCellInput{2}(3), obstCellInput{2}(4), colorArray(ii,:), gridObj, filledSites );
+       obstCellInput{2}(3), ...
+       [obstCellInput{2}(4) obstCellInput{2}(5) obstCellInput{2}(6)],...
+       colorArray(ii,:), gridObj, filledSites );
     filledSites = [ filledSites; out.AllPts ];
   end
   obst{ii} = out;
