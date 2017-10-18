@@ -18,7 +18,7 @@ trialmaster.verbose = 0; % print things
 
 % obstacles cell of cells:
 % {'rand', bndDiff, be, ffo, so, obstExclude, edgesPlace};
-% {'wall', bndDiff, be, thickness, gapWidth, dim, loc};
+% {'wall', bndDiff, be, thickness, gapWidth, dim, wallLoc, gapLoc};
 % {'teleport', dim, loc, trackTeleNumFlag};
 % {'specloc', bndDiff, be, locations, so };
 params.obst = { {'rand', 0, 1, 0.1, 1, 1, 0} };

@@ -1,6 +1,9 @@
+% obstacle at a specified location. For now, only place one. This obstacle
+% will wrap around previously set obstacles
+%
 classdef SpeclocObstClass
   properties
-    Type = 'placed';
+    Type = 'specloc';
     SiteDiff = 0;
     Be = 0;
     Ff = 0;
@@ -54,42 +57,41 @@ classdef SpeclocObstClass
       actualAdded = 0;
       newCorners = [];
       numSitesFilled = 0;
-      allSitesFilled = [];
+      allSpecLocSitesFilled = [];
+      allObstFilled = forbiddenSites;
       for ii = 1:num
         newCornerInd = locations(ii);
         [i,j,k] = ind2sub( gridSize, newCornerInd);
-        if ~ismember( newCornerInd, forbiddenSites )
-          newCorners = [newCorners newCornerInd];
-          newiFill = mod( (i:i+deltaL1) - 1, gridSize(1) ) + 1;
-          newjFill = mod( (j:j+deltaL2) - 1, gridSize(2) ) + 1;
-          newkFill = mod( (k:k+deltaL3) - 1, gridSize(3) ) + 1;
-          newComb = combvec(newiFill, newjFill, newkFill);
-          newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
-          % only except unique obstacles
-          actualNewSites = setdiff( newInds, allSitesFilled );
-          numActualNew = length( actualNewSites );
-          % See if we can accept
-          numSiteFilledTemp = numSitesFilled + numActualNew;
-          % fill em!
-          allSitesFilledTemp = [allSitesFilled; actualNewSites ];
-          allSitesFilled = allSitesFilledTemp;
-          forbiddenSites = [forbiddenSites; actualNewSites];
-          % update what's not longer available
-          allSitesFilled = unique( allSitesFilled );
-          numSitesFilled = length( allSitesFilled );
-          actualAdded = actualAdded + 1;
-        end
+        newiFill = mod( (i:i+deltaL1) - 1, gridSize(1) ) + 1;
+        newjFill = mod( (j:j+deltaL2) - 1, gridSize(2) ) + 1;
+        newkFill = mod( (k:k+deltaL3) - 1, gridSize(3) ) + 1;
+        newComb = combvec(newiFill, newjFill, newkFill);
+        newInds = sub2ind( gridSize, newComb(1,:)', newComb(2,:)', newComb(3,:)' );
+        % only acceptt unique obstacles
+        actualNewSites = setdiff( newInds, allObstFilled );
+        numActualNew = length( actualNewSites );
+        % fill em!
+        allSitesFilledTemp = [allSpecLocSitesFilled; actualNewSites ];
+        allSpecLocSitesFilled = allSitesFilledTemp;
+        allObstFilled = [allObstFilled; actualNewSites];
+        % update what's not longer available
+        allSpecLocSitesFilled = unique( allSpecLocSitesFilled );
+        numSitesFilled = length( allSpecLocSitesFilled );
+        actualAdded = actualAdded + numActualNew;
       end
       % set all points
       obj.Num = actualAdded;
       obj.Ff = numSitesFilled / gridObj.totPnts;
-      obj.AllPts = allSitesFilled;
+      obj.AllPts = allSpecLocSitesFilled;
       obj.NumFilledSites = numSitesFilled;
       % corners
-      obj.Corners = zeros( num, 3 );
-      obj.CornerInds = newCorners;
+      obj.Corners = zeros( numSitesFilled, 3 );
+      obj.CornerInds = obj.AllPts;
       [obj.Corners(:,1), obj.Corners(:,2), obj.Corners(:,3)] = ...
         ind2sub( gridSize, obj.CornerInds );
+      obj.Corners = obj.Corners(:, 1:gridObj.dim );
+      % reset length to 1
+      obj.Length = 1;
     end % place_obst
   end % methods
 end % class

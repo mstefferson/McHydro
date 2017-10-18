@@ -93,7 +93,7 @@ end
 % wall
 function [obst, obstStr] = checkObstWall( obst )
 % check inputs
-if length(obst{1,2}) ~= 6
+if length(obst{1,2}) ~= 7
   fprintf('Incorrect number of wall obstacle parameters\n')
   error('Incorrect number of wall obstacle parameters\n')
 end

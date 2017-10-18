@@ -7,7 +7,8 @@ classdef WallObstClass
     Thickness = 0;
     GapWidth = 0;
     Dim = 0;
-    Location = 0;
+    PlaceLocation = 0;
+    GapLocation = 0;
     Length = 1;    
     TracerOccNum = 0;
     TracerOccFrac = 0;
@@ -23,14 +24,15 @@ classdef WallObstClass
   methods
     % constructor
     function obj =  WallObstClass( bndDiff, be, thickness, gapWidth, ...
-        dim, placeLocation, color, gridObj )
+        dim, placeLocation, gapLocation, color, gridObj )
       % set inputs
       obj.SiteDiff = bndDiff;
       obj.Be = be;
       obj.Thickness = thickness;
       obj.GapWidth = gapWidth;
       obj.Dim = dim;
-      obj.Location = placeLocation;
+      obj.PlaceLocation = placeLocation;
+      obj.GapLocation = gapLocation;
       obj.Color = color;
       % now place
       obj = obj.placeObst( gridObj );
@@ -45,16 +47,15 @@ classdef WallObstClass
         fprintf('Wall obst not written for 3d\n');
         error('Wall obst not written for 3d\n');
       end
-      posDim = dim;
-      fillDim = mod( dim + 1 - 1, 2 ) + 1;
-      midpoint = floor( ( gridObj.sizeV(posDim) + 1 ) / 2 );
-      endPnt = midpoint - floor( ( obj.GapWidth - 1 ) / 2 );
+      % gap start and end points
+      startPnt = mod( obj.GapLocation - 1 - 1, gridObj.sizeV(2) ) + 1;
+      endPnt = mod( startPnt + obj.GapWidth, gridObj.sizeV(2) ) + 1;
       if dim == 1
-        cols2fill = [1:endPnt-1  endPnt+obj.GapWidth:gridObj.sizeV(fillDim)];
-        rows2fill = obj.Location-obj.Thickness+1:obj.Location;
+        cols2fill = [1:startPnt endPnt:gridObj.sizeV(2)];
+        rows2fill = obj.PlaceLocation-obj.Thickness+1:obj.PlaceLocation;
       else % dim = 2
-        cols2fill = obj.Location-obj.Thickness+1:obj.Location;
-        rows2fill =  [1:endPnt-1  endPnt+obj.GapWidth:gridObj.sizeV(fillDim)];
+        cols2fill = obj.PlaceLocation-obj.Thickness+1:obj.PlaceLocation;
+        rows2fill =  [1:startPnt endPnt:gridObj.sizeV(1)];
       end
       % fix wrap issue
       cols2fill = mod( cols2fill - 1, gridObj.sizeV(2) ) + 1;
