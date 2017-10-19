@@ -25,6 +25,8 @@ classdef OccCounterClass < handle
         obj.RecInterval = occCell{2};
         obj.Num = length( occCell{3} );
         obj.SiteSub = reshape( cell2mat( occCell{3} ), [  2 obj.Num ]  )';
+        obj.SiteSub(:,1) = mod( obj.SiteSub(:,1) -1, grid.sizeV(1) ) + 1;
+        obj.SiteSub(:,2) = mod( obj.SiteSub(:,2) -1, grid.sizeV(2) ) + 1;
         obj.SiteInd = sub2ind( grid.sizeV, obj.SiteSub(:,1), obj.SiteSub(:,2) );
         obj.NumTimeRec = floor( nt / obj.RecInterval ) + 1;
         obj.OccTot = zeros( 1, obj.Num );
