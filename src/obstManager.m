@@ -125,6 +125,8 @@ end
 if length( obst{1,2} ) == 5 
   obst{1,2}  = [obst{1,2} 1];
 end
+obstParams = obst{1,2};
 % make string
-obstStr = '_sp';
+obstStr = [ '_specloc_bD' num2str(obstParams(1),'%.2f')  ...
+'_be' num2str(obstParams(2),'%.2f') '_so' num2str(obstParams(3),'%d') ];
 end
