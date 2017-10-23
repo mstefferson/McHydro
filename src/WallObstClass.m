@@ -32,7 +32,7 @@ classdef WallObstClass
       obj.GapWidth = gapWidth;
       obj.Dim = dim;
       obj.PlaceLocation = placeLocation;
-      obj.GapLocation = gapLocation;
+      obj.GapLocation = round( gapLocation );
       obj.Color = color;
       % now place
       obj = obj.placeObst( gridObj );

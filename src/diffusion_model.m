@@ -366,5 +366,5 @@ fileObj.paramlist = paramlist;
 fileObj.obst = obstInpt;
 fileObj.modelopt = modelopt;
 fileObj.flux = fluxCounter.Counts;
-fileObj.occ = occCounter.OccTot;
+fileObj.occ = occCounter.OccTot';
 fileObj.occSites = occCounter.SiteSub;

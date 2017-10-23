@@ -2,6 +2,7 @@
 classdef OccCounterClass < handle
   properties
     Flag = 0;
+    AnimateFlag = 0;
     RecInterval = 0;
     Num = 0;
     SiteSub = 0;
@@ -20,13 +21,14 @@ classdef OccCounterClass < handle
     function obj = OccCounterClass( occCell, nt, grid )
       % set inputs
       obj.Flag = occCell{1};
+      obj.AnimateFlag = occCell{2};
       obj.Ngrid = grid.sizeV(1);
       if obj.Flag
-        obj.RecInterval = occCell{2};
-        obj.Num = length( occCell{3} );
-        obj.SiteSub = reshape( cell2mat( occCell{3} ), [  2 obj.Num ]  )';
-        obj.SiteSub(:,1) = mod( obj.SiteSub(:,1) -1, grid.sizeV(1) ) + 1;
-        obj.SiteSub(:,2) = mod( obj.SiteSub(:,2) -1, grid.sizeV(2) ) + 1;
+        obj.RecInterval = occCell{3};
+        obj.Num = length( occCell{4} );
+        obj.SiteSub = reshape( cell2mat( occCell{4} ), [  2 obj.Num ]  )';
+        obj.SiteSub(:,1) = mod( round( obj.SiteSub(:,1) ) -1, grid.sizeV(1) ) + 1;
+        obj.SiteSub(:,2) = mod( round( obj.SiteSub(:,2) ) -1, grid.sizeV(2) ) + 1;
         obj.SiteInd = sub2ind( grid.sizeV, obj.SiteSub(:,1), obj.SiteSub(:,2) );
         obj.NumTimeRec = floor( nt / obj.RecInterval ) + 1;
         obj.OccTot = zeros( 1, obj.Num );
@@ -46,10 +48,12 @@ classdef OccCounterClass < handle
     
     % methods
     function [obj] = animate( obj )
-      for ksite=1:obj.Num
-        obj.Rectangle = update_rectangle(obj.SiteSub, obj.Rectangle, ...
-          ksite, obj.Length, obj.Ngrid,...
-          obj.Color,obj.Curvature);
+      if obj.AnimateFlag
+        for ksite=1:obj.Num
+          obj.Rectangle = update_rectangle(obj.SiteSub, obj.Rectangle, ...
+            ksite, obj.Length, obj.Ngrid,...
+            obj.Color,obj.Curvature);
+        end
       end
     end % animate
   end % methods

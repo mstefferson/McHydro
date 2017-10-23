@@ -45,10 +45,19 @@ classdef SpeclocObstClass
       % get size
       [locDim] = size(locationSub,2);
       [num] = size( locationSub,1 );
+      % make sure sub are intergers
+      locationSub = round( locationSub );
       % assign third dim if missing
       if locDim == 2
         locationSub = [ locationSub; ones(num, 1) ];
       end
+      % set-up grid
+      gridSize = ones(1,3);
+      gridSize(1:gridObj.dim) = gridObj.sizeV;
+      % make sure it's on the grid
+      locationSub(:,1) = mod( locationSub(:,1) - 1, gridSize(1) ) + 1;
+      locationSub(:,2) = mod( locationSub(:,2) - 1, gridSize(2) ) + 1;
+      locationSub(:,3) = mod( locationSub(:,3) - 1, gridSize(3) ) + 1;
       % turn subs to inds
       locations = sub2ind( gridObj.sizeV, ...
         locationSub(:,1), locationSub(:,2), locationSub(:,3) );
@@ -56,13 +65,6 @@ classdef SpeclocObstClass
       deltaL1 = round( obj.Length-1 );
       deltaL2 = round( (obj.Length-1) .* min( floor( gridObj.dim/2 ), 1 ) );
       deltaL3 = round( (obj.Length-1) .* min( floor( gridObj.dim/3 ), 1 ) );
-      % set-up grid
-      gridTemp = ones(1,3);
-      gridTemp(1:gridObj.dim) = gridObj.sizeV;
-      gridSize = gridTemp;
-      if gridObj.dim == 2
-        locations = [ locations; ones( obj.Num, 1 ) ];
-      end
       actualAdded = 0;
       newCorners = [];
       numSitesFilled = 0;
