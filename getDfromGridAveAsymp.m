@@ -1,10 +1,11 @@
 % masterD = getDfromGridAveAsymp( path2files, fileId, plotAllFlag, saveFigFlag )
-%   Description: Wrapper for findHorztlAsymp. Loops aveGrid* for 
+%   Description: Wrapper for getHorzAsymptotes. Loops aveGrid* for 
 % everything matching the fileID in path2files. Plot options
 % key:
 % masterD( be, ffo, bBar, D, Dsig, tAnom, tAnomSig, steadyState , ...
-% earlyAnom, slopeEnd, slopeMoreNeg, yinterMostNeg, upperbound)
-function [masterD, masterOut] = getDfromGridAveAsymp( path2files, fileId, plotAllFlag, saveFigFlag )
+% earlyAnom, slopeEnd, slopeMoreNeg)
+function [masterD, asymInfo] = getDfromGridAveAsymp( path2files, fileId, ...
+  numBins, threshold, plotFlag, saveFigFlag, verbose )
 % addpath
 addpath('./src')
 % get files
@@ -30,34 +31,26 @@ for ii = 1:numFiles
   end
   % find the horzontal asymptote
   try
-  out = findHorztlAsymp( aveGrid.time, aveGrid.msdW, aveGrid.sigW );
+    [diffInfo, asymInfo] = getDfromMsdData( aveGrid.time, ...
+      aveGrid.msdW, aveGrid.sigW, ...
+      threshold, numBins, plotFlag, verbose );
+      if saveFigFlag
+        savename = ['bins_bDiff' num2str( aveGrid.bDiff) '_be' num2str( aveGrid.be )  ...
+          '_ffo' num2str( aveGrid.ffo,'%.2f' ) '.fig' ];
+          savefig(gcf, savename);
+      end
   catch err
-    keyboard
+    fprintf('%s',err.getReport('extended') );
   end
-  masterD(ii,5) = out.D;
-  masterD(ii,6) = out.Dsig;
-  masterD(ii,7) = out.tAnom;
-  masterD(ii,8) = out.tAnomSig;
-  masterD(ii,9) = out.steadyState;
-  masterD(ii,10) = out.earlyAnom;
-  masterD(ii,11) = out.slopeEnd;
-  masterD(ii,12) = out.slopeMostNeg;
-  masterD(ii,13) = out.yinterMostNeg;
-  masterD(ii,14) = min( log10( aveGrid.msdW ./ aveGrid.time) );
-  masterOut(ii) = out;
-  % plotting routines
-  if plotAllFlag
-    plotDataAsympError( aveGrid.time, aveGrid.msdW, aveGrid.sigW, ...
-      out.slopeMostNeg, out.yinterMostNeg, out.tAnom, out.earlyAnom, out.D, out.Dsig, ...
-      aveGrid.be, aveGrid.ffo, masterD(ii,1), masterD(ii,4), 0 )
-    if saveFigFlag
-      savename = ['logAsymp_bBar' num2str( aveGrid.bBar) '_be' num2str( aveGrid.be )  ...
-        '_ffo' num2str( aveGrid.ffo,'%.2f' ) '.fig' ];
-      savefig(gcf, savename);
-    end
-  end
+  masterD(ii,5) = diffInfo.D;
+  masterD(ii,6) = diffInfo.DSig;
+  masterD(ii,7) = diffInfo.tAnom;
+  masterD(ii,8) = diffInfo.tAnomSig;
+  masterD(ii,9) = diffInfo.steadyState;
+  masterD(ii,10) = diffInfo.earlyAnom;
+  masterD(ii,11) = asymInfo.slopeAsym(end);
+  masterD(ii,12) = asymInfo.maxNegSlope;
 end
 % Sort it by be, and ffo
 masterD = sortrows( masterD, [ 1 1 1 ] );
 end
-

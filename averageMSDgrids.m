@@ -2,18 +2,30 @@
 %   Description: finds weighted MSD averages over grids. Takes files
 % from parentpath with given ffo, bind, bDif, and names them with
 % name ID tag
+%
+% ffo: filling fractions you wanted to look for
+% bind: binding energies you wanted to look for
+% bDiff: bound diffusion you wanted to look for
+% sizeObs: obstable sizes you want to look for
+% parentpath: path to look for msdfiles
+% nameID: name Id you'd like in filename
+% bindDirFlag: if 1, code will look for files in directories bind## (##=be) 
+% in the parentpath. If 0, it looks in the parentpath
 
-function averageMSDgrids( ffo, bind, bDiff, sizeObs, parentpath, nameID )
+function averageMSDgrids( ffo, bind, bDiff, sizeObs, parentpath, nameID, bindDirFlag )
 % get path for binding. files must be in their own bind dir
-% fullpath = parentpath;
+fullpath = parentpath;
 for hh = 1:length(bind)
   bindTemp = bind(hh);
-  if abs(bindTemp) > 0 && abs(bindTemp) < 1
-    fullpath = [parentpath 'bind' num2str(bindTemp, '%.1f' ) '/'];
-  else
-    fullpath = [parentpath 'bind' num2str(bindTemp, '%.2d' ) '/'];
+  if bindDirFlag
+    if abs(bindTemp) > 0 && abs(bindTemp) < 1
+     fullpath = [parentpath 'bind' num2str(bindTemp, '%.1f' ) '/'];
+    else
+     fullpath = [parentpath 'bind' num2str(bindTemp, '%.2d' ) '/'];
+    end
   end
   % load first out here
+  end
   try
     for ii = 1:length(ffo)
       ffoTemp = ffo(ii);
@@ -114,6 +126,7 @@ for hh = 1:length(bind)
       end
     end
   catch err
+    fprintf('%s',err.getReport('extended') );
     keyboard
   end
 end
